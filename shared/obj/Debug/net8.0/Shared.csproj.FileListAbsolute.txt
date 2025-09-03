@@ -1,0 +1,3 @@
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\obj\Debug\net8.0\Shared.csproj.AssemblyReference.cache
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\obj\Debug\net8.0\Shared.GeneratedMSBuildEditorConfig.editorconfig
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\obj\Debug\net8.0\Shared.csproj.CoreCompileInputs.cache

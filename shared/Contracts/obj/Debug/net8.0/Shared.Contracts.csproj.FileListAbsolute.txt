@@ -1,0 +1,12 @@
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\Contracts\obj\Debug\net8.0\Shared.Contracts.GeneratedMSBuildEditorConfig.editorconfig
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\Contracts\obj\Debug\net8.0\Shared.Contracts.AssemblyInfoInputs.cache
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\Contracts\obj\Debug\net8.0\Shared.Contracts.AssemblyInfo.cs
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\Contracts\obj\Debug\net8.0\Shared.Contracts.csproj.CoreCompileInputs.cache
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\Contracts\obj\Debug\net8.0\Shared.Contracts.csproj.AssemblyReference.cache
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\Contracts\bin\Debug\net8.0\Shared.Contracts.deps.json
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\Contracts\bin\Debug\net8.0\Shared.Contracts.dll
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\Contracts\bin\Debug\net8.0\Shared.Contracts.pdb
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\Contracts\obj\Debug\net8.0\Shared.Contracts.dll
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\Contracts\obj\Debug\net8.0\refint\Shared.Contracts.dll
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\Contracts\obj\Debug\net8.0\Shared.Contracts.pdb
+c:\Sudipto\KilloCode\Code\AppointmentScheduler\shared\Contracts\obj\Debug\net8.0\ref\Shared.Contracts.dll
