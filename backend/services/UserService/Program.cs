@@ -2,40 +2,61 @@ using Microsoft.Extensions.DependencyInjection;
 using MediatR;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace UserService;
 
 public class Program
 {
-    public static async Task Main(string[] args)
+    public static void Main(string[] args)
     {
-        var host = Host.CreateDefaultBuilder(args)
-            .ConfigureServices((hostContext, services) =>
+        var builder = WebApplication.CreateBuilder(args);
+
+        // Add services to the container.
+        builder.Services.AddControllers();
+        builder.Services.AddEndpointsApiExplorer();
+
+        builder.Services.AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy("A healthy check result."));
+
+        builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+
+        builder.Services.AddMassTransit(x =>
+        {
+            x.UsingRabbitMq((context, cfg) =>
             {
-                services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
-
-                services.AddMassTransit(x =>
+                cfg.Host("localhost", "/", h =>
                 {
-                    x.UsingRabbitMq((context, cfg) =>
-                    {
-                        cfg.Host("localhost", "/", h =>
-                        {
-                            h.Username("guest");
-                            h.Password("guest");
-                        });
-                    });
+                    h.Username("guest");
+                    h.Password("guest");
                 });
+            });
+        });
 
-                // Placeholder for authentication service registration
-                services.AddSingleton<Services.AuthService>();
-                services.AddSingleton<Processors.JwtService>(x => new Processors.JwtService("MySuperSecretKey"));
-                services.AddSingleton<Processors.TokenService>();
-                services.AddSingleton<Processors.AuthorizationService>();
-    services.AddControllers();
-            })
-            .Build();
+        builder.Services.AddSingleton<Services.AuthService>();
+        builder.Services.AddSingleton<Processors.JwtService>(x => new Processors.JwtService("MySuperSecretKey"));
+        builder.Services.AddSingleton<Processors.TokenService>();
+        builder.Services.AddSingleton<Processors.AuthorizationService>();
 
-        Console.WriteLine("UserService started.");
-        await host.RunAsync();
+        var app = builder.Build();
+
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+        }
+
+        app.UseRouting();
+
+        app.UseAuthorization();
+
+        app.MapControllers();
+
+		app.MapHealthChecks("/healthz");
+
+        app.Run();
     }
 }
