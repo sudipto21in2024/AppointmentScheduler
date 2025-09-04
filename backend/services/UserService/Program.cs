@@ -44,18 +44,17 @@ public class Program
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseDeveloperExceptionPage();
-        }
 
         app.UseRouting();
 
         app.UseAuthorization();
 
+        app.UseMiddleware<Middleware.AuthenticationMiddleware>();
+        app.UseMiddleware<Middleware.AuthorizationMiddleware>();
+
         app.MapControllers();
 
-		app.MapHealthChecks("/healthz");
+  app.MapHealthChecks("/healthz");
 
         app.Run();
     }

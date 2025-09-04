@@ -21,9 +21,9 @@ subgraph Implementation Details
     F --> F1(Created PaymentService Dockerfile);
     G --> G1(Created NotificationService Dockerfile);
     H --> H1(Created ReportingService Dockerfile);
-    I --> I1(Configured docker-compose.yml with services and SQL initialization);
+    I --> I1(Configured docker-compose.yml with services and SQL initialization.  Also configured sqlserver to depend on initialization script);
     J --> J1(Created k8s/deployment.yaml with health checks);
     K --> K1(Created k8s/service.yaml);
     L --> L1(Created k8s/ingress.yaml);
-	M --> M1(Health checks added to deployment.yaml);
+	
 end

@@ -28,30 +28,35 @@ public class AuthService
     public bool Register(string email, string password, UserRole role)
     {
         // TODO: Implement user registration logic
+  //For now return true
         return true;
     }
 
-    public bool Logout(string token)
-    {
-        //TODO: Implement logout logic
-        return true;
-    }
+ public bool Logout(string token)
+ {
+  //TODO: Implement logout logic
+  //For now return true
+  return true;
+ }
 
-    public string Refresh(string refreshToken)
-    {
-        //TODO: Implement refresh token logic
-        return "dummy_token";
-    }
+ public string Refresh(string refreshToken)
+ {
+  //TODO: Implement refresh token logic
+  // For now, just return a dummy token
+  return _jwtService.GenerateToken("dummy_user");
+ }
 
     public bool RequestPasswordReset(string email)
     {
         // TODO: Implement password reset request logic
+        // For now, just return true
         return true;
     }
 
     public bool ResetPassword(string email, string token, string newPassword)
     {
         // TODO: Implement reset password logic
+  // For now, just return true
         return true;
     }
 }
