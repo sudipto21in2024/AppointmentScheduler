@@ -17,7 +17,8 @@ Security event monitoring involves collecting, analyzing, and alerting on securi
         *   Configuration changes
         *   Malware detection
         *   System errors that may indicate a security issue
-    *   Use a threat model to guide the selection of security events.
+        *   Network intrusion attempts
+        *   Data exfiltration attempts
 2.  **Configure Systems to Generate Security Events:**
     *   Configure your systems to generate security events in a consistent format.
     *   Use appropriate logging levels and event IDs.

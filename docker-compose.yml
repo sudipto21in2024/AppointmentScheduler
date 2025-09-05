@@ -10,6 +10,14 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - sqlserver
+      - rabbitmq
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   bookingservice:
     build:
@@ -21,6 +29,13 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - sqlserver
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   servicemanagementservice:
     build:
@@ -32,6 +47,13 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - sqlserver
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   paymentservice:
     build:
@@ -43,6 +65,13 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - sqlserver
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   notificationservice:
     build:
@@ -54,6 +83,13 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - sqlserver
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5004/health"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   reportingservice:
     build:
@@ -65,11 +101,25 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - sqlserver
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5005/health"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   sqlserver:
     image: "mcr.microsoft.com/mssql/server:2019-latest"
     ports:
       - "1433:1433"
+    restart: always
+    healthcheck:
+      test: ["CMD", "sqlcmd", "-S", "localhost", "-U", "sa", "-P", "MySuperSecretPassword123!", "-Q", "SELECT 1"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=MySuperSecretPassword123!
@@ -167,11 +217,31 @@ services:
     depends_on:
       - prometheus
 
+  rabbitmq:
+    image: rabbitmq:3.9-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: always
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  runbook_executor:
+    build:
+      context: .
+      dockerfile: ./scripts/Dockerfile.runbook_executor
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    restart: always
+
 volumes:
   sqlserver_data:
   prometheus_data:
   grafana_data:
   elasticsearch_data:
-
-  
- 

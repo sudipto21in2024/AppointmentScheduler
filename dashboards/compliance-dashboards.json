@@ -23,10 +23,35 @@
       "type": "table",
       "columns": ["timestamp", "user", "action", "resource"],
       "query": "type:audit_log"
+    },
+    {
+      "title": "Firewall Events",
+      "type": "table",
+      "columns": ["timestamp", "source", "destination", "action"],
+      "query": "type:firewall"
     }
   ],
   "time_range": {
     "from": "now-30d",
     "to": "now"
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "Prometheus",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "matchAny": false,
+          "tags": [],
+          "type": "tags"
+        }
+      }
+    ]
   }
 }

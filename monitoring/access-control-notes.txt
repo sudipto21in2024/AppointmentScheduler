@@ -29,6 +29,9 @@ Access control is the process of restricting access to resources based on user i
         *   `security-analyst`: Access to security-related dashboards and alerts.
         *   `developer`: Access to application performance data and logs.
         *   `read-only`: Read-only access to all monitoring data.
+        *   `auditor`: Access to audit logs and security event data
+        *   `compliance-officer`: Access to compliance related dashboards and reports
+        *   `business-user`: Access to business KPI dashboards
 4.  **Enforce Access Control Policies:**
     *   Configure the observability tools to enforce the access control policies.
     *   Use appropriate authorization mechanisms to restrict access to sensitive data.
@@ -38,6 +41,8 @@ Access control is the process of restricting access to resources based on user i
 6.  **Document access control policies:**
     *   Document access control policies and procedures in a central, accessible location.
     *   Implement a process for regularly reviewing and updating access control policies.
+    * Audit access to the security policies themselves.
+7. Implement access control in code.
 
 **Example Implementation (Elasticsearch and Kibana):**
 
@@ -72,3 +77,4 @@ Access control is the process of restricting access to resources based on user i
 
 *   Protect the access control configuration from unauthorized modification.
 *   Regularly audit access control logs to identify and investigate suspicious activity.
+*   Ensure that access to audit logs is audited.
