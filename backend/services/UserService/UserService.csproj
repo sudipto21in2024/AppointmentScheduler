@@ -18,6 +18,42 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="prometheus-net.AspNetCore" Version="*" />
+    <PackageReference Include="Serilog.AspNetCore" Version="*" />
+    <PackageReference Include="Serilog.Sinks.Elasticsearch" Version="*" />
+    <PackageReference Include="OpenTelemetry" Version="*" />
+    <PackageReference Include="OpenTelemetry.Exporter.Jaeger" Version="*" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="*" />
+    <!-- For WithEnvironmentName() -->
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />
+
+    <!-- For WithThreadId() and WithThreadName() -->
+    <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
+    <!-- For AddAspNetCoreInstrumentation() -->
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.6.0" />
+
+    <!-- For AddHttpClientInstrumentation() -->
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.6.0" />
+
+    <!-- Base OpenTelemetry packages you likely already have -->
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.6.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.6.0" />
+    <!-- For WithProcessId() -->
+    <PackageReference Include="Serilog.Enrichers.Process" Version="2.0.2" />
+
+    <!-- For WithEnvironmentName() -->
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />
+
+    <!-- For WithThreadId() and WithThreadName() -->
+    <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
+    <!-- For Entity Framework instrumentation -->
+    <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.0.0-beta.10" />
+    <!-- For OTLP exporter (recommended for production) -->
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.7.0" />
+    
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\shared\Shared.csproj" />
   </ItemGroup>
 

@@ -5,7 +5,17 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Prometheus;
+using Serilog;
+using Serilog.Sinks.Elasticsearch;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Resources;
+using Shared.Contracts;
+using Microsoft.Extensions.Logging;
+using OpenTelemetry.Metrics;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Serilog.Formatting.Compact;
+using Serilog.Events;
 
 namespace UserService;
 
@@ -19,11 +29,14 @@ public class Program
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
 
+        // Health checks
         builder.Services.AddHealthChecks()
-            .AddCheck("self", () => HealthCheckResult.Healthy("A healthy check result."));
+            .AddCheck("self", () => new HealthCheckResult(HealthStatus.Healthy, "A healthy check result."));
 
+        // MediatR
         builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
+        // MassTransit
         builder.Services.AddMassTransit(x =>
         {
             x.UsingRabbitMq((context, cfg) =>
@@ -34,27 +47,83 @@ public class Program
                     h.Password("guest");
                 });
             });
+    
+            builder.Services.AddOpenTelemetry()
+                .ConfigureResource(resource => resource.AddService("UserService"))
+                .WithTracing(tracingBuilder =>
+                {
+                    tracingBuilder
+                        .AddAspNetCoreInstrumentation()
+                        .AddHttpClientInstrumentation()
+                        .AddJaegerExporter();
+                });
         });
 
-        builder.Services.AddSingleton<Services.AuthService>();
-        builder.Services.AddSingleton<Processors.JwtService>(x => new Processors.JwtService("MySuperSecretKey"));
-        builder.Services.AddSingleton<Processors.TokenService>();
-        builder.Services.AddSingleton<Processors.AuthorizationService>();
+        // Register dependencies with proper service lifetimes
+        builder.Services.AddScoped<Processors.JwtService>(sp => 
+            new Processors.JwtService("MySuperSecretKey"));
+        builder.Services.AddScoped<Processors.TokenService>();
+        builder.Services.AddScoped<Processors.AuthorizationService>();
+        
+        // Note: IAuthenticationService needs to be registered separately
+        // builder.Services.AddScoped<IAuthenticationService, YourAuthenticationImplementation>();
+        
+        builder.Services.AddScoped<Services.AuthService>(sp => 
+            new Services.AuthService(
+                sp.GetRequiredService<IAuthenticationService>(), 
+                sp.GetRequiredService<Processors.JwtService>(), 
+                sp.GetRequiredService<Processors.TokenService>(), 
+                sp.GetRequiredService<Processors.AuthorizationService>(), 
+                sp.GetRequiredService<ILogger<Services.AuthService>>()));
 
-        var app = builder.Build();
+        // Serilog configuration
+        builder.Host.UseSerilog((context, configuration) =>
+        {
+            configuration
+                .Enrich.FromLogContext()
+                .Enrich.WithEnvironmentName()
+                .Enrich.WithMachineName()
+                .Enrich.WithProcessId();
+            
+            configuration
+                .WriteTo.Console()
+                .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(context.Configuration["Elasticsearch:Uri"] ?? "http://localhost:9200"))
+                {
+                    AutoRegisterTemplate = true,
+                    IndexFormat = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name?.ToLower().Replace(".", "-")}-{context.HostingEnvironment.EnvironmentName?.ToLower().Replace(".", "-")}-{DateTime.UtcNow:yyyy-MM}"
+                });
+            configuration.ReadFrom.Configuration(context.Configuration);
+        });
+
+    
+            // OpenTelemetry Tracing (updated API)
+            builder.Services.AddOpenTelemetry()
+                .ConfigureResource(resource => resource.AddService("UserService"))
+                .WithTracing(tracingBuilder =>
+                {
+                    tracingBuilder
+                        .AddAspNetCoreInstrumentation()
+                        .AddHttpClientInstrumentation()
+                        .AddJaegerExporter(); // Replace Jaeger with Console or use OTLP exporter
+                        // For Jaeger, use: .AddJaegerExporter() and configure via environment variables or appsettings
+                });
+    
+            var app = builder.Build();
+
+        // Prometheus metrics
+        app.UseMetricServer();
+        app.UseHttpMetrics();
 
         // Configure the HTTP request pipeline.
-
         app.UseRouting();
 
-        app.UseAuthorization();
-
+        // Authentication and Authorization middleware should be in correct order
         app.UseMiddleware<Middleware.AuthenticationMiddleware>();
+        app.UseAuthorization();
         app.UseMiddleware<Middleware.AuthorizationMiddleware>();
 
         app.MapControllers();
-
-  app.MapHealthChecks("/healthz");
+        app.MapHealthChecks("/healthz");
 
         app.Run();
     }
