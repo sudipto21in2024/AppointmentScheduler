@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Shared.Contracts;
 using Shared.Models;
+using Shared.Events;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 using BCrypt.Net;
 using System;
 using UserService.DTO;
+using MassTransit;
 
 
 namespace UserService.Controllers
@@ -18,12 +20,14 @@ namespace UserService.Controllers
         private readonly Shared.Contracts.IAuthenticationService _authenticationService;
         private readonly UserService.Services.IUserService _userService;
         private readonly ILogger<AuthController> _logger;
+        private readonly IPublishEndpoint _publishEndpoint;
 
-        public AuthController(Shared.Contracts.IAuthenticationService authenticationService, UserService.Services.IUserService userService, ILogger<AuthController> logger)
+        public AuthController(Shared.Contracts.IAuthenticationService authenticationService, UserService.Services.IUserService userService, ILogger<AuthController> logger, IPublishEndpoint publishEndpoint)
         {
             _authenticationService = authenticationService;
             _userService = userService;
             _logger = logger;
+            _publishEndpoint = publishEndpoint;
         }
 
         [HttpPost("login")]
@@ -75,6 +79,22 @@ namespace UserService.Controllers
             
             // Save user to database
             var createdUser = await _userService.CreateUser(user);
+            
+            // Publish UserRegisteredEvent
+            var userRegisteredEvent = new UserRegisteredEvent
+            {
+                UserId = createdUser.Id,
+                Email = createdUser.Email,
+                FirstName = createdUser.FirstName,
+                LastName = createdUser.LastName,
+                UserType = createdUser.UserType.ToString(),
+                TenantId = createdUser.TenantId,
+                RegisteredAt = DateTime.UtcNow
+            };
+            
+            await _publishEndpoint.Publish(userRegisteredEvent);
+            
+            _logger.LogInformation($"User {createdUser.Email} registered successfully and UserRegisteredEvent published.");
             
             return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, new UserResponse { User = createdUser });
         }

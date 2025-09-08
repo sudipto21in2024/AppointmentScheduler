@@ -43,6 +43,8 @@ public class Program
         // MassTransit
         builder.Services.AddMassTransit(x =>
         {
+            x.AddConsumer<Consumers.UserRegisteredConsumer>();
+            
             x.UsingRabbitMq((context, cfg) =>
             {
                 cfg.Host("localhost", "/", h =>
@@ -50,17 +52,12 @@ public class Program
                     h.Username("guest");
                     h.Password("guest");
                 });
-            });
-    
-            builder.Services.AddOpenTelemetry()
-                .ConfigureResource(resource => resource.AddService("UserService"))
-                .WithTracing(tracingBuilder =>
+                
+                cfg.ReceiveEndpoint("user-events", e =>
                 {
-                    tracingBuilder
-                        .AddAspNetCoreInstrumentation()
-                        .AddHttpClientInstrumentation()
-                        .AddJaegerExporter();
+                    e.ConfigureConsumer<Consumers.UserRegisteredConsumer>(context);
                 });
+            });
         });
 
         // Register dependencies with proper service lifetimes
