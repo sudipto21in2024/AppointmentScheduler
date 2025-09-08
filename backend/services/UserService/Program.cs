@@ -18,6 +18,8 @@ using Serilog.Formatting.Compact;
 using Serilog.Events;
 using Microsoft.Extensions.Configuration;
 using UserService.Services;
+using Microsoft.EntityFrameworkCore;
+using Shared.Data;
 
 namespace UserService;
 
@@ -67,6 +69,10 @@ public class Program
         builder.Services.AddScoped<Processors.TokenService>();
         builder.Services.AddScoped<IUserService, UserService.Services.UserService>();
         builder.Services.AddScoped<Shared.Contracts.IAuthenticationService, UserService.Services.AuthenticationService>();
+        
+        // Register the shared ApplicationDbContext
+        builder.Services.AddDbContext<Shared.Data.ApplicationDbContext>(options =>
+            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
         // Serilog configuration
         builder.Host.UseSerilog((context, configuration) =>

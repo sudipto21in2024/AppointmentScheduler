@@ -4,7 +4,7 @@ using Shared.Contracts;
 using System.Threading.Tasks;
 using BCrypt.Net;
 using System;
-using UserService.Models;
+using Shared.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace UserService.Services
@@ -21,10 +21,10 @@ namespace UserService.Services
 
     public class UserService : IUserService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly Shared.Data.ApplicationDbContext _context;
         private readonly ILogger<UserService> _logger;
 
-        public UserService(ApplicationDbContext context, ILogger<UserService> logger)
+        public UserService(Shared.Data.ApplicationDbContext context, ILogger<UserService> logger)
         {
             _context = context;
             _logger = logger;

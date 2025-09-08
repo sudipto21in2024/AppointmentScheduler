@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using UserService.Services;
 using Shared.Contracts;
 using Shared.Models;
-using UserService.Models;
+using Shared.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
