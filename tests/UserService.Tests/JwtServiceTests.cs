@@ -1,15 +1,22 @@
 using Xunit;
 using UserService.Processors;
+using Microsoft.Extensions.Configuration;
+using Moq;
 
 namespace UserService.Tests
 {
     public class JwtServiceTests
     {
         private readonly JwtService _jwtService;
+        private readonly Mock<IConfiguration> _configurationMock;
 
         public JwtServiceTests()
         {
-            _jwtService = new JwtService("MySuperSecretKey");
+            _configurationMock = new Mock<IConfiguration>();
+            _configurationMock.Setup(c => c["Jwt:SecretKey"]).Returns("MySuperSecretKeyThatIsLongEnoughForHS256Algorithm");
+            _configurationMock.Setup(c => c["Jwt:Issuer"]).Returns("Issuer");
+            _configurationMock.Setup(c => c["Jwt:Audience"]).Returns("Audience");
+            _jwtService = new JwtService(_configurationMock.Object);
         }
 
         [Fact]

@@ -4,7 +4,6 @@ namespace Shared.Models
     {
         Customer,
         Provider,
-        Admin,
-        Guest
+        Admin
     }
 }

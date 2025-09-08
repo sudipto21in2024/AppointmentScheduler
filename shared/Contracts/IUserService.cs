@@ -1,0 +1,15 @@
+using Shared.Models;
+using System.Threading.Tasks;
+
+namespace Shared.Contracts
+{
+    public interface IUserService
+    {
+        Task<User?> GetUserByUsername(string email);
+        Task<bool> UpdatePassword(User user, string newPassword);
+        Task<User?> GetUserById(Guid id);
+        Task<User> CreateUser(User user);
+        Task<User?> UpdateUser(User user);
+        Task<bool> DeleteUser(Guid id);
+    }
+}

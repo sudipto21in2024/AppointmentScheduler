@@ -2,20 +2,22 @@ using Microsoft.Extensions.DependencyInjection;
 using MediatR;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Prometheus;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Resources;
-using Shared.Contracts;
+// using Shared.Contracts;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Metrics;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Serilog.Formatting.Compact;
 using Serilog.Events;
+using Microsoft.Extensions.Configuration;
+using UserService.Services;
 
 namespace UserService;
 
@@ -60,21 +62,11 @@ public class Program
         });
 
         // Register dependencies with proper service lifetimes
-        builder.Services.AddScoped<Processors.JwtService>(sp => 
-            new Processors.JwtService("MySuperSecretKey"));
+        builder.Services.AddScoped<Processors.JwtService>(sp =>
+            new Processors.JwtService(sp.GetRequiredService<IConfiguration>()));
         builder.Services.AddScoped<Processors.TokenService>();
-        builder.Services.AddScoped<Processors.AuthorizationService>();
-        
-        // Note: IAuthenticationService needs to be registered separately
-        // builder.Services.AddScoped<IAuthenticationService, YourAuthenticationImplementation>();
-        
-        builder.Services.AddScoped<Services.AuthService>(sp => 
-            new Services.AuthService(
-                sp.GetRequiredService<IAuthenticationService>(), 
-                sp.GetRequiredService<Processors.JwtService>(), 
-                sp.GetRequiredService<Processors.TokenService>(), 
-                sp.GetRequiredService<Processors.AuthorizationService>(), 
-                sp.GetRequiredService<ILogger<Services.AuthService>>()));
+        builder.Services.AddScoped<IUserService, UserService.Services.UserService>();
+        builder.Services.AddScoped<Shared.Contracts.IAuthenticationService, UserService.Services.AuthenticationService>();
 
         // Serilog configuration
         builder.Host.UseSerilog((context, configuration) =>
@@ -94,7 +86,7 @@ public class Program
                 });
             configuration.ReadFrom.Configuration(context.Configuration);
         });
-
+    
     
             // OpenTelemetry Tracing (updated API)
             builder.Services.AddOpenTelemetry()
@@ -120,7 +112,7 @@ public class Program
         // Authentication and Authorization middleware should be in correct order
         app.UseMiddleware<Middleware.AuthenticationMiddleware>();
         app.UseAuthorization();
-        app.UseMiddleware<Middleware.AuthorizationMiddleware>();
+        //app.UseMiddleware<Middleware.AuthorizationMiddleware>();
 
         app.MapControllers();
         app.MapHealthChecks("/healthz");
