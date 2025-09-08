@@ -4,7 +4,8 @@ using Shared.Contracts;
 using System.Threading.Tasks;
 using BCrypt.Net;
 using System;
-
+using UserService.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace UserService.Services
 {
@@ -18,87 +19,71 @@ namespace UserService.Services
         Task<bool> DeleteUser(Guid id);
     }
 
-
     public class UserService : IUserService
     {
-        //private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
         private readonly ILogger<UserService> _logger;
 
-        public UserService(ILogger<UserService> logger)
+        public UserService(ApplicationDbContext context, ILogger<UserService> logger)
         {
-            //_context = context;
+            _context = context;
             _logger = logger;
         }
+        
         public async Task<User?> GetUserByUsername(string email)
         {
-            //return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
-            //TODO: Implement this method
-            var user = new User {
-                Id = Guid.NewGuid(),
-                Email = email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"),
-                FirstName = "Test",
-                LastName = "User",
-                UserType = UserRole.Customer,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-            return user;
+            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<bool> UpdatePassword(User user, string newPassword)
         {
-            //user.Password = newPassword;
-            //_context.Users.Update(user);
-            //await _context.SaveChangesAsync();
-            //TODO: Implement this method
+            // Handle null user case
+            if (user == null)
+                return false;
+            
+            // Handle null/new empty password case
+            if (string.IsNullOrEmpty(newPassword))
+                return false;
+                
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
             return true;
         }
 
         public async Task<User?> GetUserById(Guid id)
         {
-            // Implementation would fetch user from DB by ID
-            // For now returning a dummy user
-            return new User
-            {
-                Id = id,
-                Email = "test@example.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"),
-                FirstName = "Test",
-                LastName = "User",
-                UserType = UserRole.Customer,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            return await _context.Users.FindAsync(id);
         }
 
         public async Task<User> CreateUser(User user)
         {
-            // Implementation would save user to DB
-            // For now just setting IDs and timestamps
             user.Id = Guid.NewGuid();
-            user.CreatedAt = DateTime.UtcNow;
-            user.UpdatedAt = DateTime.UtcNow;
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
             return user;
         }
 
         public async Task<User?> UpdateUser(User user)
         {
-            // Implementation would update user in DB
-            // For now just updating timestamp
-            user.UpdatedAt = DateTime.UtcNow;
+            if (user == null)
+                return null;
+                
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
             return user;
         }
 
         public async Task<bool> DeleteUser(Guid id)
         {
-            // Implementation would soft-delete user from DB
-            // For now just returning true
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return false;
+                
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
             return true;
         }
     }
-
 
 }

@@ -4,6 +4,9 @@ using Microsoft.Extensions.Logging;
 using UserService.Services;
 using Shared.Contracts;
 using Shared.Models;
+using UserService.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace UserService.Tests
 {
@@ -14,59 +17,25 @@ namespace UserService.Tests
 
         public UserServiceTests()
         {
+            // Create a simple in-memory database context for testing
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: "TestDatabase")
+                .Options;
+            var dbContext = new ApplicationDbContext(options);
             _loggerMock = new Mock<ILogger<UserService.Services.UserService>>();
-            _userService = new UserService.Services.UserService(_loggerMock.Object);
-        }
-
-        [Fact]
-        public async Task GetUserByUsername_ValidEmail_ReturnsUser()
-        {
-            // Arrange
-            string email = "test@test.com";
-            var expectedUser = new User { Email = email };
-            // Remove the problematic logging setup
-
-            // Act
-            var user = await _userService.GetUserByUsername(email);
-
-            // Assert
-            Assert.NotNull(user);
-            Assert.Equal(email, user.Email);
-        }
-
-        [Fact]
-        public async Task GetUserByUsername_NullEmail_ReturnsUser()
-        {
-            // Arrange
-            string email = null!;
-
-            // Act
-            var user = await _userService.GetUserByUsername(email);
-
-            // Assert
-            Assert.NotNull(user);
-            Assert.Equal(email, user.Email);
-        }
-
-        [Fact]
-        public async Task GetUserByUsername_EmptyEmail_ReturnsUser()
-        {
-            // Arrange
-            string email = "";
-
-            // Act
-            var user = await _userService.GetUserByUsername(email);
-
-            // Assert
-            Assert.NotNull(user);
-            Assert.Equal(email, user.Email);
+            _userService = new UserService.Services.UserService(dbContext, _loggerMock.Object);
         }
 
         [Fact]
         public async Task UpdatePassword_ValidUserAndPassword_ReturnsTrue()
         {
             // Arrange
-            var user = new User { Email = "test@test.com" };
+            var user = new User {
+                Email = "test@test.com",
+                PasswordHash = "oldhash",
+                FirstName = "Test",
+                LastName = "User"
+            };
             string newPassword = "newpassword";
 
             // Act
@@ -77,7 +46,7 @@ namespace UserService.Tests
         }
 
         [Fact]
-        public async Task UpdatePassword_NullUser_ReturnsTrue()
+        public async Task UpdatePassword_NullUser_ReturnsFalse()
         {
             // Arrange
             User user = null!;
@@ -87,35 +56,45 @@ namespace UserService.Tests
             var result = await _userService.UpdatePassword(user, newPassword);
 
             // Assert
-            Assert.True(result);
+            Assert.False(result);
         }
 
         [Fact]
-        public async Task UpdatePassword_NullNewPassword_ReturnsTrue()
+        public async Task UpdatePassword_NullNewPassword_ReturnsFalse()
         {
             // Arrange
-            var user = new User { Email = "test@test.com" };
+            var user = new User {
+                Email = "test@test.com",
+                PasswordHash = "oldhash",
+                FirstName = "Test",
+                LastName = "User"
+            };
             string newPassword = null!;
 
             // Act
             var result = await _userService.UpdatePassword(user, newPassword);
 
             // Assert
-            Assert.True(result);
+            Assert.False(result);
         }
 
         [Fact]
-        public async Task UpdatePassword_EmptyNewPassword_ReturnsTrue()
+        public async Task UpdatePassword_EmptyNewPassword_ReturnsFalse()
         {
             // Arrange
-            var user = new User { Email = "test@test.com" };
+            var user = new User {
+                Email = "test@test.com",
+                PasswordHash = "oldhash",
+                FirstName = "Test",
+                LastName = "User"
+            };
             string newPassword = "";
 
             // Act
             var result = await _userService.UpdatePassword(user, newPassword);
 
             // Assert
-            Assert.True(result);
+            Assert.False(result);
         }
     }
 }

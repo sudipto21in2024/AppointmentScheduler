@@ -4,6 +4,9 @@ using Shared.Models;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
+using BCrypt.Net;
+using System;
+using UserService.DTO;
 
 
 namespace UserService.Controllers
@@ -13,18 +16,20 @@ namespace UserService.Controllers
     public class AuthController : ControllerBase
     {
         private readonly Shared.Contracts.IAuthenticationService _authenticationService;
+        private readonly UserService.Services.IUserService _userService;
         private readonly ILogger<AuthController> _logger;
 
-        public AuthController(Shared.Contracts.IAuthenticationService authenticationService, ILogger<AuthController> logger)
+        public AuthController(Shared.Contracts.IAuthenticationService authenticationService, UserService.Services.IUserService userService, ILogger<AuthController> logger)
         {
             _authenticationService = authenticationService;
+            _userService = userService;
             _logger = logger;
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            (User? user, string? message) = await _authenticationService.Authenticate(request.Username, request.Password);
+            (Shared.Models.User? user, string? message) = await _authenticationService.Authenticate(request.Username, request.Password);
             if (user is null)
             {
                 _logger.LogWarning($"Login failed for user {request.Username}: {message}");
@@ -38,18 +43,24 @@ namespace UserService.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            // For now we'll simulate user creation with basic validation
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password) ||
                 string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))
             {
                 return BadRequest("Email, password, first name, and last name are required.");
             }
 
-            _logger.LogInformation($"Registration requested for user {request.Email} with role {request.UserType}");
-            // In a real implementation, this would create a new user in the database
-            var user = new User
+            // Check if user already exists
+            var existingUser = await _userService.GetUserByUsername(request.Email);
+            if (existingUser != null)
             {
-                Id = Guid.NewGuid(),
+                return BadRequest("User with this email already exists.");
+            }
+
+            _logger.LogInformation($"Registration requested for user {request.Email} with role {request.UserType}");
+            
+            // Create new user
+            var user = new Shared.Models.User
+            {
                 Email = request.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                 FirstName = request.FirstName,
@@ -59,31 +70,87 @@ namespace UserService.Controllers
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                TenantId = request.TenantId ?? Guid.Empty // Default to empty guid for demo purposes
+                TenantId = request.TenantId ?? Guid.NewGuid() // Generate a new tenant ID if not provided
             };
-            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, new UserResponse { User = user });
+            
+            // Save user to database
+            var createdUser = await _userService.CreateUser(user);
+            
+            return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, new UserResponse { User = createdUser });
         }
 
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
         {
-            // In a real implementation, this would invalidate the token
-            _logger.LogInformation("Logout requested");
-            return Ok(new { message = "Logged out successfully" });
+            if (string.IsNullOrWhiteSpace(request.Token))
+            {
+                return BadRequest("Token is required.");
+            }
+            
+            var result = await _authenticationService.InvalidateRefreshToken(request.Token);
+            if (result)
+            {
+                _logger.LogInformation("User logged out successfully");
+                return Ok(new { message = "Logged out successfully" });
+            }
+            
+            _logger.LogWarning("Failed to logout user");
+            return BadRequest("Failed to logout");
         }
 
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
         {
-            // In a real implementation, this would validate and refresh the token
-            _logger.LogInformation("Token refresh requested");
-            return Ok(new RefreshResponse { AccessToken = "new_access_token", RefreshToken = "new_refresh_token" });
+            if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            {
+                return BadRequest("Refresh token is required.");
+            }
+            
+            // Validate the refresh token
+            var isValid = await _authenticationService.ValidateRefreshToken(request.RefreshToken);
+            if (!isValid)
+            {
+                return BadRequest("Invalid refresh token.");
+            }
+            
+            // Get user from refresh token
+            var user = await _authenticationService.GetUserFromRefreshToken(request.RefreshToken);
+            if (user == null)
+            {
+                return BadRequest("Unable to retrieve user from refresh token.");
+            }
+            
+            // Generate new access token
+            var newAccessToken = await _authenticationService.GenerateToken(user);
+            
+            // Generate new refresh token
+            var newRefreshToken = await _authenticationService.GenerateRefreshToken(user);
+            
+            // Invalidate the old refresh token
+            await _authenticationService.InvalidateRefreshToken(request.RefreshToken);
+            
+            _logger.LogInformation($"Token refreshed for user {user.Email}");
+            return Ok(new RefreshResponse { AccessToken = newAccessToken, RefreshToken = newRefreshToken });
         }
 
         [HttpPost("request-password-reset")]
         public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequest request)
         {
-            // In a real implementation, this would send a password reset email
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                return BadRequest("Email is required.");
+            }
+            
+            // Check if user exists
+            var user = await _userService.GetUserByUsername(request.Email);
+            if (user == null)
+            {
+                // We don't want to reveal if the email exists or not for security reasons
+                return Ok(new { message = "Password reset instructions sent if email exists" });
+            }
+            
+            // In a real implementation, this would send a password reset email with a token
+            // For now, we'll just log that a reset was requested
             _logger.LogInformation($"Password reset requested for email: {request.Email}");
             return Ok(new { message = "Password reset instructions sent if email exists" });
         }
@@ -91,98 +158,43 @@ namespace UserService.Controllers
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
-            // In a real implementation, this would validate the reset token and update the password
-            _logger.LogInformation($"Password reset requested for email: {request.Email}");
-            return Ok(new { message = "Password reset successfully" });
+            if (string.IsNullOrWhiteSpace(request.Email) ||
+                string.IsNullOrWhiteSpace(request.Token) ||
+                string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                return BadRequest("Email, token, and new password are required.");
+            }
+            
+            // Check if user exists
+            var user = await _userService.GetUserByUsername(request.Email);
+            if (user == null)
+            {
+                return BadRequest("Invalid request.");
+            }
+            
+            // In a real implementation, this would validate the reset token
+            // For now, we'll just update the password directly
+            var result = await _authenticationService.ChangePassword(user, request.NewPassword);
+            if (result)
+            {
+                _logger.LogInformation($"Password reset successfully for email: {request.Email}");
+                return Ok(new { message = "Password reset successfully" });
+            }
+            
+            _logger.LogWarning($"Failed to reset password for email: {request.Email}");
+            return BadRequest("Failed to reset password");
         }
 
         [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUser(Guid id)
         {
-            // In a real implementation, this would fetch a user from the database
-            var user = new User
+            var user = await _userService.GetUserById(id);
+            if (user == null)
             {
-                Id = id,
-                Email = "test@example.com",
-                PasswordHash = "hashed_password",
-                FirstName = "Test",
-                LastName = "User",
-                PhoneNumber = "123-456-7890",
-                UserType = UserRole.Customer,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                TenantId = Guid.NewGuid()
-            };
+                return NotFound($"User with ID {id} not found.");
+            }
+            
             return Ok(new UserResponse { User = user });
         }
-    }
-
-    // Request DTOs for the API endpoints
-    public class LoginRequest
-    {
-        [Required]
-        public string Username { get; set; } = null!;
-        [Required]
-        public string Password { get; set; } = null!;
-    }
-
-    public class LoginResponse
-    {
-        public string AccessToken { get; set; } = null!;
-        public User User { get; set; } = null!;
-    }
-
-    public class RegisterRequest
-    {
-        [Required]
-        public string Email { get; set; } = null!;
-        [Required]
-        public string Password { get; set; } = null!;
-        [Required]
-        public string FirstName { get; set; } = null!;
-        [Required]
-        public string LastName { get; set; } = null!;
-        public string? PhoneNumber { get; set; }
-        [Required]
-        public UserRole UserType { get; set; }
-        public Guid? TenantId { get; set; }
-    }
-
-    public class LogoutRequest
-    {
-        public string Token { get; set; } = null!;
-    }
-
-    public class RefreshRequest
-    {
-        public string RefreshToken { get; set; } = null!;
-    }
-
-    public class RefreshResponse
-    {
-        public string AccessToken { get; set; } = null!;
-        public string RefreshToken { get; set; } = null!;
-    }
-
-    public class PasswordResetRequest
-    {
-        [Required]
-        public string Email { get; set; } = null!;
-    }
-
-    public class ResetPasswordRequest
-    {
-        [Required]
-        public string Email { get; set; } = null!;
-        [Required]
-        public string Token { get; set; } = null!;
-        [Required]
-        public string NewPassword { get; set; } = null!;
-    }
-
-    public class UserResponse
-    {
-        public User User { get; set; } = null!;
     }
 }
