@@ -91,23 +91,28 @@ public class Program
         });
     
     
-            // OpenTelemetry Tracing (updated API)
-            builder.Services.AddOpenTelemetry()
-                .ConfigureResource(resource => resource.AddService("UserService"))
-                .WithTracing(tracingBuilder =>
-                {
-                    tracingBuilder
-                        .AddAspNetCoreInstrumentation()
-                        .AddHttpClientInstrumentation()
-                        .AddJaegerExporter(); // Replace Jaeger with Console or use OTLP exporter
-                        // For Jaeger, use: .AddJaegerExporter() and configure via environment variables or appsettings
-                });
+        // OpenTelemetry Tracing (updated API)
+        builder.Services.AddOpenTelemetry()
+            .ConfigureResource(resource => resource.AddService("UserService"))
+            .WithTracing(tracingBuilder =>
+            {
+                tracingBuilder
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddEntityFrameworkCoreInstrumentation()
+                    .AddSource("MassTransit") // MassTransit ActivitySource
+                    .AddJaegerExporter();
+            })
+            .WithMetrics(metricsBuilder =>
+            {
+                metricsBuilder
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddMeter("MassTransit") // MassTransit Meter
+                    .AddPrometheusExporter();
+            });
     
             var app = builder.Build();
-
-        // Prometheus metrics
-        app.UseMetricServer();
-        app.UseHttpMetrics();
 
         // Configure the HTTP request pipeline.
         app.UseRouting();
@@ -116,6 +121,9 @@ public class Program
         app.UseMiddleware<Middleware.AuthenticationMiddleware>();
         app.UseAuthorization();
         //app.UseMiddleware<Middleware.AuthorizationMiddleware>();
+
+        // Prometheus metrics endpoint
+        app.UseOpenTelemetryPrometheusScrapingEndpoint();
 
         app.MapControllers();
         app.MapHealthChecks("/healthz");

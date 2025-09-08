@@ -5,11 +5,15 @@ using BCrypt.Net;
 using Shared.Contracts;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
+using System;
+using System.Diagnostics;
+using UserService.Utils;
 
 namespace UserService.Services
 {
     public class AuthenticationService : Shared.Contracts.IAuthenticationService
     {
+        private static readonly ActivitySource ActivitySource = new ActivitySource("UserService.AuthenticationService");
         private readonly IJwtService _jwtService;
         private readonly ITokenService _tokenService;
         private readonly IUserService _userService;
@@ -27,57 +31,188 @@ namespace UserService.Services
 
         public async Task<(User?, string?)> Authenticate(string username, string password)
         {
-            var user = await _userService.GetUserByUsername(username);
-            if (user == null)
+            using var activity = ActivitySource.StartActivity("AuthenticationService.Authenticate");
+            activity?.SetTag("user.username", username);
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
             {
-                _logger.LogInformation($"Authentication failed for username: {username}. User not found.");
-                return (null, "Invalid username or password.");
-            }
+                var user = await _userService.GetUserByUsername(username);
+                if (user == null)
+                {
+                    _logger.LogInformation($"Authentication failed for username: {username}. User not found.");
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return (null, "Invalid username or password.");
+                }
 
-            if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+                if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+                {
+                    _logger.LogInformation($"Authentication failed for username: {username}. Invalid password.");
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return (null, "Invalid username or password.");
+                }
+                
+                activity?.SetTag("user.id", user.Id.ToString());
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return (user, null);
+            }
+            catch (Exception ex)
             {
-                _logger.LogInformation($"Authentication failed for username: {username}. Invalid password.");
-                return (null, "Invalid username or password.");
+                _logger.LogError(ex, "Error during authentication for user {Username}", username);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
             }
-
-            return (user, null);
         }
 
         public async Task<string> GenerateToken(User user)
         {
-            return _jwtService.GenerateToken(user.Id.ToString());
+            using var activity = ActivitySource.StartActivity("AuthenticationService.GenerateToken");
+            activity?.SetTag("user.id", user?.Id.ToString());
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                var token = _jwtService.GenerateToken(user.Id.ToString());
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return token;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating token for user {UserId}", user?.Id);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         public async Task<string> GenerateRefreshToken(User user)
         {
-            return _tokenService.GenerateRefreshToken(user);
+            using var activity = ActivitySource.StartActivity("AuthenticationService.GenerateRefreshToken");
+            activity?.SetTag("user.id", user?.Id.ToString());
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                var token = _tokenService.GenerateRefreshToken(user);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return token;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating refresh token for user {UserId}", user?.Id);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         public async Task<bool> ValidateRefreshToken(string refreshToken)
         {
-            return _tokenService.ValidateRefreshToken(refreshToken);
+            using var activity = ActivitySource.StartActivity("AuthenticationService.ValidateRefreshToken");
+            activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(refreshToken));
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                var result = _tokenService.ValidateRefreshToken(refreshToken);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error validating refresh token");
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         public async Task<User?> GetUserFromRefreshToken(string refreshToken)
         {
-            return await _tokenService.GetUserFromRefreshToken(refreshToken);
+            using var activity = ActivitySource.StartActivity("AuthenticationService.GetUserFromRefreshToken");
+            activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(refreshToken));
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                var user = await _tokenService.GetUserFromRefreshToken(refreshToken);
+                activity?.SetTag("user.id", user?.Id.ToString());
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving user from refresh token");
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         public async Task<bool> InvalidateRefreshToken(string refreshToken)
         {
-            return await _tokenService.InvalidateRefreshToken(refreshToken);
+            using var activity = ActivitySource.StartActivity("AuthenticationService.InvalidateRefreshToken");
+            activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(refreshToken));
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                var result = await _tokenService.InvalidateRefreshToken(refreshToken);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error invalidating refresh token");
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         public async Task<bool> ChangePassword(User user, string newPassword)
         {
-            // Implement password security requirements here
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword);
-            return await _userService.UpdatePassword(user, hashedPassword);
+            using var activity = ActivitySource.StartActivity("AuthenticationService.ChangePassword");
+            activity?.SetTag("user.id", user?.Id.ToString());
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                // Implement password security requirements here
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                var result = await _userService.UpdatePassword(user, hashedPassword);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error changing password for user {UserId}", user?.Id);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         public async Task<bool> ValidateJwtToken(string token)
         {
-            return _jwtService.ValidateToken(token);
+            using var activity = ActivitySource.StartActivity("AuthenticationService.ValidateJwtToken");
+            activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(token));
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                var result = _jwtService.ValidateToken(token);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error validating JWT token");
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
     }
 }

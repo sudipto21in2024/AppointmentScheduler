@@ -9,6 +9,8 @@ using BCrypt.Net;
 using System;
 using UserService.DTO;
 using MassTransit;
+using System.Diagnostics;
+using UserService.Utils;
 
 
 namespace UserService.Controllers
@@ -20,6 +22,7 @@ namespace UserService.Controllers
         private readonly Shared.Contracts.IAuthenticationService _authenticationService;
         private readonly UserService.Services.IUserService _userService;
         private readonly ILogger<AuthController> _logger;
+        private static readonly ActivitySource ActivitySource = new ActivitySource("UserService.AuthController");
         private readonly IPublishEndpoint _publishEndpoint;
 
         public AuthController(Shared.Contracts.IAuthenticationService authenticationService, UserService.Services.IUserService userService, ILogger<AuthController> logger, IPublishEndpoint publishEndpoint)
@@ -33,188 +36,321 @@ namespace UserService.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            (Shared.Models.User? user, string? message) = await _authenticationService.Authenticate(request.Username, request.Password);
-            if (user is null)
+            using var activity = ActivitySource.StartActivity("AuthController.Login");
+            activity?.SetTag("user.email", request.Username);
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
             {
-                _logger.LogWarning($"Login failed for user {request.Username}: {message}");
-                return BadRequest(message);
+                (Shared.Models.User? user, string? message) = await _authenticationService.Authenticate(request.Username, request.Password);
+                if (user is null)
+                {
+                    _logger.LogWarning($"Login failed for user {request.Username}: {message}");
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return BadRequest(message);
+                }
+                
+                _logger.LogInformation($"User {request.Username} logged in successfully.");
+                activity?.SetTag("user.id", user.Id.ToString());
+                
+                var token = await _authenticationService.GenerateToken(user);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                
+                return Ok(new LoginResponse { AccessToken = token, User = user });
             }
-            _logger.LogInformation($"User {request.Username} logged in successfully.");
-            var token = await _authenticationService.GenerateToken(user);
-            return Ok(new LoginResponse { AccessToken = token, User = user });
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during login for user {Username}", request.Username);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password) ||
-                string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))
+            using var activity = ActivitySource.StartActivity("AuthController.Register");
+            activity?.SetTag("user.email", request.Email);
+            activity?.SetTag("user.type", request.UserType.ToString());
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
             {
-                return BadRequest("Email, password, first name, and last name are required.");
-            }
+                if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password) ||
+                    string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return BadRequest("Email, password, first name, and last name are required.");
+                }
 
-            // Check if user already exists
-            var existingUser = await _userService.GetUserByUsername(request.Email);
-            if (existingUser != null)
-            {
-                return BadRequest("User with this email already exists.");
-            }
+                // Check if user already exists
+                var existingUser = await _userService.GetUserByUsername(request.Email);
+                if (existingUser != null)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return BadRequest("User with this email already exists.");
+                }
 
-            _logger.LogInformation($"Registration requested for user {request.Email} with role {request.UserType}");
+                _logger.LogInformation($"Registration requested for user {request.Email} with role {request.UserType}");
             
-            // Create new user
-            var user = new Shared.Models.User
+                // Create new user
+                var user = new Shared.Models.User
+                {
+                    Email = request.Email,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    PhoneNumber = request.PhoneNumber,
+                    UserType = request.UserType,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    TenantId = request.TenantId ?? Guid.NewGuid() // Generate a new tenant ID if not provided
+                };
+            
+                // Save user to database
+                var createdUser = await _userService.CreateUser(user);
+                activity?.SetTag("user.id", createdUser.Id.ToString());
+            
+                // Publish UserRegisteredEvent
+                var userRegisteredEvent = new UserRegisteredEvent
+                {
+                    UserId = createdUser.Id,
+                    Email = createdUser.Email,
+                    FirstName = createdUser.FirstName,
+                    LastName = createdUser.LastName,
+                    UserType = createdUser.UserType.ToString(),
+                    TenantId = createdUser.TenantId,
+                    RegisteredAt = DateTime.UtcNow
+                };
+            
+                await _publishEndpoint.Publish(userRegisteredEvent);
+            
+                _logger.LogInformation($"User {createdUser.Email} registered successfully and UserRegisteredEvent published.");
+                activity?.SetStatus(ActivityStatusCode.Ok);
+            
+                return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, new UserResponse { User = createdUser });
+            }
+            catch (Exception ex)
             {
-                Email = request.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                PhoneNumber = request.PhoneNumber,
-                UserType = request.UserType,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                TenantId = request.TenantId ?? Guid.NewGuid() // Generate a new tenant ID if not provided
-            };
-            
-            // Save user to database
-            var createdUser = await _userService.CreateUser(user);
-            
-            // Publish UserRegisteredEvent
-            var userRegisteredEvent = new UserRegisteredEvent
-            {
-                UserId = createdUser.Id,
-                Email = createdUser.Email,
-                FirstName = createdUser.FirstName,
-                LastName = createdUser.LastName,
-                UserType = createdUser.UserType.ToString(),
-                TenantId = createdUser.TenantId,
-                RegisteredAt = DateTime.UtcNow
-            };
-            
-            await _publishEndpoint.Publish(userRegisteredEvent);
-            
-            _logger.LogInformation($"User {createdUser.Email} registered successfully and UserRegisteredEvent published.");
-            
-            return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, new UserResponse { User = createdUser });
+                _logger.LogError(ex, "Error during registration for user {Email}", request.Email);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Token))
-            {
-                return BadRequest("Token is required.");
-            }
+            using var activity = ActivitySource.StartActivity("AuthController.Logout");
+            activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(request.Token));
             
-            var result = await _authenticationService.InvalidateRefreshToken(request.Token);
-            if (result)
-            {
-                _logger.LogInformation("User logged out successfully");
-                return Ok(new { message = "Logged out successfully" });
-            }
+            LoggingExtensions.AddTraceIdToLogContext();
             
-            _logger.LogWarning("Failed to logout user");
-            return BadRequest("Failed to logout");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Token))
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return BadRequest("Token is required.");
+                }
+            
+                var result = await _authenticationService.InvalidateRefreshToken(request.Token);
+                if (result)
+                {
+                    _logger.LogInformation("User logged out successfully");
+                    activity?.SetStatus(ActivityStatusCode.Ok);
+                    return Ok(new { message = "Logged out successfully" });
+                }
+            
+                _logger.LogWarning("Failed to logout user");
+                activity?.SetStatus(ActivityStatusCode.Error);
+                return BadRequest("Failed to logout");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during logout");
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            using var activity = ActivitySource.StartActivity("AuthController.Refresh");
+            activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(request.RefreshToken));
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
             {
-                return BadRequest("Refresh token is required.");
-            }
+                if (string.IsNullOrWhiteSpace(request.RefreshToken))
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return BadRequest("Refresh token is required.");
+                }
             
-            // Validate the refresh token
-            var isValid = await _authenticationService.ValidateRefreshToken(request.RefreshToken);
-            if (!isValid)
+                // Validate the refresh token
+                var isValid = await _authenticationService.ValidateRefreshToken(request.RefreshToken);
+                if (!isValid)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return BadRequest("Invalid refresh token.");
+                }
+            
+                // Get user from refresh token
+                var user = await _authenticationService.GetUserFromRefreshToken(request.RefreshToken);
+                if (user == null)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return BadRequest("Unable to retrieve user from refresh token.");
+                }
+                
+                activity?.SetTag("user.id", user.Id.ToString());
+                activity?.SetTag("user.email", user.Email);
+            
+                // Generate new access token
+                var newAccessToken = await _authenticationService.GenerateToken(user);
+            
+                // Generate new refresh token
+                var newRefreshToken = await _authenticationService.GenerateRefreshToken(user);
+            
+                // Invalidate the old refresh token
+                await _authenticationService.InvalidateRefreshToken(request.RefreshToken);
+            
+                _logger.LogInformation($"Token refreshed for user {user.Email}");
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return Ok(new RefreshResponse { AccessToken = newAccessToken, RefreshToken = newRefreshToken });
+            }
+            catch (Exception ex)
             {
-                return BadRequest("Invalid refresh token.");
+                _logger.LogError(ex, "Error during token refresh");
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
             }
-            
-            // Get user from refresh token
-            var user = await _authenticationService.GetUserFromRefreshToken(request.RefreshToken);
-            if (user == null)
-            {
-                return BadRequest("Unable to retrieve user from refresh token.");
-            }
-            
-            // Generate new access token
-            var newAccessToken = await _authenticationService.GenerateToken(user);
-            
-            // Generate new refresh token
-            var newRefreshToken = await _authenticationService.GenerateRefreshToken(user);
-            
-            // Invalidate the old refresh token
-            await _authenticationService.InvalidateRefreshToken(request.RefreshToken);
-            
-            _logger.LogInformation($"Token refreshed for user {user.Email}");
-            return Ok(new RefreshResponse { AccessToken = newAccessToken, RefreshToken = newRefreshToken });
         }
 
         [HttpPost("request-password-reset")]
         public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Email))
-            {
-                return BadRequest("Email is required.");
-            }
+            using var activity = ActivitySource.StartActivity("AuthController.RequestPasswordReset");
+            activity?.SetTag("email.present", !string.IsNullOrWhiteSpace(request.Email));
             
-            // Check if user exists
-            var user = await _userService.GetUserByUsername(request.Email);
-            if (user == null)
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
             {
-                // We don't want to reveal if the email exists or not for security reasons
+                if (string.IsNullOrWhiteSpace(request.Email))
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return BadRequest("Email is required.");
+                }
+            
+                // Check if user exists
+                var user = await _userService.GetUserByUsername(request.Email);
+                if (user == null)
+                {
+                    // We don't want to reveal if the email exists or not for security reasons
+                    activity?.SetStatus(ActivityStatusCode.Ok); // Not an error from a security perspective
+                    return Ok(new { message = "Password reset instructions sent if email exists" });
+                }
+                
+                activity?.SetTag("user.id", user.Id.ToString());
+            
+                // In a real implementation, this would send a password reset email with a token
+                // For now, we'll just log that a reset was requested
+                _logger.LogInformation($"Password reset requested for email: {request.Email}");
+                activity?.SetStatus(ActivityStatusCode.Ok);
                 return Ok(new { message = "Password reset instructions sent if email exists" });
             }
-            
-            // In a real implementation, this would send a password reset email with a token
-            // For now, we'll just log that a reset was requested
-            _logger.LogInformation($"Password reset requested for email: {request.Email}");
-            return Ok(new { message = "Password reset instructions sent if email exists" });
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during password reset request for email {Email}", request.Email);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Email) ||
-                string.IsNullOrWhiteSpace(request.Token) ||
-                string.IsNullOrWhiteSpace(request.NewPassword))
-            {
-                return BadRequest("Email, token, and new password are required.");
-            }
+            using var activity = ActivitySource.StartActivity("AuthController.ResetPassword");
+            activity?.SetTag("email.present", !string.IsNullOrWhiteSpace(request.Email));
+            activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(request.Token));
             
-            // Check if user exists
-            var user = await _userService.GetUserByUsername(request.Email);
-            if (user == null)
-            {
-                return BadRequest("Invalid request.");
-            }
+            LoggingExtensions.AddTraceIdToLogContext();
             
-            // In a real implementation, this would validate the reset token
-            // For now, we'll just update the password directly
-            var result = await _authenticationService.ChangePassword(user, request.NewPassword);
-            if (result)
+            try
             {
-                _logger.LogInformation($"Password reset successfully for email: {request.Email}");
-                return Ok(new { message = "Password reset successfully" });
-            }
+                if (string.IsNullOrWhiteSpace(request.Email) ||
+                    string.IsNullOrWhiteSpace(request.Token) ||
+                    string.IsNullOrWhiteSpace(request.NewPassword))
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return BadRequest("Email, token, and new password are required.");
+                }
             
-            _logger.LogWarning($"Failed to reset password for email: {request.Email}");
-            return BadRequest("Failed to reset password");
+                // Check if user exists
+                var user = await _userService.GetUserByUsername(request.Email);
+                if (user == null)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return BadRequest("Invalid request.");
+                }
+                
+                activity?.SetTag("user.id", user.Id.ToString());
+            
+                // In a real implementation, this would validate the reset token
+                // For now, we'll just update the password directly
+                var result = await _authenticationService.ChangePassword(user, request.NewPassword);
+                if (result)
+                {
+                    _logger.LogInformation($"Password reset successfully for email: {request.Email}");
+                    activity?.SetStatus(ActivityStatusCode.Ok);
+                    return Ok(new { message = "Password reset successfully" });
+                }
+            
+                _logger.LogWarning($"Failed to reset password for email: {request.Email}");
+                activity?.SetStatus(ActivityStatusCode.Error);
+                return BadRequest("Failed to reset password");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during password reset for email {Email}", request.Email);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUser(Guid id)
         {
-            var user = await _userService.GetUserById(id);
-            if (user == null)
-            {
-                return NotFound($"User with ID {id} not found.");
-            }
+            using var activity = ActivitySource.StartActivity("AuthController.GetUser");
+            activity?.SetTag("user.id", id.ToString());
             
-            return Ok(new UserResponse { User = user });
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                var user = await _userService.GetUserById(id);
+                if (user == null)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return NotFound($"User with ID {id} not found.");
+                }
+            
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return Ok(new UserResponse { User = user });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving user with ID {UserId}", id);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
     }
 }

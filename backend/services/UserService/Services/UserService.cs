@@ -6,6 +6,8 @@ using BCrypt.Net;
 using System;
 using Shared.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
+using UserService.Utils;
 
 namespace UserService.Services
 {
@@ -21,6 +23,7 @@ namespace UserService.Services
 
     public class UserService : IUserService
     {
+        private static readonly ActivitySource ActivitySource = new ActivitySource("UserService.UserService");
         private readonly Shared.Data.ApplicationDbContext _context;
         private readonly ILogger<UserService> _logger;
 
@@ -32,58 +35,162 @@ namespace UserService.Services
         
         public async Task<User?> GetUserByUsername(string email)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            using var activity = ActivitySource.StartActivity("UserService.GetUserByUsername");
+            activity?.SetTag("user.email", email);
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving user by email {Email}", email);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         public async Task<bool> UpdatePassword(User user, string newPassword)
         {
-            // Handle null user case
-            if (user == null)
-                return false;
+            using var activity = ActivitySource.StartActivity("UserService.UpdatePassword");
+            activity?.SetTag("user.id", user?.Id.ToString());
             
-            // Handle null/new empty password case
-            if (string.IsNullOrEmpty(newPassword))
-                return false;
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                // Handle null user case
+                if (user == null)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return false;
+                }
                 
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
-            _context.Users.Update(user);
-            await _context.SaveChangesAsync();
-            return true;
+                // Handle null/new empty password case
+                if (string.IsNullOrEmpty(newPassword))
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return false;
+                }
+                    
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating password for user {UserId}", user?.Id);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         public async Task<User?> GetUserById(Guid id)
         {
-            return await _context.Users.FindAsync(id);
+            using var activity = ActivitySource.StartActivity("UserService.GetUserById");
+            activity?.SetTag("user.id", id.ToString());
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                var user = await _context.Users.FindAsync(id);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving user by ID {UserId}", id);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         public async Task<User> CreateUser(User user)
         {
-            user.Id = Guid.NewGuid();
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return user;
+            using var activity = ActivitySource.StartActivity("UserService.CreateUser");
+            activity?.SetTag("user.email", user.Email);
+            activity?.SetTag("user.id", user.Id.ToString());
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                user.Id = Guid.NewGuid();
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating user {Email}", user.Email);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         public async Task<User?> UpdateUser(User user)
         {
-            if (user == null)
-                return null;
-                
-            _context.Users.Update(user);
-            await _context.SaveChangesAsync();
-            return user;
+            using var activity = ActivitySource.StartActivity("UserService.UpdateUser");
+            activity?.SetTag("user.id", user?.Id.ToString());
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                if (user == null)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return null;
+                }
+                    
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating user {UserId}", user?.Id);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
 
         public async Task<bool> DeleteUser(Guid id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-                return false;
-                
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-            return true;
+            using var activity = ActivitySource.StartActivity("UserService.DeleteUser");
+            activity?.SetTag("user.id", id.ToString());
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                var user = await _context.Users.FindAsync(id);
+                if (user == null)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return false;
+                }
+                    
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting user {UserId}", id);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
         }
     }
-
 }

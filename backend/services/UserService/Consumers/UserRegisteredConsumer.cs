@@ -1,6 +1,9 @@
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Shared.Events;
+using System;
+using System.Diagnostics;
+using UserService.Utils;
 
 namespace UserService.Consumers
 {
@@ -10,6 +13,7 @@ namespace UserService.Consumers
     /// </summary>
     public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
     {
+        private static readonly ActivitySource ActivitySource = new ActivitySource("UserService.UserRegisteredConsumer");
         private readonly ILogger<UserRegisteredConsumer> _logger;
 
         public UserRegisteredConsumer(ILogger<UserRegisteredConsumer> logger)
@@ -19,8 +23,14 @@ namespace UserService.Consumers
 
         public async Task Consume(ConsumeContext<UserRegisteredEvent> context)
         {
+            using var activity = ActivitySource.StartActivity("UserRegisteredConsumer.Consume");
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
             var userEvent = context.Message;
-
+            activity?.SetTag("user.id", userEvent.UserId.ToString());
+            activity?.SetTag("user.email", userEvent.Email);
+            
             try
             {
                 _logger.LogInformation("Processing UserRegisteredEvent for user {UserId}, Email: {Email}", 
@@ -36,12 +46,14 @@ namespace UserService.Consumers
 
                 _logger.LogInformation("Completed processing UserRegisteredEvent for user {UserId}", 
                     userEvent.UserId);
+                activity?.SetStatus(ActivityStatusCode.Ok);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing UserRegisteredEvent for user {UserId}", 
                     userEvent.UserId);
                 
+                activity?.SetStatus(ActivityStatusCode.Error);
                 // Depending on requirements, we might want to:
                 // 1. Retry the operation
                 // 2. Send to a dead letter queue

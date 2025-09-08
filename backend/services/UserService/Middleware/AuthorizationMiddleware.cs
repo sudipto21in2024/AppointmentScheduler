@@ -1,11 +1,15 @@
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using Shared.Contracts;
+using System;
+using System.Diagnostics;
+using UserService.Utils;
 
 namespace UserService.Middleware;
 
 public class AuthorizationMiddleware
 {
+    private static readonly ActivitySource ActivitySource = new ActivitySource("UserService.AuthorizationMiddleware");
     private readonly RequestDelegate _next;
     private readonly Shared.Contracts.IAuthenticationService _authenticationService;
 
@@ -17,28 +21,44 @@ public class AuthorizationMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Check if the request has an authorization header
-        if (!context.Request.Headers.ContainsKey("Authorization"))
+        using var activity = ActivitySource.StartActivity("AuthorizationMiddleware.InvokeAsync");
+        
+        LoggingExtensions.AddTraceIdToLogContext();
+        
+        try
         {
-            context.Response.StatusCode = 401;
-            return;
+            // Check if the request has an authorization header
+            if (!context.Request.Headers.ContainsKey("Authorization"))
+            {
+                context.Response.StatusCode = 401;
+                activity?.SetStatus(ActivityStatusCode.Error);
+                return;
+            }
+
+            string? token = context.Request.Headers["Authorization"];
+            
+            if (string.IsNullOrEmpty(token))
+            {
+                context.Response.StatusCode = 401;
+                activity?.SetStatus(ActivityStatusCode.Error);
+                return;
+            }
+
+            // Validate the token
+            if (!await _authenticationService.ValidateJwtToken(token))
+            {
+                context.Response.StatusCode = 401;
+                activity?.SetStatus(ActivityStatusCode.Error);
+                return;
+            }
+
+            await _next(context);
+            activity?.SetStatus(ActivityStatusCode.Ok);
         }
-
-        string? token = context.Request.Headers["Authorization"];
-		
-		if (string.IsNullOrEmpty(token))
-		{
-			context.Response.StatusCode = 401;
-			return;
-		}
-
-		      // Validate the token
-		      if (!await _authenticationService.ValidateJwtToken(token))
-		      {
-		          context.Response.StatusCode = 401;
-		          return;
-		      }
-
-        await _next(context);
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error);
+            throw;
+        }
     }
 }
