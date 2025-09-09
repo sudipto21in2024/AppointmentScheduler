@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment - Appointment Booking System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Booking Form Section -->
+            <div class="flex-1">
+                <h1 class="text-2xl font-bold text-gray-900 mb-6">Book Appointment</h1>
+                
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">Select Service and Time</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="service" class="block text-sm font-medium text-gray-700">Service</label>
+                            <select id="service" name="service" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Choose a service</option>
+                                <option value="haircut" selected>Haircut - $25 (30 min)</option>
+                                <option value="beard-trim">Beard Trim - $15 (15 min)</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="date" class="block text-sm font-medium text-gray-700">Date</label>
+                            <input 
+                                type="date" 
+                                id="date" 
+                                name="date" 
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                min="2025-09-08"
+                                value="2025-09-12"
+                            >
+                        </div>
+                        
+                        <div>
+                            <label for="time" class="block text-sm font-medium text-gray-700">Time</label>
+                            <select id="time" name="time" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select a time</option>
+                                <option value="09:00">9:00 AM</option>
+                                <option value="09:30">9:30 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <option value="10:30">10:30 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                                <option value="11:30">11:30 AM</option>
+                                <option value="12:00">12:00 PM</option>
+                                <option value="12:30">12:30 PM</option>
+                                <option value="13:00">1:00 PM</option>
+                                <option value="13:30">1:30 PM</option>
+                                <option value="14:00" selected>2:00 PM</option>
+                                <option value="14:30">2:30 PM</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="notes" class="block text-sm font-medium text-gray-700">Special Requests</label>
+                            <textarea 
+                                id="notes" 
+                                name="notes" 
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Any specific requests or notes?"
+                                rows="3"
+                            ></textarea>
+                        </div>
+                    </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">Your Information</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="firstName" class="block text-sm font-medium text-gray-700">First Name</label>
+                            <input 
+                                type="text" 
+                                id="firstName" 
+                                name="firstName" 
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="John" 
+                                required
+                                value="John"
+                            >
+                        </div>
+                        <div>
+                            <label for="lastName" class="block text-sm font-medium text-gray-700">Last Name</label>
+                            <input 
+                                type="text" 
+                                id="lastName" 
+                                name="lastName" 
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Doe" 
+                                required
+                                value="Doe"
+                            >
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="you@example.com" 
+                                required
+                                value="john.doe@example.com"
+                            >
+                        </div>
+                        
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
+                            <input 
+                                type="tel" 
+                                id="phone" 
+                                name="phone" 
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="(123) 456-7890" 
+                                required
+                                value="(555) 123-4567"
+                            >
+                        </div>
+                    </div>
+                </div>
+            
+            <!-- Booking Summary Section -->
+            <div class="flex-1">
+                <div class="bg-white rounded-lg shadow-md p-6 sticky top-8">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Booking Summary</h3>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="text-lg font-semibold text-gray-900">Haircut</div>
+                        <div class="text-gray-600">Sep 12, 2025 at 2:0 PM</div>
+                        <div class="text-gray-600">John's Barber Shop</div>
+                    </div>
+                    
+                    <div class="space-y-2 mb-4">
+                        <div class="flex justify-between">
+                            <div class="text-gray-600">Service Fee</div>
+                            <div class="text-gray-900">$25.00</div>
+                        </div>
+                        <div class="flex justify-between">
+                            <div class="text-gray-600">Booking Fee</div>
+                            <div class="text-gray-900">$2.50</div>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-gray-200 pt-4 mb-6">
+                        <div class="flex justify-between">
+                            <div class="text-lg font-semibold text-gray-900">Total</div>
+                            <div class="text-lg font-semibold text-gray-900">$27.50</div>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Confirm Booking
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

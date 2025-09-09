@@ -1,0 +1,70 @@
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2563EB", "secondaryColor": "#1D4ED8", "lineColor": "#6B7280"}}}%%
+graph TD
+    %% Main Layout
+    A[Container: maxWidth="800px", padding="24px"] --> B[Flex: direction="column", gap="24px"]
+    
+    %% Header Section
+    B --> C[Heading: level=1, text="Create Service"]
+    
+    %% Form Wizard
+    B --> D[FormWizard: steps=["Basic Info", "Pricing", "Availability", "Review"], currentStep=1]
+    
+    %% Step 1: Basic Information
+    D --> E[FormStep: title="Basic Information"]
+    E --> F[FormSection:]
+    F --> G[FormField: text, name="serviceName", label="Service Name", placeholder="e.g., Haircut", required=true]
+    F --> H[FormField: textarea, name="description", label="Description", placeholder="Describe your service...", rows=4]
+    F --> I[FormField: select, name="category", label="Category", options=["Hair", "Beard", "Spa", "Nails"], placeholder="Select a category"]
+    F --> J[FormField: image, name="serviceImage", label="Service Image", accept="image/*"]
+    
+    %% Step 2: Pricing
+    D --> K[FormStep: title="Pricing"]
+    K --> L[FormSection:]
+    L --> M[FormField: number, name="duration", label="Duration (minutes)", min=15, step=15, value=30]
+    L --> N[FormField: currency, name="price", label="Price", currency="USD", value=25]
+    L --> O[FormField: checkbox, name="variablePricing", label="Variable pricing based on client"]
+    
+    %% Step 3: Availability
+    D --> P[FormStep: title="Availability"]
+    P --> Q[FormSection:]
+    Q --> R[FormField: checkbox, name="availableOnline", label="Available for online booking", checked=true]
+    Q --> S[FormField: range, name="bookingWindow", label="Booking window", min=0, max=30, value=[0, 7], tooltips=true]
+    Q --> T[FormField: checkbox, name="simultaneousBooking", label="Can be booked simultaneously with other services"]
+    
+    %% Step 4: Review
+    D --> U[FormStep: title="Review"]
+    U --> V[Stack: spacing="16px"]
+    V --> W[Heading: level=3, text="Service Preview"]
+    V --> X[ServiceCard: title="[Service Name]", description="[Description]", duration="[Duration]", price="[Price]"]
+    V --> Y[Flex: direction="row", justify="space-between"]
+    Y --> Z[Button: variant="secondary", text="Back"]
+    Y --> AA[Button: variant="primary", text="Publish Service"]
+    
+    %% Styling
+    style A fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style B fill:#FFFFFF,stroke:none
+    style C fill:#FFFFFF,stroke:none,color:#111827
+    style D fill:#FFFFFF,stroke:none
+    style E fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style F fill:#FFFFFF,stroke:none
+    style G fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style H fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style I fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style J fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style K fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style L fill:#FFFFFF,stroke:none
+    style M fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style N fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style O fill:#FFFFFF,stroke:none
+    style P fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style Q fill:#FFFFFF,stroke:none
+    style R fill:#FFFFFF,stroke:none
+    style S fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style T fill:#FFFFFF,stroke:none
+    style U fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style V fill:#FFFFFF,stroke:none
+    style W fill:#FFFFFF,stroke:none,color:#111827
+    style X fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style Y fill:#FFFFFF,stroke:none
+    style Z fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px,color:#111827
+    style AA fill:#2563EB,stroke:#2563EB,stroke-width:1px,color:#FFFFFF

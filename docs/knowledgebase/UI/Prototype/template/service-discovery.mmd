@@ -1,0 +1,42 @@
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2563EB", "secondaryColor": "#1D4ED8", "lineColor": "#6B7280"}}}%%
+graph TD
+    %% Main Layout
+    A[Container: maxWidth="1200px", padding="24px"] --> B[Flex: direction="column", gap="24px"]
+    
+    %% Header Section
+    B --> C[Flex: direction="row", justify="space-between", align="center"]
+    C --> D[Heading: level=1, text="Find Services"]
+    C --> E[Button: variant="primary", text="Book Appointment"]
+    
+    %% Search and Filter Section
+    B --> F[Flex: direction="row", gap="16px", responsive=true]
+    F --> G[SearchBox: placeholder="Search services...", flex=1]
+    F --> H[FilterBar: filters=["Category", "Price Range", "Rating", "Availability"]]
+    F --> I[Button: variant="secondary", icon="sort", text="Sort"]
+    
+    %% Service Listings
+    B --> J[Grid: columns={desktop: 3, tablet: 2, mobile: 1}, gap="24px"]
+    J --> K[ServiceCard: title="Haircut", description="Professional haircut with styling", duration="30 min", price="$25", rating=4.8, image="/images/haircut.jpg"]
+    J --> L[ServiceCard: title="Beard Trim", description="Precision beard trimming and styling", duration="15 min", price="$15", rating=4.9, image="/images/beard-trim.jpg"]
+    J --> M[ServiceCard: title="Hair Coloring", description="Full hair coloring service", duration="2 hours", price="$80", rating=4.7, image="/images/hair-coloring.jpg"]
+    J --> N[ServiceCard: title="Manicure", description="Complete nail care service", duration="45 min", price="$30", rating=4.9, image="/images/manicure.jpg"]
+    
+    %% Pagination
+    B --> O[Pagination: total=48, current=1, pageSize=12]
+    
+    %% Styling
+    style A fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style B fill:#FFFFFF,stroke:none
+    style C fill:#FFFFFF,stroke:none
+    style D fill:#FFFFFF,stroke:none,color:#11827
+    style E fill:#2563EB,stroke:#2563EB,stroke-width:1px,color:#FFFFFF
+    style F fill:#FFFFFF,stroke:none
+    style G fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style H fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style I fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style J fill:#FFFFFF,stroke:none
+    style K fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style L fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style M fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style N fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style O fill:#FFFFFF,stroke:none

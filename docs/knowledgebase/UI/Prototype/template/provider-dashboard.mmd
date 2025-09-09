@@ -1,0 +1,42 @@
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2563EB", "secondaryColor": "#1D4ED8", "lineColor": "#6B7280"}}}%%
+graph TD
+    %% Main Layout
+    A[Container: maxWidth="1200px", padding="24px"] --> B[Flex: direction="column", gap="24px"]
+    
+    %% Header Section
+    B --> C[Flex: direction="row", justify="space-between", align="center"]
+    C --> D[Heading: level=1, text="Provider Dashboard"]
+    C --> E[Button: variant="primary", text="Add Service"]
+    
+    %% Stats Section
+    B --> F[Grid: columns={desktop: 4, tablet: 2, mobile: 1}, gap="16px"]
+    F --> G[StatCard: label="Total Bookings", value=124, trend="up", icon="booking"]
+    F --> H[StatCard: label="Revenue", value="$12,40", trend="up", icon="revenue"]
+    F --> I[StatCard: label="Upcoming", value=8, trend="none", icon="calendar"]
+    F --> J[StatCard: label="Reviews", value=4.8, trend="up", icon="review"]
+    
+    %% Controls Section
+    B --> K[Flex: direction="row", justify="space-between", align="center"]
+    K --> L[FilterBar: filters=["This Week", "This Month", "Custom Range"]]
+    K --> M[SearchBox: placeholder="Search services..."]
+    
+    %% Services Section
+    B --> N[Tabs: items=["All Services", "Active", "Draft"], activeTab="All Services"]
+    N --> O[Table: columns=["Service", "Duration", "Price", "Bookings", "Status", "Actions"]]
+    
+    %% Styling
+    style A fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style B fill:#FFFFFF,stroke:none
+    style C fill:#FFFFFF,stroke:none
+    style D fill:#FFFFFF,stroke:none,color:#111827
+    style E fill:#2563EB,stroke:#2563EB,stroke-width:1px,color:#FFFFFF
+    style F fill:#FFFFFF,stroke:none
+    style G fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style H fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style I fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style J fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style K fill:#FFFFFF,stroke:none
+    style L fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style M fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
+    style N fill:#FFFFFF,stroke:none
+    style O fill:#FFFFFF,stroke:#D1D5DB,stroke-width:1px
