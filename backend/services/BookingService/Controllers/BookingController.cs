@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Shared.Events;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
 
 namespace BookingService.Controllers
 {

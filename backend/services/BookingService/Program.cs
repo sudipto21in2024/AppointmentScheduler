@@ -3,6 +3,9 @@ using Microsoft.Extensions.Hosting;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Shared.Data;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using BookingService.Extensions;
 
 namespace BookingService
 {
@@ -41,6 +44,9 @@ namespace BookingService
             // Register the shared ApplicationDbContext
             builder.Services.AddDbContext<Shared.Data.ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            // Register booking services
+            builder.Services.AddBookingServices();
 
             var app = builder.Build();
 
