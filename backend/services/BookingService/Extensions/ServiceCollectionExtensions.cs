@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using BookingService.Services;
+using Shared.Data;
+using Microsoft.Extensions.Logging;
 
 namespace BookingService.Extensions
 {
@@ -15,10 +17,8 @@ namespace BookingService.Extensions
         /// <returns>The service collection</returns>
         public static IServiceCollection AddBookingServices(this IServiceCollection services)
         {
-            // Register the booking service interface
-            // Note: The implementation will be registered in a separate extension method
-            // or when the concrete implementation is created
-            // services.AddScoped<IBookingService, BookingService>();
+            // Register the booking service implementation
+            services.AddScoped<IBookingService, BookingServiceImpl>();
             
             return services;
         }
