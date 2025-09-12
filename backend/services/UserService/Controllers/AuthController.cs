@@ -11,6 +11,7 @@ using UserService.DTO;
 using MassTransit;
 using System.Diagnostics;
 using UserService.Utils;
+using FluentValidation;
 
 
 namespace UserService.Controllers
@@ -24,13 +25,26 @@ namespace UserService.Controllers
         private readonly ILogger<AuthController> _logger;
         private static readonly ActivitySource ActivitySource = new ActivitySource("UserService.AuthController");
         private readonly IPublishEndpoint _publishEndpoint;
+        private readonly IValidator<LoginRequest> _loginRequestValidator;
+        private readonly IValidator<RegisterRequest> _registerRequestValidator;
+        private readonly IValidator<RefreshRequest> _refreshRequestValidator;
+        private readonly IValidator<PasswordResetRequest> _passwordResetRequestValidator;
+        private readonly IValidator<ResetPasswordRequest> _resetPasswordRequestValidator;
 
-        public AuthController(Shared.Contracts.IAuthenticationService authenticationService, UserService.Services.IUserService userService, ILogger<AuthController> logger, IPublishEndpoint publishEndpoint)
+        public AuthController(Shared.Contracts.IAuthenticationService authenticationService, UserService.Services.IUserService userService, ILogger<AuthController> logger, IPublishEndpoint publishEndpoint,
+            IValidator<LoginRequest> loginRequestValidator, IValidator<RegisterRequest> registerRequestValidator,
+            IValidator<RefreshRequest> refreshRequestValidator, IValidator<PasswordResetRequest> passwordResetRequestValidator,
+            IValidator<ResetPasswordRequest> resetPasswordRequestValidator)
         {
             _authenticationService = authenticationService;
             _userService = userService;
             _logger = logger;
             _publishEndpoint = publishEndpoint;
+            _loginRequestValidator = loginRequestValidator;
+            _registerRequestValidator = registerRequestValidator;
+            _refreshRequestValidator = refreshRequestValidator;
+            _passwordResetRequestValidator = passwordResetRequestValidator;
+            _resetPasswordRequestValidator = resetPasswordRequestValidator;
         }
 
         [HttpPost("login")]
@@ -38,11 +52,19 @@ namespace UserService.Controllers
         {
             using var activity = ActivitySource.StartActivity("AuthController.Login");
             activity?.SetTag("user.email", request.Username);
-            
+             
             LoggingExtensions.AddTraceIdToLogContext();
-            
+             
             try
             {
+                // Validate the request
+                var validationResult = await _loginRequestValidator.ValidateAsync(request);
+                if (!validationResult.IsValid)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return BadRequest(validationResult.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }));
+                }
+
                 (Shared.Models.User? user, string? message) = await _authenticationService.Authenticate(request.Username, request.Password);
                 if (user is null)
                 {
@@ -73,16 +95,17 @@ namespace UserService.Controllers
             using var activity = ActivitySource.StartActivity("AuthController.Register");
             activity?.SetTag("user.email", request.Email);
             activity?.SetTag("user.type", request.UserType.ToString());
-            
+             
             LoggingExtensions.AddTraceIdToLogContext();
-            
+             
             try
             {
-                if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password) ||
-                    string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))
+                // Validate the request
+                var validationResult = await _registerRequestValidator.ValidateAsync(request);
+                if (!validationResult.IsValid)
                 {
                     activity?.SetStatus(ActivityStatusCode.Error);
-                    return BadRequest("Email, password, first name, and last name are required.");
+                    return BadRequest(validationResult.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }));
                 }
 
                 // Check if user already exists
@@ -146,11 +169,12 @@ namespace UserService.Controllers
         {
             using var activity = ActivitySource.StartActivity("AuthController.Logout");
             activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(request.Token));
-            
+             
             LoggingExtensions.AddTraceIdToLogContext();
-            
+             
             try
             {
+                // Basic validation for logout request
                 if (string.IsNullOrWhiteSpace(request.Token))
                 {
                     activity?.SetStatus(ActivityStatusCode.Error);
@@ -182,15 +206,17 @@ namespace UserService.Controllers
         {
             using var activity = ActivitySource.StartActivity("AuthController.Refresh");
             activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(request.RefreshToken));
-            
+             
             LoggingExtensions.AddTraceIdToLogContext();
-            
+             
             try
             {
-                if (string.IsNullOrWhiteSpace(request.RefreshToken))
+                // Validate the request
+                var validationResult = await _refreshRequestValidator.ValidateAsync(request);
+                if (!validationResult.IsValid)
                 {
                     activity?.SetStatus(ActivityStatusCode.Error);
-                    return BadRequest("Refresh token is required.");
+                    return BadRequest(validationResult.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }));
                 }
             
                 // Validate the refresh token
@@ -238,15 +264,17 @@ namespace UserService.Controllers
         {
             using var activity = ActivitySource.StartActivity("AuthController.RequestPasswordReset");
             activity?.SetTag("email.present", !string.IsNullOrWhiteSpace(request.Email));
-            
+             
             LoggingExtensions.AddTraceIdToLogContext();
-            
+             
             try
             {
-                if (string.IsNullOrWhiteSpace(request.Email))
+                // Validate the request
+                var validationResult = await _passwordResetRequestValidator.ValidateAsync(request);
+                if (!validationResult.IsValid)
                 {
                     activity?.SetStatus(ActivityStatusCode.Error);
-                    return BadRequest("Email is required.");
+                    return BadRequest(validationResult.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }));
                 }
             
                 // Check if user exists
@@ -280,17 +308,17 @@ namespace UserService.Controllers
             using var activity = ActivitySource.StartActivity("AuthController.ResetPassword");
             activity?.SetTag("email.present", !string.IsNullOrWhiteSpace(request.Email));
             activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(request.Token));
-            
+             
             LoggingExtensions.AddTraceIdToLogContext();
-            
+             
             try
             {
-                if (string.IsNullOrWhiteSpace(request.Email) ||
-                    string.IsNullOrWhiteSpace(request.Token) ||
-                    string.IsNullOrWhiteSpace(request.NewPassword))
+                // Validate the request
+                var validationResult = await _resetPasswordRequestValidator.ValidateAsync(request);
+                if (!validationResult.IsValid)
                 {
                     activity?.SetStatus(ActivityStatusCode.Error);
-                    return BadRequest("Email, token, and new password are required.");
+                    return BadRequest(validationResult.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }));
                 }
             
                 // Check if user exists

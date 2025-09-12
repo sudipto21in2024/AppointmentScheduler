@@ -4,9 +4,12 @@ using Shared.Contracts;
 using Shared.Models;
 using UserService.Controllers;
 using UserService.DTO;
+using UserService.Validators;
 using Xunit;
 using System.Collections.Generic;
 using System.Reflection;
+using FluentValidation;
+using MassTransit;
 
 namespace UserService.Tests
 {
@@ -15,6 +18,12 @@ namespace UserService.Tests
         private readonly Mock<IAuthenticationService> _authenticationServiceMock;
         private readonly Mock<UserService.Services.IUserService> _userServiceMock;
         private readonly Mock<ILogger<AuthController>> _loggerMock;
+        private readonly Mock<IPublishEndpoint> _publishEndpointMock;
+        private readonly Mock<IValidator<LoginRequest>> _loginRequestValidatorMock;
+        private readonly Mock<IValidator<RegisterRequest>> _registerRequestValidatorMock;
+        private readonly Mock<IValidator<RefreshRequest>> _refreshRequestValidatorMock;
+        private readonly Mock<IValidator<PasswordResetRequest>> _passwordResetRequestValidatorMock;
+        private readonly Mock<IValidator<ResetPasswordRequest>> _resetPasswordRequestValidatorMock;
         private readonly AuthController _authController;
 
         public AuthControllerTests()
@@ -22,7 +31,35 @@ namespace UserService.Tests
             _authenticationServiceMock = new Mock<IAuthenticationService>();
             _userServiceMock = new Mock<UserService.Services.IUserService>();
             _loggerMock = new Mock<ILogger<AuthController>>();
-            _authController = new AuthController(_authenticationServiceMock.Object, _userServiceMock.Object, _loggerMock.Object);
+            _publishEndpointMock = new Mock<IPublishEndpoint>();
+            _loginRequestValidatorMock = new Mock<IValidator<LoginRequest>>();
+            _registerRequestValidatorMock = new Mock<IValidator<RegisterRequest>>();
+            _refreshRequestValidatorMock = new Mock<IValidator<RefreshRequest>>();
+            _passwordResetRequestValidatorMock = new Mock<IValidator<PasswordResetRequest>>();
+            _resetPasswordRequestValidatorMock = new Mock<IValidator<ResetPasswordRequest>>();
+            
+            // Setup default validation results to be valid
+            _loginRequestValidatorMock.Setup(x => x.ValidateAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+            _registerRequestValidatorMock.Setup(x => x.ValidateAsync(It.IsAny<RegisterRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+            _refreshRequestValidatorMock.Setup(x => x.ValidateAsync(It.IsAny<RefreshRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+            _passwordResetRequestValidatorMock.Setup(x => x.ValidateAsync(It.IsAny<PasswordResetRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+            _resetPasswordRequestValidatorMock.Setup(x => x.ValidateAsync(It.IsAny<ResetPasswordRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+            
+            _authController = new AuthController(
+                _authenticationServiceMock.Object,
+                _userServiceMock.Object,
+                _loggerMock.Object,
+                _publishEndpointMock.Object,
+                _loginRequestValidatorMock.Object,
+                _registerRequestValidatorMock.Object,
+                _refreshRequestValidatorMock.Object,
+                _passwordResetRequestValidatorMock.Object,
+                _resetPasswordRequestValidatorMock.Object);
         }
 
         [Fact]

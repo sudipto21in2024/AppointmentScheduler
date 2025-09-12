@@ -20,6 +20,8 @@ using Microsoft.Extensions.Configuration;
 using UserService.Services;
 using Microsoft.EntityFrameworkCore;
 using Shared.Data;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 namespace UserService;
 
@@ -31,6 +33,9 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddControllers();
+        builder.Services.AddFluentValidationAutoValidation();
+        builder.Services.AddFluentValidationClientsideAdapters();
+        builder.Services.AddValidatorsFromAssemblyContaining<Validators.LoginRequestValidator>();
         builder.Services.AddEndpointsApiExplorer();
 
         // Health checks
