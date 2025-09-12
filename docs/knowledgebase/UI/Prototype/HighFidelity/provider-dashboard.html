@@ -4,248 +4,444 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Provider Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
+        /* Custom styles based on the themeVariables and component properties */
+        :root {
+            --primary-color: #2563EB;
+            --secondary-color: #1D4ED8;
+            --line-color: #6B7280;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Global Layout */
+        .app-root {
+            background-color: #F3F4F6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .global-nav-wrapper {
+            background-color: #FFFFFF;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+        }
+        .navbar .brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        .navbar .nav-items {
+            display: flex;
+            gap: 20px;
+        }
+        .navbar .nav-item {
+            color: #374151;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .navbar .nav-item:hover {
+            color: var(--primary-color);
+        }
+
+        .main-content-wrapper {
+            display: flex;
+            flex-grow: 1;
+        }
+
+        .sidebar-nav {
+            width: 200px;
+            background-color: #FFFFFF;
+            border-right: 1px solid #E5E7EB;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .sidebar-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            color: #374151;
+            text-decoration: none;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .sidebar-nav-item:hover {
+            background-color: #F3F4F6;
+            color: var(--primary-color);
+        }
+        .sidebar-nav-item.active {
+            background-color: var(--primary-color);
+            color: #FFFFFF;
+        }
+        .sidebar-nav-item.active .material-icons {
+            color: #FFFFFF;
+        }
+
+        .primary-content-area {
+            flex-grow: 1;
+            padding: 24px;
+            background-color: #FFFFFF;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 24px; /* Adjust margin as needed */
+        }
+
+        .global-footer {
+            background-color: #F3F4F6;
+            padding: 24px;
+            text-align: center;
+            color: #6B7280;
+            font-size: 12px;
+            border-top: 1px solid #E5E7EB;
+        }
+
+        /* Component specific styles */
+        .container-component {
+            max-width: 1200px;
+            background-color: #FFFFFF;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin: 0 auto; /* Center the container within its parent */
+        }
+
+        .button-primary {
+            background-color: var(--primary-color);
+            color: #FFFFFF;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .button-primary:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .stat-card {
+            background-color: #FFFFFF;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .stat-card-label {
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+        .stat-card-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111827;
+        }
+        .stat-card-trend {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+            gap: 4px;
+        }
+        .stat-card-trend.up {
+            color: #10B981; /* Green */
+        }
+        .stat-card-trend.down {
+            color: #EF4444; /* Red */
+        }
+        .stat-card-trend.none {
+            color: #6B7280;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+        }
+        .filter-bar button {
+            padding: 8px 16px;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            background-color: #FFFFFF;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .filter-bar button:hover {
+            background-color: #F3F4F6;
+        }
+        .filter-bar button.active {
+            background-color: var(--primary-color);
+            color: #FFFFFF;
+            border-color: var(--primary-color);
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .tabs-container {
+            display: flex;
+            border-bottom: 1px solid #E5E7EB;
+            margin-bottom: 16px;
+        }
+        .tabs-container button {
+            padding: 10px 16px;
+            font-weight: 500;
+            color: #6B7280;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .tabs-container button.active {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .table-container {
+            width: 100%;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .table-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-container th, .table-container td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        .table-container th {
+            background-color: #F9FAFB;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+        .table-container tbody tr:last-child td {
+            border-bottom: none;
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen py-8 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-7xl mx-auto">
-        <!-- Header Section -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">Provider Dashboard</h1>
-                <p class="mt-2 text-gray-600">Manage your services and bookings</p>
-            </div>
-            <div class="mt-4 md:mt-0">
-                <button class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                    </svg>
-                    Add Service
-                </button>
-            </div>
-        </div>
-        
-        <!-- Stats Section -->
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-            <!-- Total Bookings Card -->
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
-                            <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Total Bookings</dt>
-                                <dd class="flex items-baseline">
-                                    <div class="text-2xl font-semibold text-gray-900">124</div>
-                                </dd>
-                            </dl>
-                        </div>
-                    </div>
+<body>
+    <div class="app-root">
+        <!-- Global Navigation (Header) -->
+        <header class="global-nav-wrapper">
+            <nav class="navbar">
+                <a href="#" class="brand">AppointmentScheduler</a>
+                <div class="nav-items">
+                    <a href="#" class="nav-item">Dashboard</a>
+                    <a href="#" class="nav-item">Services</a>
+                    <a href="#" class="nav-item">Bookings</a>
+                    <a href="#" class="nav-item">Profile</a>
                 </div>
-                <div class="bg-gray-50 px-5 py-3">
-                    <div class="text-sm">
-                        <span class="text-green-600 font-medium">12% increase</span>
-                        <span class="text-gray-600">from last month</span>
-                    </div>
+            </nav>
+        </header>
+
+        <!-- Main Content Wrapper -->
+        <div class="main-content-wrapper">
+            <!-- Sidebar -->
+            <aside class="sidebar-nav">
+                <div class="brand-section">
+                    <!-- <img src="/path/to/logo.png" alt="Logo" class="h-8 mb-4"> -->
+                    <h3 class="text-lg font-semibold text-gray-800">Admin Panel</h3>
                 </div>
-            </div>
-            
-            <!-- Revenue Card -->
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
-                            <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.1 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Revenue</dt>
-                                <dd class="flex items-baseline">
-                                    <div class="text-2xl font-semibold text-gray-900">$12,400</div>
-                                </dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-gray-50 px-5 py-3">
-                    <div class="text-sm">
-                        <span class="text-green-600 font-medium">8% increase</span>
-                        <span class="text-gray-600">from last month</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Upcoming Card -->
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-yellow-100 rounded-md p-3">
-                            <svg class="h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Upcoming</dt>
-                                <dd class="flex items-baseline">
-                                    <div class="text-2xl font-semibold text-gray-900">8</div>
-                                </dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-gray-50 px-5 py-3">
-                    <div class="text-sm">
-                        <span class="text-gray-600">No change from last month</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Reviews Card -->
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-purple-100 rounded-md p-3">
-                            <svg class="h-6 w-6 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.18l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                            </svg>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Reviews</dt>
-                                <dd class="flex items-baseline">
-                                    <div class="text-2xl font-semibold text-gray-900">4.8</div>
-                                </dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-gray-50 px-5 py-3">
-                    <div class="text-sm">
-                        <span class="text-green-600 font-medium">0.2 increase</span>
-                        <span class="text-gray-60">from last month</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Controls Section -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <div class="flex-1 min-w-0">
-                <div class="relative rounded-md shadow-sm">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 0 110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <input type="text" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-12 py-2 sm:text-sm border-gray-300 rounded-md" placeholder="Search services...">
-                </div>
-            <div class="mt-4 md:mt-0 md:ml-4">
-                <select class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                    <option>This Week</option>
-                    <option>This Month</option>
-                    <option>Custom Range</option>
-                </select>
-            </div>
-        </div>
-        
-        <!-- Services Section -->
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-            <div class="border-b border-gray-200">
-                <nav class="flex -mb-px">
-                    <button class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm">
-                        All Services
-                    </button>
-                    <button class="border-blue-500 text-blue-600 whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm">
-                        Active
-                    </button>
-                    <button class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm">
-                        Draft
-                    </button>
+                <nav>
+                    <a href="#" class="sidebar-nav-item active">
+                        <span class="material-icons">dashboard</span>
+                        Dashboard
+                    </a>
+                    <a href="#" class="sidebar-nav-item">
+                        <span class="material-icons">calendar_today</span>
+                        Appointments
+                    </a>
+                    <a href="#" class="sidebar-nav-item">
+                        <span class="material-icons">cut</span>
+                        Services
+                    </a>
+                    <a href="#" class="sidebar-nav-item">
+                        <span class="material-icons">people</span>
+                        Clients
+                    </a>
+                    <a href="#" class="sidebar-nav-item">
+                        <span class="material-icons">settings</span>
+                        Settings
+                    </a>
                 </nav>
-            </div>
-            
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bookings</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Haircut</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">30 min</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$25</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">24</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    Active
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex space-x-3">
-                                    <a href="#" class="text-blue-600 hover:text-blue-900">Edit</a>
-                                    <a href="#" class="text-red-600 hover:text-red-900">Deactivate</a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Beard Trim</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">15 min</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$15</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">18</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    Active
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex space-x-3">
-                                    <a href="#" class="text-blue-600 hover:text-blue-900">Edit</a>
-                                    <a href="#" class="text-red-600 hover:text-red-900">Deactivate</a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Hair Coloring</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2 hours</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$80</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">6</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                    Draft
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex space-x-3">
-                                    <a href="#" class="text-blue-600 hover:text-blue-900">Edit</a>
-                                    <a href="#" class="text-green-600 hover:text-green-900">Publish</a>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                <div class="mt-auto">
+                    <a href="#" class="sidebar-nav-item">
+                        <span class="material-icons">help_outline</span>
+                        Help & Support
+                    </a>
+                    <a href="#" class="sidebar-nav-item">
+                        <span class="material-icons">logout</span>
+                        Logout
+                    </a>
+                </div>
+            </aside>
+
+            <!-- Primary Content Area -->
+            <main class="primary-content-area">
+                <div class="flex flex-col gap-6">
+                    <!-- Page Header -->
+                    <div class="flex justify-between items-center">
+                        <h1 class="text-3xl font-bold text-gray-900">Provider Dashboard</h1>
+                        <button class="button-primary">
+                            <span class="material-icons text-lg">add</span>
+                            Add Service
+                        </button>
+                    </div>
+
+                    <!-- Key Performance Indicators (Metrics Dashboard) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="stat-card">
+                            <span class="material-icons text-2xl text-blue-500">book_online</span>
+                            <span class="stat-card-label">Total Bookings</span>
+                            <span class="stat-card-value">124</span>
+                            <div class="stat-card-trend up">
+                                <span class="material-icons text-base">arrow_upward</span>
+                                <span>+15% from last month</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="material-icons text-2xl text-green-500">attach_money</span>
+                            <span class="stat-card-label">Revenue</span>
+                            <span class="stat-card-value">$12,400</span>
+                            <div class="stat-card-trend up">
+                                <span class="material-icons text-base">arrow_upward</span>
+                                <span>+10% from last month</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="material-icons text-2xl text-yellow-500">event</span>
+                            <span class="stat-card-label">Upcoming</span>
+                            <span class="stat-card-value">8</span>
+                            <div class="stat-card-trend none">
+                                <span class="material-icons text-base">trending_flat</span>
+                                <span>No change</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="material-icons text-2xl text-purple-500">star</span>
+                            <span class="stat-card-label">Reviews</span>
+                            <span class="stat-card-value">4.8</span>
+                            <div class="stat-card-trend up">
+                                <span class="material-icons text-base">arrow_upward</span>
+                                <span>+0.1 from last month</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Controls Section (Data Tables - Recent Activity) -->
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="filter-bar">
+                            <button class="active">This Week</button>
+                            <button>This Month</button>
+                            <button>Custom Range</button>
+                        </div>
+                        <div class="search-box w-full md:w-auto">
+                            <input type="text" placeholder="Search services...">
+                        </div>
+                    </div>
+
+                    <!-- Content Sections (Data Tables - Detailed Reports) -->
+                    <div>
+                        <div class="tabs-container">
+                            <button class="active">All Services</button>
+                            <button>Active</button>
+                            <button>Draft</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Service</th>
+                                        <th>Duration</th>
+                                        <th>Price</th>
+                                        <th>Bookings</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Haircut</td>
+                                        <td>30 min</td>
+                                        <td>$25</td>
+                                        <td>50</td>
+                                        <td>Active</td>
+                                        <td>
+                                            <button class="text-blue-500 hover:underline">Edit</button>
+                                            <button class="text-red-500 hover:underline ml-2">Delete</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Beard Trim</td>
+                                        <td>15 min</td>
+                                        <td>$15</td>
+                                        <td>30</td>
+                                        <td>Active</td>
+                                        <td>
+                                            <button class="text-blue-500 hover:underline">Edit</button>
+                                            <button class="text-red-500 hover:underline ml-2">Delete</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Hair Coloring</td>
+                                        <td>120 min</td>
+                                        <td>$80</td>
+                                        <td>15</td>
+                                        <td>Draft</td>
+                                        <td>
+                                            <button class="text-blue-500 hover:underline">Edit</button>
+                                            <button class="text-red-500 hover:underline ml-2">Delete</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
+
+        <!-- Global Footer -->
+        <footer class="global-footer">
+            &copy; 2025 AppointmentScheduler. All rights reserved.
+        </footer>
     </div>
 </body>
 </html>

@@ -4,93 +4,308 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
+        /* Custom styles based on the themeVariables and component properties */
+        :root {
+            --primary-color: #2563EB;
+            --secondary-color: #1D4ED8;
+            --line-color: #6B7280;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6; /* Light gray background */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Global Layout */
+        .app-header {
+            background-color: var(--primary-color);
+            color: #FFFFFF;
+            padding: 16px 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .app-header .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .app-header .nav-item {
+            margin-left: 20px;
+            color: #FFFFFF;
+            text-decoration: none;
+        }
+
+        .main-content-wrapper {
+            display: flex;
+            flex-grow: 1;
+            background-color: #f3f4f6;
+            justify-content: center; /* Center content horizontally */
+            align-items: center; /* Center content vertically */
+        }
+
+        .primary-content-area {
+            flex-grow: 1;
+            padding: 24px; /* Padding for the content area */
+        }
+
+        .app-footer {
+            background-color: #374151;
+            color: #D1D5DB;
+            padding: 24px;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        /* Component specific styles */
+        .container-component {
+            max-width: 480px;
+            padding: 40px 24px;
+            background-color: #FFFFFF;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        .stack-spacing-32 > *:not(:last-child) {
+            margin-bottom: 32px;
+        }
+        .stack-spacing-16 > *:not(:last-child) {
+            margin-bottom: 16px;
+        }
+        .stack-spacing-12 > *:not(:last-child) {
+            margin-bottom: 12px;
+        }
+        .stack-spacing-8 > *:not(:last-child) {
+            margin-bottom: 8px;
+        }
+        .stack-spacing-4 > *:not(:last-child) {
+            margin-right: 4px; /* for horizontal stack */
+        }
+        .stack-align-center {
+            align-items: center;
+        }
+        .stack-justify-center {
+            justify-content: center;
+        }
+
+        .heading-1 {
+            font-size: 2.25rem; /* 36px */
+            line-height: 2.5rem; /* 40px */
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .text-subtitle {
+            font-size: 1.125rem; /* 18px */
+            line-height: 1.75rem; /* 28px */
+            color: #6B7280;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: #6B7280;
+            font-size: 0.875rem; /* 14px */
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #D1D5DB;
+        }
+        .divider:not(:empty)::before {
+            margin-right: .5em;
+        }
+        .divider:not(:empty)::after {
+            margin-left: .5em;
+        }
+
+        .button-secondary {
+            background-color: #FFFFFF;
+            color: #374151;
+            border: 1px solid #D1D5DB;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .button-secondary:hover {
+            background-color: #F3F4F6;
+            border-color: #9CA3AF;
+        }
+        .button-secondary.block {
+            width: 100%;
+        }
+        .button-secondary.large {
+            padding: 14px 28px;
+            font-size: 1.125rem;
+        }
+
+        .form-field-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-field-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            font-size: 1rem;
+            color: #374151;
+        }
+
+        .form-field-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        .form-field-checkbox {
+            display: flex;
+            align-items: center;
+        }
+        .form-field-checkbox input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .link-style {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .link-style:hover {
+            text-decoration: underline;
+        }
+
+        .button-primary {
+            background-color: var(--primary-color);
+            color: #FFFFFF;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .button-primary:hover {
+            background-color: var(--secondary-color);
+        }
+        .button-primary.block {
+            width: 100%;
+        }
+        .button-primary.large {
+            padding: 14px 28px;
+            font-size: 1.125rem;
         }
     </style>
 </head>
-<body class="bg-gray-100 flex items-start justify-center min-h-screen py-10 px-6 sm:px-8 lg:px-12">
-    <div class="bg-white p-10 rounded-lg shadow-xl border border-gray-200 max-w-sm sm:max-w-md w-full">
-        <div class="flex flex-col items-center space-y-8">
-            
-            <!-- Header Section -->
-            <div class="flex flex-col items-center space-y-2 text-center">
-                <!-- Using an SVG as a placeholder for the Logo component -->
-                <div class="w-12 h-12 bg-blue-60 rounded-full"></div>
-                <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Welcome Back</h1>
-                <p class="text-base text-gray-500">Sign in to your account</p>
-            </div>
+<body>
+    <!-- Global Navigation (Header) -->
+    <header class="app-header">
+        <div class="logo">AppointmentScheduler</div>
+        <nav>
+            <a href="#" class="nav-item">Dashboard</a>
+            <a href="#" class="nav-item">Services</a>
+            <a href="#" class="nav-item">Bookings</a>
+            <a href="#" class="nav-item">Profile</a>
+        </nav>
+    </header>
 
-            <!-- Social Login Options -->
-            <div class="w-full space-y-4">
-                <div class="relative flex items-center">
-                    <div class="flex-grow border-t border-gray-300"></div>
-                    <span class="flex-shrink mx-4 text-gray-500 text-sm">Sign in with</span>
-                    <div class="flex-grow border-t border-gray-300"></div>
-                </div>
-                <div class="space-y-3">
-                    <button class="w-full flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
-                        <svg class="w-5 h-5 mr-3 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M22.68 12.35c0-.6-.05-1.1-.15-1.63H12.5v3.08h5.6c-.25 1.4-1.1 2.57-2.4 3.38v2.66h3.42c2.02-1.85 3.19-4.67 3.19-8.49z"></path><path d="M12.5 23c2.9 0 5.33-1.02 7.11-2.77l-3.42-2.66c-.95.63-2.15 1-3.69 1-2.85 0-5.28-1.92-6.15-4.5h-3.5v2.75c1.78 3.51 5.34 6 9.7 6z"></path><path d="M6.35 15.22a6.95 6.95 0 0 1-.36-2.22c0-.75.12-1.48.36-2.19v-2.75h-3.55a10.84 10.84 0 0 0 0 7.69l3.5-2.75z"></path><path d="M12.5 3.32c1.55 0 3.01.53 4.14 1.54l3.05-3.04C18.6.72 15.86 0 12.5 0 8.04 0 4.48 2.5 2.7 6l3.55 2.75c.87-2.58 3.3-4.5 6.15-4.5z"></path>
-                        </svg>
-                        <span>Continue with Google</span>
-                    </button>
-                    <button class="w-full flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
-                        <svg class="w-5 h-5 mr-3 text-gray-900" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 1.387.6.111.82-.26.82-.577 0-.285-.01-1.04-.015-2.04c-3.38.724-4.043-1.61-4.043-1.61-.546-1.387-1.332-1.756-1.332-1.756-1.087-.745.083-.73.083-.73 1.205.084 1.838 1.236 1.838 1.236 1.07 1.836 2.809 1.305 3.492.999.108-.776.419-1.305.762-1.605-2.665-.3-5.466-1.32-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.12-.3-.538-1.52.12-3.179 0 0 1-.32 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.046.138 3.003.404 2.3-1.55 3.3-1.23 3.3-1.23.656 1.66.246 2.879.12 3.179.77.84 1.235 1.91 1.235 3.22 0 4.61-2.802 5.625-5.475 5.922.42.36.81 1.096.81 2.214 0 1.606-.015 2.897-.015 3.292 0 .318.21.69.825.577C20.562 21.82 24 17.32 24 12c0-6.627-5.373-12-12-12z"></path>
-                        </svg>
-                        <span>Continue with GitHub</span>
-                    </button>
-                </div>
-            </div>
+    <!-- Main Content Wrapper -->
+    <div class="main-content-wrapper">
+        <!-- Primary Content Area -->
+        <main class="primary-content-area">
+            <div class="container-component">
+                <div class="flex flex-col stack-spacing-32 stack-align-center">
+                    <!-- Header Section -->
+                    <a href="/">
+                        <img src="https://via.placeholder.com/100x40?text=Logo" alt="Logo" class="h-10">
+                    </a>
+                    <div class="flex flex-col stack-spacing-8 stack-align-center">
+                        <h1 class="heading-1">Welcome Back</h1>
+                        <p class="text-subtitle">Sign in to your account</p>
+                    </div>
 
-            <!-- Email Login Form -->
-            <div class="w-full space-y-6">
-                <div class="relative flex items-center">
-                    <div class="flex-grow border-t border-gray-300"></div>
-                    <span class="flex-shrink mx-4 text-gray-500 text-sm">Or sign in with email</span>
-                    <div class="flex-grow border-t border-gray-300"></div>
-                </div>
-                <form class="space-y-5">
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-                        <div class="mt-1">
-                            <input type="email" id="email" name="email" placeholder="you@example.com" required
-                                class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <!-- Social Login Options -->
+                    <div class="w-full flex flex-col stack-spacing-16">
+                        <div class="divider">Sign in with</div>
+                        <div class="flex flex-col stack-spacing-12">
+                            <button class="button-secondary block large">
+                                <span class="material-icons">g_mobiledata</span>
+                                Continue with Google
+                            </button>
+                            <button class="button-secondary block large">
+                                <span class="material-icons">github</span>
+                                Continue with GitHub
+                            </button>
                         </div>
                     </div>
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                        <div class="mt-1">
-                            <input type="password" id="password" name="password" placeholder="Enter your password" required
-                                class="block w-full px-4 py-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        </div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <input id="remember" name="remember" type="checkbox"
-                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                            <label for="remember" class="ml-2 block text-sm text-gray-900">Remember me</label>
-                        </div>
-                        <a href="/forgot-password" class="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors">Forgot password?</a>
+
+                    <!-- Email Login Form -->
+                    <div class="w-full flex flex-col stack-spacing-24">
+                        <div class="divider">Or sign in with email</div>
+                        <form class="flex flex-col gap-4">
+                            <div>
+                                <label for="email" class="form-field-label">Email Address</label>
+                                <input type="email" id="email" name="email" placeholder="you@example.com" required class="form-field-input">
+                            </div>
+                            <div class="relative">
+                                <label for="password" class="form-field-label">Password</label>
+                                <input type="password" id="password" name="password" placeholder="Enter your password" required class="form-field-input">
+                                <!-- Password toggle button -->
+                                <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" onclick="
+                                    const passwordField = document.getElementById('password');
+                                    if (passwordField.type === 'password') {
+                                        passwordField.type = 'text';
+                                    } else {
+                                        passwordField.type = 'password';
+                                    }
+                                ">
+                                    <span class="material-icons">visibility</span>
+                                </button>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="form-field-checkbox">
+                                    <input type="checkbox" id="remember" name="remember" class="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                    <label for="remember" class="ml-2 text-sm text-gray-900">Remember me</label>
+                                </div>
+                                <a href="/forgot-password" class="link-style text-sm">Forgot password?</a>
+                            </div>
+                            <button type="submit" class="button-primary block large">Sign In</button>
+                        </form>
                     </div>
-                    <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                        Sign In
-                    </button>
-                </form>
-            </div>
 
-            <!-- Sign Up Link -->
-            <div class="flex justify-center text-sm mt-6">
-                <p class="text-gray-500 mr-1">Don't have an account?</p>
-                <a href="/register" class="font-medium text-blue-600 hover:text-blue-500 transition-colors">Sign up</a>
+                    <!-- Sign Up Link -->
+                    <div class="flex flex-row stack-justify-center stack-spacing-4 text-sm">
+                        <p class="text-gray-600">Don't have an account?</p>
+                        <a href="/register" class="link-style">Sign up</a>
+                    </div>
+                </div>
             </div>
-
-        </div>
+        </main>
     </div>
+
+    <!-- Global Footer -->
+    <footer class="app-footer">
+        &copy; 2025 AppointmentScheduler. All rights reserved.
+    </footer>
 </body>
 </html>
