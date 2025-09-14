@@ -20,6 +20,9 @@ namespace BookingService.Extensions
             // Register the booking service implementation
             services.AddScoped<IBookingService, BookingServiceImpl>();
             
+            // Register the slot service interface (implementation will be registered separately)
+            // services.AddScoped<ISlotService, SlotServiceImpl>();
+            
             return services;
         }
     }
