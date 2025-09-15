@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Shared.Events;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using ServiceManagementService.Services;
+using ServiceManagementService.Validators;
+using Shared.Models;
 
 namespace ServiceManagementService.Controllers
 {
@@ -10,81 +13,407 @@ namespace ServiceManagementService.Controllers
     public class ServiceController : ControllerBase
     {
         private readonly ILogger<ServiceController> _logger;
-        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly IServiceService _serviceService;
+        private readonly IServiceValidator _validator;
 
-        public ServiceController(ILogger<ServiceController> logger, IPublishEndpoint publishEndpoint)
+        public ServiceController(
+            ILogger<ServiceController> logger, 
+            IServiceService serviceService,
+            IServiceValidator validator)
         {
             _logger = logger;
-            _publishEndpoint = publishEndpoint;
+            _serviceService = serviceService;
+            _validator = validator;
         }
 
+        /// <summary>
+        /// Creates a new service
+        /// </summary>
+        /// <param name="request">Service creation request</param>
+        /// <returns>Created service</returns>
         [HttpPost]
         public async Task<IActionResult> CreateService([FromBody] CreateServiceRequest request)
         {
-            // In a real implementation, this would create a service in the database
-            // For now, we'll just simulate the creation and publish the event
-            
-            var serviceId = Guid.NewGuid();
-            
-            _logger.LogInformation($"Service created with ID: {serviceId}");
-            
-            // Publish ServiceCreatedEvent
-            var serviceCreatedEvent = new ServiceCreatedEvent
+            try
             {
-                ServiceId = serviceId,
-                Name = request.Name,
-                Description = request.Description,
-                CategoryId = request.CategoryId,
-                ProviderId = request.ProviderId,
-                TenantId = request.TenantId,
-                Price = request.Price,
-                Currency = request.Currency,
-                Duration = request.Duration,
-                CreatedAt = DateTime.UtcNow
-            };
-            
-            await _publishEndpoint.Publish(serviceCreatedEvent);
-            
-            _logger.LogInformation($"ServiceCreatedEvent published for service {serviceId}");
-            
-            return Ok(new { ServiceId = serviceId, Message = "Service created successfully" });
+                // Get user and tenant IDs from claims (simplified for this example)
+                var userId = GetUserIdFromClaims();
+                var tenantId = GetTenantIdFromClaims();
+
+                var service = await _serviceService.CreateServiceAsync(request, userId, tenantId);
+                
+                _logger.LogInformation($"Service created with ID: {service.Id}");
+                
+                return Ok(new { ServiceId = service.Id, Message = "Service created successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating service");
+                return StatusCode(500, new { Message = "An error occurred while creating the service" });
+            }
         }
-        
-        [HttpPut("{id}/publish")]
-        public async Task<IActionResult> PublishService(Guid id)
+
+        /// <summary>
+        /// Gets a service by ID
+        /// </summary>
+        /// <param name="id">Service ID</param>
+        /// <returns>Service details</returns>
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetService(Guid id)
         {
-            // In a real implementation, this would update the service status in the database
-            // For now, we'll just simulate the publishing and publish the event
-            
-            _logger.LogInformation($"Service published with ID: {id}");
-            
-            // Publish ServicePublishedEvent
-            var servicePublishedEvent = new ServicePublishedEvent
+            try
             {
-                ServiceId = id,
-                Name = "Sample Service",
-                ProviderId = Guid.NewGuid(),
-                TenantId = Guid.NewGuid(),
-                PublishedAt = DateTime.UtcNow
-            };
-            
-            await _publishEndpoint.Publish(servicePublishedEvent);
-            
-            _logger.LogInformation($"ServicePublishedEvent published for service {id}");
-            
-            return Ok(new { ServiceId = id, Message = "Service published successfully" });
+                // Get user and tenant IDs from claims (simplified for this example)
+                var userId = GetUserIdFromClaims();
+                var tenantId = GetTenantIdFromClaims();
+
+                var service = await _serviceService.GetServiceByIdAsync(id, userId, tenantId);
+                
+                return Ok(service);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { Message = "Service not found" });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving service");
+                return StatusCode(500, new { Message = "An error occurred while retrieving the service" });
+            }
         }
+
+        /// <summary>
+        /// Updates an existing service
+        /// </summary>
+        /// <param name="id">Service ID</param>
+        /// <param name="request">Service update request</param>
+        /// <returns>Updated service</returns>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateService(Guid id, [FromBody] UpdateServiceRequest request)
+        {
+            try
+            {
+                // Get user and tenant IDs from claims (simplified for this example)
+                var userId = GetUserIdFromClaims();
+                var tenantId = GetTenantIdFromClaims();
+
+                var service = await _serviceService.UpdateServiceAsync(id, request, userId, tenantId);
+                
+                _logger.LogInformation($"Service updated with ID: {service.Id}");
+                
+                return Ok(new { ServiceId = service.Id, Message = "Service updated successfully" });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { Message = "Service not found" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating service");
+                return StatusCode(500, new { Message = "An error occurred while updating the service" });
+            }
+        }
+
+        /// <summary>
+        /// Deletes a service
+        /// </summary>
+        /// <param name="id">Service ID</param>
+        /// <returns>Success message</returns>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteService(Guid id)
+        {
+            try
+            {
+                // Get user and tenant IDs from claims (simplified for this example)
+                var userId = GetUserIdFromClaims();
+                var tenantId = GetTenantIdFromClaims();
+
+                await _serviceService.DeleteServiceAsync(id, userId, tenantId);
+                
+                _logger.LogInformation($"Service deleted with ID: {id}");
+                
+                return Ok(new { ServiceId = id, Message = "Service deleted successfully" });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { Message = "Service not found" });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting service");
+                return StatusCode(500, new { Message = "An error occurred while deleting the service" });
+            }
+        }
+
+        /// <summary>
+        /// Lists services with optional filtering
+        /// </summary>
+        /// <param name="categoryId">Optional category filter</param>
+        /// <param name="isActive">Optional active status filter</param>
+        /// <returns>List of services</returns>
+        [HttpGet]
+        public async Task<IActionResult> GetServices([FromQuery] Guid? categoryId, [FromQuery] bool? isActive)
+        {
+            try
+            {
+                // Get user and tenant IDs from claims (simplified for this example)
+                var userId = GetUserIdFromClaims();
+                var tenantId = GetTenantIdFromClaims();
+
+                var services = await _serviceService.GetServicesAsync(userId, tenantId, categoryId, isActive);
+                
+                return Ok(services);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving services");
+                return StatusCode(500, new { Message = "An error occurred while retrieving services" });
+            }
+        }
+
+        /// <summary>
+        /// Creates a new service category
+        /// </summary>
+        /// <param name="request">Category creation request</param>
+        /// <returns>Created category</returns>
+        [HttpPost("categories")]
+        public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryRequest request)
+        {
+            try
+            {
+                // Get user and tenant IDs from claims (simplified for this example)
+                var userId = GetUserIdFromClaims();
+                var tenantId = GetTenantIdFromClaims();
+
+                var category = await _serviceService.CreateServiceCategoryAsync(request, userId, tenantId);
+                
+                _logger.LogInformation($"Category created with ID: {category.Id}");
+                
+                return Ok(new { CategoryId = category.Id, Message = "Category created successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating category");
+                return StatusCode(500, new { Message = "An error occurred while creating the category" });
+            }
+        }
+
+        /// <summary>
+        /// Updates an existing service category
+        /// </summary>
+        /// <param name="id">Category ID</param>
+        /// <param name="request">Category update request</param>
+        /// <returns>Updated category</returns>
+        [HttpPut("categories/{id}")]
+        public async Task<IActionResult> UpdateCategory(Guid id, [FromBody] UpdateCategoryRequest request)
+        {
+            try
+            {
+                // Get user and tenant IDs from claims (simplified for this example)
+                var userId = GetUserIdFromClaims();
+                var tenantId = GetTenantIdFromClaims();
+
+                var category = await _serviceService.UpdateServiceCategoryAsync(id, request, userId, tenantId);
+                
+                _logger.LogInformation($"Category updated with ID: {category.Id}");
+                
+                return Ok(new { CategoryId = category.Id, Message = "Category updated successfully" });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { Message = "Category not found" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating category");
+                return StatusCode(500, new { Message = "An error occurred while updating the category" });
+            }
+        }
+
+        /// <summary>
+        /// Deletes a service category
+        /// </summary>
+        /// <param name="id">Category ID</param>
+        /// <returns>Success message</returns>
+        [HttpDelete("categories/{id}")]
+        public async Task<IActionResult> DeleteCategory(Guid id)
+        {
+            try
+            {
+                // Get user and tenant IDs from claims (simplified for this example)
+                var userId = GetUserIdFromClaims();
+                var tenantId = GetTenantIdFromClaims();
+
+                await _serviceService.DeleteServiceCategoryAsync(id, userId, tenantId);
+                
+                _logger.LogInformation($"Category deleted with ID: {id}");
+                
+                return Ok(new { CategoryId = id, Message = "Category deleted successfully" });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { Message = "Category not found" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting category");
+                return StatusCode(500, new { Message = "An error occurred while deleting the category" });
+            }
+        }
+
+        /// <summary>
+        /// Lists service categories
+        /// </summary>
+        /// <returns>List of service categories</returns>
+        [HttpGet("categories")]
+        public async Task<IActionResult> GetCategories()
+        {
+            try
+            {
+                // Get tenant ID from claims (simplified for this example)
+                var tenantId = GetTenantIdFromClaims();
+
+                var categories = await _serviceService.GetServiceCategoriesAsync(tenantId);
+                
+                return Ok(categories);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving categories");
+                return StatusCode(500, new { Message = "An error occurred while retrieving categories" });
+            }
+        }
+
+        #region Helper Methods
+
+        /// <summary>
+        /// Gets user ID from claims (simplified for this example)
+        /// </summary>
+        /// <returns>User ID</returns>
+        private Guid GetUserIdFromClaims()
+        {
+            // In a real implementation, this would extract the user ID from the JWT claims
+            // For this example, we'll return a dummy GUID
+            return Guid.NewGuid();
+        }
+
+        /// <summary>
+        /// Gets tenant ID from claims (simplified for this example)
+        /// </summary>
+        /// <returns>Tenant ID</returns>
+        private Guid GetTenantIdFromClaims()
+        {
+            // In a real implementation, this would extract the tenant ID from the JWT claims
+            // For this example, we'll return a dummy GUID
+            return Guid.NewGuid();
+        }
+
+        #endregion
     }
-    
+
+    /// <summary>
+    /// Request model for creating a service
+    /// </summary>
     public class CreateServiceRequest
     {
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public Guid CategoryId { get; set; }
-        public Guid ProviderId { get; set; }
-        public Guid TenantId { get; set; }
+        public int Duration { get; set; }
         public decimal Price { get; set; }
         public string Currency { get; set; } = "USD";
-        public int Duration { get; set; }
+        public bool IsActive { get; set; } = true;
+        public bool IsFeatured { get; set; } = false;
+        public int MaxBookingsPerDay { get; set; } = 10;
+    }
+
+    /// <summary>
+    /// Request model for updating a service
+    /// </summary>
+    public class UpdateServiceRequest
+    {
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+        public Guid? CategoryId { get; set; }
+        public int? Duration { get; set; }
+        public decimal? Price { get; set; }
+        public string? Currency { get; set; }
+        public bool? IsActive { get; set; }
+        public bool? IsFeatured { get; set; }
+        public int? MaxBookingsPerDay { get; set; }
+    }
+
+    /// <summary>
+    /// Request model for creating a service category
+    /// </summary>
+    public class CreateCategoryRequest
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public Guid? ParentCategoryId { get; set; }
+        public string? IconUrl { get; set; }
+        public int SortOrder { get; set; } = 0;
+        public bool IsActive { get; set; } = true;
+    }
+
+    /// <summary>
+    /// Request model for updating a service category
+    /// </summary>
+    public class UpdateCategoryRequest
+    {
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+        public Guid? ParentCategoryId { get; set; }
+        public string? IconUrl { get; set; }
+        public int? SortOrder { get; set; }
+        public bool? IsActive { get; set; }
     }
 }
