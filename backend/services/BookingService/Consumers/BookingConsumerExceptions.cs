@@ -58,4 +58,23 @@ namespace BookingService.Consumers
         /// <param name="innerException">The inner exception</param>
         public NotificationSendingException(string message, Exception innerException) : base(message, innerException) { }
     }
+    
+    /// <summary>
+    /// Exception thrown when booking update fails
+    /// </summary>
+    public class BookingUpdateException : Exception
+    {
+        /// <summary>
+        /// Initializes a new instance of the BookingUpdateException class
+        /// </summary>
+        /// <param name="message">The exception message</param>
+        public BookingUpdateException(string message) : base(message) { }
+        
+        /// <summary>
+        /// Initializes a new instance of the BookingUpdateException class
+        /// </summary>
+        /// <param name="message">The exception message</param>
+        /// <param name="innerException">The inner exception</param>
+        public BookingUpdateException(string message, Exception innerException) : base(message, innerException) { }
+    }
 }

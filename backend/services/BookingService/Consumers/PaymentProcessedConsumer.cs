@@ -1,7 +1,6 @@
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Shared.Events;
-using Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,28 +8,10 @@ using System.Threading.Tasks;
 using BookingService.Consumers;
 using Shared.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace BookingService.Consumers
 {
-    /// <summary>
-    /// Exception thrown when booking update fails
-    /// </summary>
-    public class BookingUpdateException : Exception
-    {
-        /// <summary>
-        /// Initializes a new instance of the BookingUpdateException class
-        /// </summary>
-        /// <param name="message">The exception message</param>
-        public BookingUpdateException(string message) : base(message) { }
-        
-        /// <summary>
-        /// Initializes a new instance of the BookingUpdateException class
-        /// </summary>
-        /// <param name="message">The exception message</param>
-        /// <param name="innerException">The inner exception</param>
-        public BookingUpdateException(string message, Exception innerException) : base(message, innerException) { }
-    }
-
     /// <summary>
     /// Consumer for PaymentProcessedEvent
     /// This consumer handles the PaymentProcessedEvent by updating booking status and sending notifications
@@ -42,12 +23,25 @@ namespace BookingService.Consumers
         private readonly ApplicationDbContext _context;
         private readonly HashSet<Guid> _processedEvents = new HashSet<Guid>();
 
+        /// <summary>
+        /// Initializes a new instance of the PaymentProcessedConsumer class
+        /// </summary>
+        /// <param name="logger">The logger</param>
+        /// <param name="context">The database context</param>
         public PaymentProcessedConsumer(ILogger<PaymentProcessedConsumer> logger, ApplicationDbContext context)
         {
             _logger = logger;
             _context = context;
         }
 
+        /// <summary>
+        /// Consumes a PaymentProcessedEvent and updates booking status accordingly
+        /// </summary>
+        /// <param name="context">The consume context containing the PaymentProcessedEvent</param>
+        /// <returns>A task representing the asynchronous operation</returns>
+        /// <exception cref="EventValidationException">Thrown when event data is invalid</exception>
+        /// <exception cref="BookingUpdateException">Thrown when booking status update fails</exception>
+        /// <exception cref="NotificationSendingException">Thrown when notification sending fails</exception>
         public async Task Consume(ConsumeContext<PaymentProcessedEvent> context)
         {
             using var activity = ActivitySource.StartActivity("PaymentProcessedConsumer.Consume");
@@ -198,6 +192,7 @@ namespace BookingService.Consumers
         /// Updates the booking status to confirmed after successful payment
         /// </summary>
         /// <param name="paymentEvent">The payment event</param>
+        /// <returns>A task representing the asynchronous operation</returns>
         /// <exception cref="BookingUpdateException">Thrown when booking status update fails</exception>
         private async Task UpdateBookingStatus(PaymentProcessedEvent paymentEvent)
         {
@@ -211,6 +206,7 @@ namespace BookingService.Consumers
                 
                 if (booking == null)
                 {
+                    _logger.LogWarning("Booking {BookingId} not found for tenant {TenantId}", paymentEvent.BookingId, paymentEvent.TenantId);
                     throw new BookingUpdateException($"Booking {paymentEvent.BookingId} not found for tenant {paymentEvent.TenantId}");
                 }
                 
@@ -235,6 +231,7 @@ namespace BookingService.Consumers
         /// </summary>
         /// <param name="paymentEvent">The payment event</param>
         /// <param name="context">The consume context</param>
+        /// <returns>A task representing the asynchronous operation</returns>
         /// <exception cref="NotificationSendingException">Thrown when notification sending fails</exception>
         private async Task SendNotifications(PaymentProcessedEvent paymentEvent, ConsumeContext<PaymentProcessedEvent> context)
         {
