@@ -1,6 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Shared.Data;
 using Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using ServiceManagementService.Services;
 
 namespace ServiceManagementService.Validators
 {
@@ -19,7 +23,7 @@ namespace ServiceManagementService.Validators
         /// <param name="request">Service creation request</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Validation result</returns>
-        public async Task<ValidationResult> ValidateCreateServiceRequestAsync(CreateServiceRequest request, Guid tenantId)
+        public async Task<ValidationResult> ValidateCreateServiceRequestAsync(ServiceManagementService.Services.CreateServiceRequest request, Guid tenantId)
         {
             var result = new ValidationResult { IsValid = true };
 
@@ -88,7 +92,7 @@ namespace ServiceManagementService.Validators
         /// </summary>
         /// <param name="request">Service update request</param>
         /// <returns>Validation result</returns>
-        public async Task<ValidationResult> ValidateUpdateServiceRequestAsync(UpdateServiceRequest request)
+        public async Task<ValidationResult> ValidateUpdateServiceRequestAsync(ServiceManagementService.Services.UpdateServiceRequest request)
         {
             var result = new ValidationResult { IsValid = true };
 
@@ -133,7 +137,7 @@ namespace ServiceManagementService.Validators
         /// <param name="request">Category creation request</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Validation result</returns>
-        public async Task<ValidationResult> ValidateCreateCategoryRequestAsync(CreateCategoryRequest request, Guid tenantId)
+        public async Task<ValidationResult> ValidateCreateCategoryRequestAsync(ServiceManagementService.Services.CreateCategoryRequest request, Guid tenantId)
         {
             var result = new ValidationResult { IsValid = true };
 
@@ -178,7 +182,7 @@ namespace ServiceManagementService.Validators
         /// </summary>
         /// <param name="request">Category update request</param>
         /// <returns>Validation result</returns>
-        public async Task<ValidationResult> ValidateUpdateCategoryRequestAsync(UpdateCategoryRequest request)
+        public async Task<ValidationResult> ValidateUpdateCategoryRequestAsync(ServiceManagementService.Services.UpdateCategoryRequest request)
         {
             var result = new ValidationResult { IsValid = true };
 

@@ -1,10 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Events;
+using Shared.Models;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using ServiceManagementService.Services;
 using ServiceManagementService.Validators;
-using Shared.Models;
 
 namespace ServiceManagementService.Controllers
 {
@@ -359,61 +363,4 @@ namespace ServiceManagementService.Controllers
         #endregion
     }
 
-    /// <summary>
-    /// Request model for creating a service
-    /// </summary>
-    public class CreateServiceRequest
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public Guid CategoryId { get; set; }
-        public int Duration { get; set; }
-        public decimal Price { get; set; }
-        public string Currency { get; set; } = "USD";
-        public bool IsActive { get; set; } = true;
-        public bool IsFeatured { get; set; } = false;
-        public int MaxBookingsPerDay { get; set; } = 10;
-    }
-
-    /// <summary>
-    /// Request model for updating a service
-    /// </summary>
-    public class UpdateServiceRequest
-    {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public Guid? CategoryId { get; set; }
-        public int? Duration { get; set; }
-        public decimal? Price { get; set; }
-        public string? Currency { get; set; }
-        public bool? IsActive { get; set; }
-        public bool? IsFeatured { get; set; }
-        public int? MaxBookingsPerDay { get; set; }
-    }
-
-    /// <summary>
-    /// Request model for creating a service category
-    /// </summary>
-    public class CreateCategoryRequest
-    {
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public Guid? ParentCategoryId { get; set; }
-        public string? IconUrl { get; set; }
-        public int SortOrder { get; set; } = 0;
-        public bool IsActive { get; set; } = true;
-    }
-
-    /// <summary>
-    /// Request model for updating a service category
-    /// </summary>
-    public class UpdateCategoryRequest
-    {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public Guid? ParentCategoryId { get; set; }
-        public string? IconUrl { get; set; }
-        public int? SortOrder { get; set; }
-        public bool? IsActive { get; set; }
-    }
 }
