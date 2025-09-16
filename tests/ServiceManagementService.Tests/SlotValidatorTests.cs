@@ -6,6 +6,7 @@ using Shared.Data;
 using Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using Shared.DTOs;
 
 namespace ServiceManagementService.Tests
 {

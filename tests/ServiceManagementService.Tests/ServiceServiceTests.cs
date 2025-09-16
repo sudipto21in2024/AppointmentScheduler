@@ -1,3 +1,4 @@
+using System;
 using Xunit;
 using Moq;
 using Microsoft.Extensions.Logging;
@@ -85,7 +86,7 @@ namespace ServiceManagementService.Tests
 
             // Setup validator to return valid result
             _validatorMock.Setup(v => v.ValidateCreateServiceRequestAsync(It.IsAny<CreateServiceRequest>(), It.IsAny<Guid>()))
-                .ReturnsAsync(new ValidationResult { IsValid = true });
+                .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act
             var result = await _serviceService.CreateServiceAsync(request, userId, tenantId);
@@ -147,7 +148,7 @@ namespace ServiceManagementService.Tests
 
             // Setup validator to return valid result
             _validatorMock.Setup(v => v.ValidateCreateServiceRequestAsync(It.IsAny<CreateServiceRequest>(), It.IsAny<Guid>()))
-                .ReturnsAsync(new ValidationResult { IsValid = true });
+                .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act & Assert
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 
@@ -300,7 +301,7 @@ namespace ServiceManagementService.Tests
 
             // Setup validator to return valid result
             _validatorMock.Setup(v => v.ValidateUpdateServiceRequestAsync(It.IsAny<UpdateServiceRequest>()))
-                .ReturnsAsync(new ValidationResult { IsValid = true });
+                .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act
             var result = await _serviceService.UpdateServiceAsync(serviceId, request, userId, tenantId);
@@ -368,7 +369,7 @@ namespace ServiceManagementService.Tests
 
             // Setup validator to return valid result
             _validatorMock.Setup(v => v.ValidateUpdateServiceRequestAsync(It.IsAny<UpdateServiceRequest>()))
-                .ReturnsAsync(new ValidationResult { IsValid = true });
+                .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act & Assert
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 

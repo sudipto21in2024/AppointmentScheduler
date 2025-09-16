@@ -9,6 +9,7 @@ using Shared.Events;
 using Microsoft.EntityFrameworkCore;
 using MassTransit;
 using System.Threading.Tasks;
+using Shared.DTOs;
 
 namespace ServiceManagementService.Tests
 {
@@ -89,7 +90,7 @@ namespace ServiceManagementService.Tests
 
             // Setup validator to return valid result
             _validatorMock.Setup(v => v.ValidateCreateSlotRequestAsync(It.IsAny<CreateSlotRequest>(), It.IsAny<Guid>()))
-                .ReturnsAsync(new ValidationResult { IsValid = true });
+                .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act
             var result = await _slotService.CreateSlotAsync(request, userId, tenantId);
@@ -148,7 +149,7 @@ namespace ServiceManagementService.Tests
 
             // Setup validator to return valid result
             _validatorMock.Setup(v => v.ValidateCreateSlotRequestAsync(It.IsAny<CreateSlotRequest>(), It.IsAny<Guid>()))
-                .ReturnsAsync(new ValidationResult { IsValid = true });
+                .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act & Assert
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 
@@ -309,7 +310,7 @@ namespace ServiceManagementService.Tests
 
             // Setup validator to return valid result
             _validatorMock.Setup(v => v.ValidateUpdateSlotRequestAsync(It.IsAny<UpdateSlotRequest>()))
-                .ReturnsAsync(new ValidationResult { IsValid = true });
+                .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act
             var result = await _slotService.UpdateSlotAsync(slotId, request, userId, tenantId);
@@ -377,7 +378,7 @@ namespace ServiceManagementService.Tests
 
             // Setup validator to return valid result
             _validatorMock.Setup(v => v.ValidateUpdateSlotRequestAsync(It.IsAny<UpdateSlotRequest>()))
-                .ReturnsAsync(new ValidationResult { IsValid = true });
+                .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act & Assert
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 

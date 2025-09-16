@@ -8,6 +8,7 @@ using Shared.Events;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using ServiceManagementService.Validators;
+using ServiceManagementService.Services;
 
 namespace ServiceManagementService.Services
 {
@@ -31,10 +32,10 @@ namespace ServiceManagementService.Services
         /// <param name="userId">ID of the user creating the service</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Created service</returns>
-        public async Task<Service> CreateServiceAsync(ServiceManagementService.Services.CreateServiceRequest request, Guid userId, Guid tenantId)
+        public async Task<Service> CreateServiceAsync(CreateServiceRequest request, Guid userId, Guid tenantId)
         {
             // Validate the request
-            var validationResult = await _validator.ValidateCreateServiceRequestAsync(request, tenantId);
+            var validationResult = await _validator.ValidateCreateServiceRequestAsync(request, tenantId) as Shared.DTOs.ValidationResult;
             if (!validationResult.IsValid)
             {
                 throw new ArgumentException(string.Join("; ", validationResult.Errors));
@@ -126,10 +127,10 @@ namespace ServiceManagementService.Services
         /// <param name="userId">ID of the user updating the service</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Updated service</returns>
-        public async Task<Service> UpdateServiceAsync(Guid serviceId, ServiceManagementService.Services.UpdateServiceRequest request, Guid userId, Guid tenantId)
+        public async Task<Service> UpdateServiceAsync(Guid serviceId, UpdateServiceRequest request, Guid userId, Guid tenantId)
         {
             // Validate the request
-            var validationResult = await _validator.ValidateUpdateServiceRequestAsync(request);
+            var validationResult = await _validator.ValidateUpdateServiceRequestAsync(request) as Shared.DTOs.ValidationResult;
             if (!validationResult.IsValid)
             {
                 throw new ArgumentException(string.Join("; ", validationResult.Errors));
@@ -345,10 +346,10 @@ namespace ServiceManagementService.Services
         /// <param name="userId">ID of the user creating the category</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Created category</returns>
-        public async Task<ServiceCategory> CreateServiceCategoryAsync(ServiceManagementService.Services.CreateCategoryRequest request, Guid userId, Guid tenantId)
+        public async Task<ServiceCategory> CreateServiceCategoryAsync(CreateCategoryRequest request, Guid userId, Guid tenantId)
         {
             // Validate the request
-            var validationResult = await _validator.ValidateCreateCategoryRequestAsync(request, tenantId);
+            var validationResult = await _validator.ValidateCreateCategoryRequestAsync(request, tenantId) as Shared.DTOs.ValidationResult;
             if (!validationResult.IsValid)
             {
                 throw new ArgumentException(string.Join("; ", validationResult.Errors));
@@ -390,10 +391,10 @@ namespace ServiceManagementService.Services
         /// <param name="userId">ID of the user updating the category</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Updated category</returns>
-        public async Task<ServiceCategory> UpdateServiceCategoryAsync(Guid categoryId, ServiceManagementService.Services.UpdateCategoryRequest request, Guid userId, Guid tenantId)
+        public async Task<ServiceCategory> UpdateServiceCategoryAsync(Guid categoryId, UpdateCategoryRequest request, Guid userId, Guid tenantId)
         {
             // Validate the request
-            var validationResult = await _validator.ValidateUpdateCategoryRequestAsync(request);
+            var validationResult = await _validator.ValidateUpdateCategoryRequestAsync(request) as Shared.DTOs.ValidationResult;
             if (!validationResult.IsValid)
             {
                 throw new ArgumentException(string.Join("; ", validationResult.Errors));

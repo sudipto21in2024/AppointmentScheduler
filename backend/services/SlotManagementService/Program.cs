@@ -13,13 +13,13 @@ using SlotManagementService.Validators;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
-namespace ServiceManagementService
+namespace SlotManagementService
 {
     public class Program
     {
         public static async Task Main(string[] args)
         {
-            var builder = Host.CreateApplicationBuilder(args);
+            var builder = WebApplication.CreateBuilder(args);
 
             // Configure logging
             builder.Logging.ClearProviders();

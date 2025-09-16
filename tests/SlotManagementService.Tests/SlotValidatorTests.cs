@@ -1,14 +1,15 @@
 using Xunit;
 using Moq;
 using Microsoft.Extensions.Logging;
-using ServiceManagementService.Validators;
+using SlotManagementService.Validators;
 using Shared.Data;
 using Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using System;
+using Shared.DTOs;
 
-namespace ServiceManagementService.Tests
+namespace SlotManagementService.Tests
 {
     public class SlotValidatorTests
     {

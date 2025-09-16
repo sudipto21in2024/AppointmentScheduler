@@ -1,8 +1,8 @@
 using Xunit;
 using Moq;
 using Microsoft.Extensions.Logging;
-using ServiceManagementService.Services;
-using ServiceManagementService.Validators;
+using SlotManagementService.Services;
+using SlotManagementService.Validators;
 using Shared.Data;
 using Shared.Models;
 using Shared.Events;
@@ -12,8 +12,9 @@ using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Shared.DTOs;
 
-namespace ServiceManagementService.Tests
+namespace SlotManagementService.Tests
 {
     public class SlotServiceTests
     {
@@ -80,7 +81,7 @@ namespace ServiceManagementService.Tests
             _dbContext.Services.Add(service);
             await _dbContext.SaveChangesAsync();
 
-            var request = new ServiceManagementService.Validators.CreateSlotRequest
+            var request = new CreateSlotRequest
             {
                 ServiceId = serviceId,
                 StartDateTime = DateTime.UtcNow.AddHours(1),
@@ -91,8 +92,8 @@ namespace ServiceManagementService.Tests
             };
 
             // Setup validator to return valid result
-            _validatorMock.Setup(v => v.ValidateCreateSlotRequestAsync(It.IsAny<ServiceManagementService.Validators.CreateSlotRequest>(), It.IsAny<Guid>()))
-                .ReturnsAsync(new ServiceManagementService.Validators.ValidationResult { IsValid = true });
+            _validatorMock.Setup(v => v.ValidateCreateSlotRequestAsync(It.IsAny<CreateSlotRequest>(), It.IsAny<Guid>()))
+                .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act
             var result = await _slotService.CreateSlotAsync(request, userId, tenantId);
@@ -136,7 +137,7 @@ namespace ServiceManagementService.Tests
             _dbContext.Users.Add(customer);
             await _dbContext.SaveChangesAsync();
 
-            var request = new ServiceManagementService.Validators.CreateSlotRequest
+            var request = new CreateSlotRequest
             {
                 ServiceId = serviceId,
                 StartDateTime = DateTime.UtcNow.AddHours(1),
@@ -147,8 +148,8 @@ namespace ServiceManagementService.Tests
             };
 
             // Setup validator to return valid result
-            _validatorMock.Setup(v => v.ValidateCreateSlotRequestAsync(It.IsAny<ServiceManagementService.Validators.CreateSlotRequest>(), It.IsAny<Guid>()))
-                .ReturnsAsync(new ServiceManagementService.Validators.ValidationResult { IsValid = true });
+            _validatorMock.Setup(v => v.ValidateCreateSlotRequestAsync(It.IsAny<CreateSlotRequest>(), It.IsAny<Guid>()))
+                .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act & Assert
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 
@@ -301,7 +302,7 @@ namespace ServiceManagementService.Tests
             _dbContext.Slots.Add(slot);
             await _dbContext.SaveChangesAsync();
 
-            var request = new ServiceManagementService.Validators.UpdateSlotRequest
+            var request = new UpdateSlotRequest
             {
                 StartDateTime = DateTime.UtcNow.AddHours(3),
                 EndDateTime = DateTime.UtcNow.AddHours(4),
@@ -310,8 +311,8 @@ namespace ServiceManagementService.Tests
             };
 
             // Setup validator to return valid result
-            _validatorMock.Setup(v => v.ValidateUpdateSlotRequestAsync(It.IsAny<ServiceManagementService.Validators.UpdateSlotRequest>()))
-                .ReturnsAsync(new ServiceManagementService.Validators.ValidationResult { IsValid = true });
+            _validatorMock.Setup(v => v.ValidateUpdateSlotRequestAsync(It.IsAny<UpdateSlotRequest>()))
+                .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act
             var result = await _slotService.UpdateSlotAsync(slotId, request, userId, tenantId);
@@ -389,7 +390,7 @@ namespace ServiceManagementService.Tests
             _dbContext.Slots.Add(slot);
             await _dbContext.SaveChangesAsync();
 
-            var request = new ServiceManagementService.Validators.UpdateSlotRequest
+            var request = new UpdateSlotRequest
             {
                 StartDateTime = DateTime.UtcNow.AddHours(3),
                 EndDateTime = DateTime.UtcNow.AddHours(4),
@@ -398,8 +399,8 @@ namespace ServiceManagementService.Tests
             };
 
             // Setup validator to return valid result
-            _validatorMock.Setup(v => v.ValidateUpdateSlotRequestAsync(It.IsAny<ServiceManagementService.Validators.UpdateSlotRequest>()))
-                .ReturnsAsync(new ServiceManagementService.Validators.ValidationResult { IsValid = true });
+            _validatorMock.Setup(v => v.ValidateUpdateSlotRequestAsync(It.IsAny<UpdateSlotRequest>()))
+                .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act & Assert
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 
@@ -535,7 +536,7 @@ namespace ServiceManagementService.Tests
                 ProviderId = providerId,
                 TenantId = tenantId,
                 Duration = 60,
-                Price = 100.00m,
+                Price = 10.00m,
                 Currency = "USD",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
@@ -991,21 +992,21 @@ namespace ServiceManagementService.Tests
             _dbContext.Services.Add(service);
             await _dbContext.SaveChangesAsync();
 
-            var request = new ServiceManagementService.Validators.CreateRecurringSlotsRequest
+            var request = new CreateRecurringSlotsRequest
             {
                 ServiceId = serviceId,
                 StartDateTime = DateTime.UtcNow.AddHours(1),
                 EndDateTime = DateTime.UtcNow.AddHours(2),
                 MaxBookings = 5,
-                Pattern = ServiceManagementService.Validators.RecurrencePattern.Daily,
+                Pattern = RecurrencePattern.Daily,
                 Interval = 1,
                 Occurrences = 3,
                 EndDate = DateTime.UtcNow.AddDays(30)
             };
 
             // Setup validator to return valid result
-            _validatorMock.Setup(v => v.ValidateRecurringSlotRequestAsync(It.IsAny<ServiceManagementService.Validators.CreateRecurringSlotsRequest>(), It.IsAny<Guid>()))
-                .ReturnsAsync(new ServiceManagementService.Validators.ValidationResult { IsValid = true });
+            _validatorMock.Setup(v => v.ValidateRecurringSlotRequestAsync(It.IsAny<CreateRecurringSlotsRequest>(), It.IsAny<Guid>()))
+                .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act
             var result = await _slotService.CreateRecurringSlotsAsync(request, userId, tenantId);
@@ -1043,21 +1044,21 @@ namespace ServiceManagementService.Tests
             _dbContext.Users.Add(customer);
             await _dbContext.SaveChangesAsync();
 
-            var request = new ServiceManagementService.Validators.CreateRecurringSlotsRequest
+            var request = new CreateRecurringSlotsRequest
             {
                 ServiceId = serviceId,
                 StartDateTime = DateTime.UtcNow.AddHours(1),
                 EndDateTime = DateTime.UtcNow.AddHours(2),
                 MaxBookings = 5,
-                Pattern = ServiceManagementService.Validators.RecurrencePattern.Daily,
+                Pattern = RecurrencePattern.Daily,
                 Interval = 1,
                 Occurrences = 3,
                 EndDate = DateTime.UtcNow.AddDays(30)
             };
 
             // Setup validator to return valid result
-            _validatorMock.Setup(v => v.ValidateRecurringSlotRequestAsync(It.IsAny<ServiceManagementService.Validators.CreateRecurringSlotsRequest>(), It.IsAny<Guid>()))
-                .ReturnsAsync(new ServiceManagementService.Validators.ValidationResult { IsValid = true });
+            _validatorMock.Setup(v => v.ValidateRecurringSlotRequestAsync(It.IsAny<CreateRecurringSlotsRequest>(), It.IsAny<Guid>()))
+                .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act & Assert
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 

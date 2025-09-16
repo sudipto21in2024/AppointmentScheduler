@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Shared.Data;
 using Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using Shared.DTOs;
 using ServiceManagementService.Services;
 
 namespace ServiceManagementService.Validators
@@ -23,9 +24,9 @@ namespace ServiceManagementService.Validators
         /// <param name="request">Service creation request</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Validation result</returns>
-        public async Task<ValidationResult> ValidateCreateServiceRequestAsync(ServiceManagementService.Services.CreateServiceRequest request, Guid tenantId)
+        public async Task<Shared.DTOs.ValidationResult> ValidateCreateServiceRequestAsync(CreateServiceRequest request, Guid tenantId)
         {
-            var result = new ValidationResult { IsValid = true };
+            var result = new Shared.DTOs.ValidationResult { IsValid = true };
 
             // Validate required fields
             if (string.IsNullOrWhiteSpace(request.Name))
@@ -92,9 +93,9 @@ namespace ServiceManagementService.Validators
         /// </summary>
         /// <param name="request">Service update request</param>
         /// <returns>Validation result</returns>
-        public async Task<ValidationResult> ValidateUpdateServiceRequestAsync(ServiceManagementService.Services.UpdateServiceRequest request)
+        public async Task<Shared.DTOs.ValidationResult> ValidateUpdateServiceRequestAsync(UpdateServiceRequest request)
         {
-            var result = new ValidationResult { IsValid = true };
+            var result = new Shared.DTOs.ValidationResult { IsValid = true };
 
             // Validate fields if provided
             if (request.Duration.HasValue && request.Duration.Value <= 0)
@@ -137,9 +138,9 @@ namespace ServiceManagementService.Validators
         /// <param name="request">Category creation request</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Validation result</returns>
-        public async Task<ValidationResult> ValidateCreateCategoryRequestAsync(ServiceManagementService.Services.CreateCategoryRequest request, Guid tenantId)
+        public async Task<Shared.DTOs.ValidationResult> ValidateCreateCategoryRequestAsync(CreateCategoryRequest request, Guid tenantId)
         {
-            var result = new ValidationResult { IsValid = true };
+            var result = new Shared.DTOs.ValidationResult { IsValid = true };
 
             // Validate required fields
             if (string.IsNullOrWhiteSpace(request.Name))
@@ -182,9 +183,9 @@ namespace ServiceManagementService.Validators
         /// </summary>
         /// <param name="request">Category update request</param>
         /// <returns>Validation result</returns>
-        public async Task<ValidationResult> ValidateUpdateCategoryRequestAsync(ServiceManagementService.Services.UpdateCategoryRequest request)
+        public async Task<Shared.DTOs.ValidationResult> ValidateUpdateCategoryRequestAsync(UpdateCategoryRequest request)
         {
-            var result = new ValidationResult { IsValid = true };
+            var result = new Shared.DTOs.ValidationResult { IsValid = true };
 
             // Validate parent category exists if provided
             if (request.ParentCategoryId.HasValue && request.ParentCategoryId.Value != Guid.Empty)
