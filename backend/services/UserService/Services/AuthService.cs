@@ -65,7 +65,7 @@ namespace UserService.Services
             }
         }
 
-        public async Task<string> GenerateToken(User user)
+        public string GenerateToken(User user)
         {
             using var activity = ActivitySource.StartActivity("AuthenticationService.GenerateToken");
             activity?.SetTag("user.id", user?.Id.ToString());
@@ -74,7 +74,7 @@ namespace UserService.Services
             
             try
             {
-                var token = _jwtService.GenerateToken(user.Id.ToString());
+                var token = _jwtService.GenerateToken(user?.Id.ToString() ?? throw new ArgumentNullException(nameof(user), "User cannot be null."));
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return token;
             }
@@ -86,7 +86,7 @@ namespace UserService.Services
             }
         }
 
-        public async Task<string> GenerateRefreshToken(User user)
+        public string GenerateRefreshToken(User user)
         {
             using var activity = ActivitySource.StartActivity("AuthenticationService.GenerateRefreshToken");
             activity?.SetTag("user.id", user?.Id.ToString());
@@ -95,7 +95,7 @@ namespace UserService.Services
             
             try
             {
-                var token = _tokenService.GenerateRefreshToken(user);
+                var token = _tokenService.GenerateRefreshToken(user ?? throw new ArgumentNullException(nameof(user), "User cannot be null."));
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return token;
             }
@@ -107,7 +107,7 @@ namespace UserService.Services
             }
         }
 
-        public async Task<bool> ValidateRefreshToken(string refreshToken)
+        public bool ValidateRefreshToken(string refreshToken)
         {
             using var activity = ActivitySource.StartActivity("AuthenticationService.ValidateRefreshToken");
             activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(refreshToken));
@@ -128,7 +128,7 @@ namespace UserService.Services
             }
         }
 
-        public async Task<User?> GetUserFromRefreshToken(string refreshToken)
+        public User? GetUserFromRefreshToken(string refreshToken)
         {
             using var activity = ActivitySource.StartActivity("AuthenticationService.GetUserFromRefreshToken");
             activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(refreshToken));
@@ -137,7 +137,7 @@ namespace UserService.Services
             
             try
             {
-                var user = await _tokenService.GetUserFromRefreshToken(refreshToken);
+                var user = _tokenService.GetUserFromRefreshToken(refreshToken);
                 activity?.SetTag("user.id", user?.Id.ToString());
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return user;
@@ -150,7 +150,7 @@ namespace UserService.Services
             }
         }
 
-        public async Task<bool> InvalidateRefreshToken(string refreshToken)
+        public bool InvalidateRefreshToken(string refreshToken)
         {
             using var activity = ActivitySource.StartActivity("AuthenticationService.InvalidateRefreshToken");
             activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(refreshToken));
@@ -159,7 +159,7 @@ namespace UserService.Services
             
             try
             {
-                var result = await _tokenService.InvalidateRefreshToken(refreshToken);
+                var result = _tokenService.InvalidateRefreshToken(refreshToken);
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return result;
             }
@@ -182,7 +182,7 @@ namespace UserService.Services
             {
                 // Implement password security requirements here
                 string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword);
-                var result = await _userService.UpdatePassword(user, hashedPassword);
+                var result = await _userService.UpdatePassword(user ?? throw new ArgumentNullException(nameof(user), "User cannot be null."), hashedPassword);
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return result;
             }
@@ -194,7 +194,7 @@ namespace UserService.Services
             }
         }
 
-        public async Task<bool> ValidateJwtToken(string token)
+        public bool ValidateJwtToken(string token)
         {
             using var activity = ActivitySource.StartActivity("AuthenticationService.ValidateJwtToken");
             activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(token));

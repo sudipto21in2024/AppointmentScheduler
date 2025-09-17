@@ -76,7 +76,7 @@ namespace UserService.Controllers
                 _logger.LogInformation($"User {request.Username} logged in successfully.");
                 activity?.SetTag("user.id", user.Id.ToString());
                 
-                var token = await _authenticationService.GenerateToken(user);
+                var token = _authenticationService.GenerateToken(user);
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 
                 return Ok(new LoginResponse { AccessToken = token, User = user });
@@ -165,7 +165,7 @@ namespace UserService.Controllers
         }
 
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
+        public IActionResult Logout([FromBody] LogoutRequest request)
         {
             using var activity = ActivitySource.StartActivity("AuthController.Logout");
             activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(request.Token));
@@ -181,7 +181,7 @@ namespace UserService.Controllers
                     return BadRequest("Token is required.");
                 }
             
-                var result = await _authenticationService.InvalidateRefreshToken(request.Token);
+                var result = _authenticationService.InvalidateRefreshToken(request.Token);
                 if (result)
                 {
                     _logger.LogInformation("User logged out successfully");
@@ -220,7 +220,7 @@ namespace UserService.Controllers
                 }
             
                 // Validate the refresh token
-                var isValid = await _authenticationService.ValidateRefreshToken(request.RefreshToken);
+                var isValid = _authenticationService.ValidateRefreshToken(request.RefreshToken);
                 if (!isValid)
                 {
                     activity?.SetStatus(ActivityStatusCode.Error);
@@ -228,7 +228,7 @@ namespace UserService.Controllers
                 }
             
                 // Get user from refresh token
-                var user = await _authenticationService.GetUserFromRefreshToken(request.RefreshToken);
+                var user = _authenticationService.GetUserFromRefreshToken(request.RefreshToken);
                 if (user == null)
                 {
                     activity?.SetStatus(ActivityStatusCode.Error);
@@ -239,13 +239,13 @@ namespace UserService.Controllers
                 activity?.SetTag("user.email", user.Email);
             
                 // Generate new access token
-                var newAccessToken = await _authenticationService.GenerateToken(user);
+                var newAccessToken = _authenticationService.GenerateToken(user);
             
                 // Generate new refresh token
-                var newRefreshToken = await _authenticationService.GenerateRefreshToken(user);
+                var newRefreshToken = _authenticationService.GenerateRefreshToken(user);
             
                 // Invalidate the old refresh token
-                await _authenticationService.InvalidateRefreshToken(request.RefreshToken);
+                _authenticationService.InvalidateRefreshToken(request.RefreshToken);
             
                 _logger.LogInformation($"Token refreshed for user {user.Email}");
                 activity?.SetStatus(ActivityStatusCode.Ok);

@@ -67,8 +67,9 @@ public class Program
 
         // Register dependencies with proper service lifetimes
         builder.Services.AddScoped<Processors.JwtService>(sp =>
-            new Processors.JwtService(sp.GetRequiredService<IConfiguration>()));
-        builder.Services.AddScoped<Processors.TokenService>();
+            new Processors.JwtService(sp.GetRequiredService<IConfiguration>(), sp.GetRequiredService<ILogger<Processors.JwtService>>()));
+        builder.Services.AddScoped<Processors.TokenService>(sp =>
+            new Processors.TokenService(sp.GetRequiredService<ILogger<Processors.TokenService>>()));
         builder.Services.AddScoped<IUserService, UserService.Services.UserService>();
         builder.Services.AddScoped<Shared.Contracts.IAuthenticationService, UserService.Services.AuthenticationService>();
         

@@ -86,7 +86,7 @@ namespace PaymentService.Tests
             };
 
             _mockDbContext.Setup(db => db.Payments.FindAsync(paymentId))
-                .Returns(new ValueTask<Payment>(payment));
+                .Returns(new ValueTask<Payment?>(payment));
 
             var request = new RefundPaymentRequest
             {
@@ -122,7 +122,7 @@ namespace PaymentService.Tests
             var tenantId = Guid.NewGuid();
 
             _mockDbContext.Setup(db => db.Payments.FindAsync(paymentId))
-                .Returns(new ValueTask<Payment>((Payment)null));
+                .Returns(new ValueTask<Payment?>((Payment?)null));
 
             var request = new RefundPaymentRequest
             {
@@ -165,7 +165,7 @@ namespace PaymentService.Tests
             };
 
             _mockDbContext.Setup(db => db.Payments.FindAsync(paymentId))
-                .Returns(new ValueTask<Payment>(payment));
+                .Returns(new ValueTask<Payment?>(payment));
 
             // Act
             var result = await _paymentService.GetPaymentDetailsAsync(paymentId, tenantId);
@@ -195,7 +195,7 @@ namespace PaymentService.Tests
             var tenantId = Guid.NewGuid();
 
             _mockDbContext.Setup(db => db.Payments.FindAsync(paymentId))
-                .Returns(new ValueTask<Payment>((Payment)null));
+                .Returns(new ValueTask<Payment?>((Payment?)null));
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentException>(() => _paymentService.GetPaymentDetailsAsync(paymentId, tenantId));

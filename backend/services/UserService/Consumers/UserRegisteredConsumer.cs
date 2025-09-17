@@ -44,9 +44,10 @@ namespace UserService.Consumers
                 // Additional processing logic could go here
                 // For example, updating analytics, sending notifications, etc.
 
-                _logger.LogInformation("Completed processing UserRegisteredEvent for user {UserId}", 
+                _logger.LogInformation("Completed processing UserRegisteredEvent for user {UserId}",
                     userEvent.UserId);
                 activity?.SetStatus(ActivityStatusCode.Ok);
+                await Task.CompletedTask;
             }
             catch (Exception ex)
             {

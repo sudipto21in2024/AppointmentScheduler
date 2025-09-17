@@ -12,8 +12,8 @@ namespace UserService.Processors
     public interface ITokenService
     {
         string GenerateRefreshToken(User user);
-        Task<User?> GetUserFromRefreshToken(string refreshToken);
-        Task<bool> InvalidateRefreshToken(string refreshToken);
+        User? GetUserFromRefreshToken(string refreshToken);
+        bool InvalidateRefreshToken(string refreshToken);
         bool ValidateRefreshToken(string refreshToken);
     }
 
@@ -21,6 +21,12 @@ namespace UserService.Processors
     {
         private static readonly ActivitySource ActivitySource = new ActivitySource("UserService.TokenService");
         private readonly List<RefreshToken> _refreshTokens = new List<RefreshToken>();
+        private readonly ILogger<TokenService> _logger;
+
+        public TokenService(ILogger<TokenService> logger)
+        {
+            _logger = logger;
+        }
 
         public string GenerateRefreshToken(User user)
         {
@@ -31,6 +37,13 @@ namespace UserService.Processors
             
             try
             {
+                if (user == null)
+                {
+                    _logger.LogError("Attempted to generate refresh token for a null user.");
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    throw new ArgumentNullException(nameof(user), "User cannot be null when generating refresh token.");
+                }
+
                 var refreshToken = new RefreshToken
                 {
                     Token = Guid.NewGuid().ToString(),
@@ -44,8 +57,7 @@ namespace UserService.Processors
             }
             catch (Exception ex)
             {
-                // Note: In a real implementation, we would inject ILogger<TokenService>
-                // For now, we'll just rethrow the exception
+                _logger.LogError(ex, "Error generating refresh token");
                 activity?.SetStatus(ActivityStatusCode.Error);
                 throw;
             }
@@ -66,12 +78,13 @@ namespace UserService.Processors
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error validating refresh token");
                 activity?.SetStatus(ActivityStatusCode.Error);
                 throw;
             }
         }
 
-        public async Task<User?> GetUserFromRefreshToken(string refreshToken)
+        public User? GetUserFromRefreshToken(string refreshToken)
         {
             using var activity = ActivitySource.StartActivity("TokenService.GetUserFromRefreshToken");
             activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(refreshToken));
@@ -94,12 +107,13 @@ namespace UserService.Processors
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error getting user from refresh token");
                 activity?.SetStatus(ActivityStatusCode.Error);
                 throw;
             }
         }
 
-        public async Task<bool> InvalidateRefreshToken(string refreshToken)
+        public bool InvalidateRefreshToken(string refreshToken)
         {
             using var activity = ActivitySource.StartActivity("TokenService.InvalidateRefreshToken");
             activity?.SetTag("token.present", !string.IsNullOrWhiteSpace(refreshToken));
@@ -120,6 +134,7 @@ namespace UserService.Processors
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error invalidating refresh token");
                 activity?.SetStatus(ActivityStatusCode.Error);
                 throw;
             }

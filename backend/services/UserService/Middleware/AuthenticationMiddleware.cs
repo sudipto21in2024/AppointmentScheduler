@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using UserService.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace UserService.Middleware;
 
@@ -9,10 +10,12 @@ public class AuthenticationMiddleware
 {
     private static readonly ActivitySource ActivitySource = new ActivitySource("UserService.AuthenticationMiddleware");
     private readonly RequestDelegate _next;
+    private readonly ILogger<AuthenticationMiddleware> _logger;
 
-    public AuthenticationMiddleware(RequestDelegate next)
+    public AuthenticationMiddleware(RequestDelegate next, ILogger<AuthenticationMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -37,6 +40,7 @@ public class AuthenticationMiddleware
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error during authentication middleware execution.");
             activity?.SetStatus(ActivityStatusCode.Error);
             throw;
         }

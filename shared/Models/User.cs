@@ -22,6 +22,7 @@ namespace Shared.Models
         public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
         public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+        public virtual ICollection<NotificationPreference> NotificationPreferences { get; set; } = new List<NotificationPreference>();
         public virtual ICollection<BookingHistory> BookingHistories { get; set; } = new List<BookingHistory>();
     }
 }

@@ -7,6 +7,7 @@ using System;
 using System.Diagnostics;
 using UserService.Utils;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace UserService.Processors
 {
@@ -21,13 +22,15 @@ namespace UserService.Processors
     {
         private static readonly ActivitySource ActivitySource = new ActivitySource("UserService.JwtService");
         private readonly string _secretKey = null!;
+        private readonly ILogger<JwtService> _logger;
 
         private readonly IConfiguration _configuration;
 
-        public JwtService(IConfiguration configuration)
+        public JwtService(IConfiguration configuration, ILogger<JwtService> logger)
         {
             _configuration = configuration;
             _secretKey = _configuration["Jwt:SecretKey"] ?? throw new ArgumentNullException("Jwt:SecretKey", "Jwt:SecretKey is missing from configuration");
+            _logger = logger;
         }
 
         public string GenerateToken(string userId)
@@ -58,6 +61,7 @@ namespace UserService.Processors
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error generating JWT token for user {UserId}", userId);
                 activity?.SetStatus(ActivityStatusCode.Error);
                 throw;
             }
@@ -93,6 +97,7 @@ namespace UserService.Processors
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error validating JWT token.");
                 activity?.SetStatus(ActivityStatusCode.Error);
                 return false;
             }
@@ -129,6 +134,7 @@ namespace UserService.Processors
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error retrieving user ID from JWT token.");
                 activity?.SetStatus(ActivityStatusCode.Error);
                 return null;
             }

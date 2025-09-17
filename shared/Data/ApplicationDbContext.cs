@@ -28,6 +28,7 @@ namespace Shared.Data
 
         // Notification Service Entities
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<NotificationPreference> NotificationPreferences { get; set; }
 
         // Tenant Management Entities
         public DbSet<Tenant> Tenants { get; set; }
@@ -325,6 +326,30 @@ namespace Shared.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
+            // Notification Preference entity configuration
+            modelBuilder.Entity<NotificationPreference>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.EmailEnabled)
+                    .IsRequired();
+
+                entity.Property(e => e.SmsEnabled)
+                    .IsRequired();
+
+                entity.Property(e => e.PushEnabled)
+                    .IsRequired();
+
+                entity.Property(e => e.PreferredTimezone)
+                    .HasMaxLength(100);
+
+                // Relationships
+                entity.HasOne(e => e.User)
+                    .WithMany(e => e.NotificationPreferences)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
             // Booking History entity configuration
             modelBuilder.Entity<BookingHistory>(entity =>
             {
@@ -367,6 +392,7 @@ namespace Shared.Data
             modelBuilder.Entity<Payment>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
             modelBuilder.Entity<Review>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
             modelBuilder.Entity<Notification>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
+            modelBuilder.Entity<NotificationPreference>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
             modelBuilder.Entity<BookingHistory>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
 
             // Create indexes for better performance

@@ -97,7 +97,7 @@ namespace PaymentService.Tests
             var bookingId = Guid.NewGuid();
 
             _mockDbContext.Setup(db => db.Bookings.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Booking, bool>>>(), default))
-                .ReturnsAsync((Booking)null);
+                .ReturnsAsync((Booking?)null);
 
             var request = new ProcessPaymentRequest
             {

@@ -20,7 +20,7 @@ namespace Shared.Validators
         /// </summary>
         /// <param name="request">Slot update request</param>
         /// <returns>Validation result</returns>
-        Task<ValidationResult> ValidateUpdateSlotRequestAsync(UpdateSlotRequest request);
+        ValidationResult ValidateUpdateSlotRequestAsync(UpdateSlotRequest request);
 
         /// <summary>
         /// Validates a recurring slot creation request
