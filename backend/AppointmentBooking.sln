@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService", "serv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService.Tests", "..\tests\NotificationService.Tests\NotificationService.Tests.csproj", "{216B7858-BFA2-4142-8505-8166BB1D992F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gateway", "Gateway\Gateway.csproj", "{467261B7-4586-4972-9984-E087097D2E42}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -141,6 +143,18 @@ Global
 		{216B7858-BFA2-4142-8505-8166BB1D992F}.Release|x64.Build.0 = Release|Any CPU
 		{216B7858-BFA2-4142-8505-8166BB1D992F}.Release|x86.ActiveCfg = Release|Any CPU
 		{216B7858-BFA2-4142-8505-8166BB1D992F}.Release|x86.Build.0 = Release|Any CPU
+		{467261B7-4586-4972-9984-E087097D2E42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{467261B7-4586-4972-9984-E087097D2E42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{467261B7-4586-4972-9984-E087097D2E42}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{467261B7-4586-4972-9984-E087097D2E42}.Debug|x64.Build.0 = Debug|Any CPU
+		{467261B7-4586-4972-9984-E087097D2E42}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{467261B7-4586-4972-9984-E087097D2E42}.Debug|x86.Build.0 = Debug|Any CPU
+		{467261B7-4586-4972-9984-E087097D2E42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{467261B7-4586-4972-9984-E087097D2E42}.Release|Any CPU.Build.0 = Release|Any CPU
+		{467261B7-4586-4972-9984-E087097D2E42}.Release|x64.ActiveCfg = Release|Any CPU
+		{467261B7-4586-4972-9984-E087097D2E42}.Release|x64.Build.0 = Release|Any CPU
+		{467261B7-4586-4972-9984-E087097D2E42}.Release|x86.ActiveCfg = Release|Any CPU
+		{467261B7-4586-4972-9984-E087097D2E42}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

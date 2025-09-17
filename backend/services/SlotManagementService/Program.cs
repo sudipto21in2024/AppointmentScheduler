@@ -12,6 +12,8 @@ using SlotManagementService.Services;
 using SlotManagementService.Validators;
 using Microsoft.Extensions.Configuration;
 using Serilog;
+using Consul;
+using Shared.Consul; // Use the shared Consul service
 
 namespace SlotManagementService
 {
@@ -52,6 +54,13 @@ namespace SlotManagementService
 
             // Add health checks
             builder.Services.AddHealthChecks();
+
+            // Add Consul client and hosted service for registration
+            builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient(cfg =>
+            {
+                cfg.Address = new Uri(builder.Configuration["Consul:Host"] ?? "http://localhost:8500");
+            }));
+            builder.Services.AddHostedService<Shared.Consul.ConsulRegisterService>();
 
             var app = builder.Build();
 

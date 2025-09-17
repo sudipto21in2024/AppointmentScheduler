@@ -2,6 +2,17 @@
 
 ## 2025-09-17
 
+### API Gateway Implementation
+- Implemented API Gateway using Ocelot for centralized routing and cross-cutting concerns.
+- Integrated Consul for dynamic service discovery.
+- Created `backend/Gateway` project for the API Gateway.
+- Configured Ocelot with re-routes for all microservices (`UserService`, `BookingService`, `ServiceManagementService`, `PaymentService`, `NotificationService`, `ReportingService`, `SlotManagementService`).
+- Updated all microservices (`UserService`, `BookingService`, `PaymentService`, `NotificationService`, `ReportingService`, `SlotManagementService`) to register with Consul via a shared `ConsulRegisterService`.
+- Created `Program.cs` for `ReportingService` to enable explicit hosting and Consul registration.
+- Updated `docker-compose.yml` to include `gateway` and `consul` services, and configured microservices for Consul integration.
+- Created Kubernetes YAMLs (`deployment.yaml`, `service.yaml`, `configmap.yaml`) for Gateway and Consul, and for each microservice, to enable Kubernetes deployment.
+- Added `Gateway` project to `AppointmentBooking.sln`.
+
 ### User Service Enhancements
 - Implemented soft deletion for user accounts.
 - Integrated event publishing for user-related actions:

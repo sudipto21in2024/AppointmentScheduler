@@ -10,7 +10,6 @@ using Serilog;
 using Serilog.Sinks.Elasticsearch;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Resources;
-// using Shared.Contracts;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Metrics;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -22,6 +21,8 @@ using Microsoft.EntityFrameworkCore;
 using Shared.Data;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Consul;
+using Shared.Consul;
 
 namespace UserService;
 
@@ -40,7 +41,7 @@ public class Program
 
         // Health checks
         builder.Services.AddHealthChecks()
-            .AddCheck("self", () => new HealthCheckResult(HealthStatus.Healthy, "A healthy check result."));
+            .AddCheck("self", () => new HealthCheckResult(Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Healthy, "A healthy check result."));
 
         // MediatR
         builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
@@ -96,7 +97,6 @@ public class Program
             configuration.ReadFrom.Configuration(context.Configuration);
         });
     
-    
         // OpenTelemetry Tracing (updated API)
         builder.Services.AddOpenTelemetry()
             .ConfigureResource(resource => resource.AddService("UserService"))
@@ -117,8 +117,15 @@ public class Program
                     .AddMeter("MassTransit") // MassTransit Meter
                     .AddPrometheusExporter();
             });
+
+        // Add Consul client and hosted service for registration
+        builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient(cfg =>
+        {
+            cfg.Address = new Uri(builder.Configuration["Consul:Host"] ?? "http://localhost:8500");
+        }));
+        builder.Services.AddHostedService<Shared.Consul.ConsulRegisterService>();
     
-            var app = builder.Build();
+        var app = builder.Build();
 
         // Configure the HTTP request pipeline.
         app.UseRouting();

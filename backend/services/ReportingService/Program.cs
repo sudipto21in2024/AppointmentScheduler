@@ -1,16 +1,17 @@
-using System;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MassTransit;
-using Microsoft.EntityFrameworkCore;
-using Shared.Data;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
-using PaymentService.Extensions;
 using Consul;
-using Shared.Consul; // Use the shared Consul service
+using Shared.Consul;
+using Shared.Data;
+using Microsoft.EntityFrameworkCore;
+using ReportingService.Services;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace PaymentService
+
+namespace ReportingService
 {
     public class Program
     {
@@ -20,29 +21,19 @@ namespace PaymentService
 
             // Add services to the container.
             builder.Services.AddControllers();
-
-            // Health checks
-            builder.Services.AddHealthChecks();
-
-            // MassTransit
-            builder.Services.AddMassTransit(x =>
-            {
-                x.UsingRabbitMq((context, cfg) =>
-                {
-                    cfg.Host("localhost", "/", h =>
-                    {
-                        h.Username("guest");
-                        h.Password("guest");
-                    });
-                });
-            });
-
-            // Register the shared ApplicationDbContext
-            builder.Services.AddDbContext<Shared.Data.ApplicationDbContext>(options =>
+            builder.Services.AddEndpointsApiExplorer();
+            
+            // Add DbContext
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // Register payment services
-            builder.Services.AddPaymentServices();
+            // Register services
+            builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
+
+            // Add health checks
+            builder.Services.AddHealthChecks()
+                 .AddCheck("self", () => new HealthCheckResult(HealthStatus.Healthy, "A healthy check result."));
 
             // Add Consul client and hosted service for registration
             builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient(cfg =>
@@ -54,10 +45,16 @@ namespace PaymentService
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
+            app.UseHttpsRedirection();
             app.UseRouting();
             app.UseAuthorization();
             app.MapControllers();
-            app.MapHealthChecks("/healthz");
+            app.MapHealthChecks("/healthz"); // Health check endpoint
 
             app.Run();
         }

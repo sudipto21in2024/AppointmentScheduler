@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MassTransit;
@@ -6,6 +7,8 @@ using Shared.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using BookingService.Extensions;
+using Consul;
+using Shared.Consul; // Use the shared Consul service
 
 namespace BookingService
 {
@@ -47,6 +50,13 @@ namespace BookingService
 
             // Register booking services
             builder.Services.AddBookingServices();
+
+            // Add Consul client and hosted service for registration
+            builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient(cfg =>
+            {
+                cfg.Address = new Uri(builder.Configuration["Consul:Host"] ?? "http://localhost:8500");
+            }));
+            builder.Services.AddHostedService<Shared.Consul.ConsulRegisterService>();
 
             var app = builder.Build();
 

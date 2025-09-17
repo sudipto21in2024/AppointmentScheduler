@@ -9,6 +9,8 @@ using Hangfire;
 using Hangfire.SqlServer;
 using MassTransit; // Add MassTransit namespace
 using NotificationService.Consumers; // Add consumer namespace
+using Consul; // Add Consul namespace
+using Shared.Consul; // Use the shared Consul service
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,6 +57,13 @@ builder.Services.AddMassTransit(x =>
         });
     });
 });
+
+// Add Consul client and hosted service for registration
+builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient(cfg =>
+{
+    cfg.Address = new Uri(builder.Configuration["Consul:Host"] ?? "http://localhost:8500");
+}));
+builder.Services.AddHostedService<Shared.Consul.ConsulRegisterService>();
 
 var app = builder.Build();
 
