@@ -57,4 +57,14 @@ namespace Shared.Events
         public Guid TenantId { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
+
+    /// <summary>
+    /// Event triggered when a user changes their password
+    /// </summary>
+    public class PasswordChangedEvent : IEvent
+    {
+        public Guid UserId { get; set; }
+        public Guid TenantId { get; set; }
+        public DateTime ChangedAt { get; set; }
+    }
 }

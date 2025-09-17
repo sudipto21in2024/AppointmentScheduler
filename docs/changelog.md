@@ -1,0 +1,44 @@
+# Change Log
+
+## 2025-09-17
+
+### User Service Enhancements
+- Implemented soft deletion for user accounts.
+- Integrated event publishing for user-related actions:
+    - `UserRegisteredEvent` on new user creation.
+    - `PasswordChangedEvent` on password updates.
+    - `UserUpdatedEvent` on user profile modifications.
+    - `UserDeletedEvent` on soft deletion of user accounts.
+- Added `PasswordSalt` property to the `User` model for enhanced password security.
+- Updated `GetUserByUsername` and `GetUserById` to filter for active users.
+- Modified `UpdatePassword` to use `PasswordSalt` and only allow updates for active users.
+- Modified `CreateUser` to generate and store `PasswordSalt`, set `IsActive` to true, and record `CreatedAt` and `UpdatedAt` timestamps.
+- Modified `UpdateUser` to only update active users and set the `UpdatedAt` timestamp.
+- Modified `DeleteUser` to perform soft deletion by setting `IsActive` to false.
+
+### Authentication Service Enhancements
+- Implemented `AuthenticationService` with robust security recommendations.
+- Integrated `RefreshToken` model for secure refresh token management.
+- Added `DbSet<RefreshToken>` to `ApplicationDbContext`.
+- Implemented secure `GenerateRefreshToken` with token rotation.
+- Implemented `ValidateRefreshToken` to check token validity and activity.
+- Implemented `GetUserFromRefreshToken` to retrieve user from a valid refresh token.
+- Implemented `InvalidateRefreshToken` to revoke refresh tokens.
+- Modified `ChangePassword` to invalidate all active refresh tokens for a user upon password change.
+- Ensured strong password hashing using BCrypt with salt.
+
+### Test Suite Updates
+- Renamed `AuthServiceTests.cs` to `OldAuthServiceTests.cs` and `JwtServiceTests.cs` to `OldJwtServiceTests.cs` to deprecate outdated tests.
+- Created `AuthenticationServiceTests.cs` to thoroughly test the new `AuthenticationService.Services.AuthenticationService` implementation, covering:
+    - User authentication with valid/invalid credentials and inactive users.
+    - JWT generation and validation.
+    - Refresh token generation, validation, retrieval, and invalidation.
+    - Password change functionality including refresh token invalidation.
+- Updated `UserService.Tests.csproj` to include necessary project references for the new `AuthenticationService` and `Shared` projects.
+- Modified `UserServiceTests.cs` to align with `UserService` changes, including:
+    - Injecting `IEventStore` into the test setup.
+    - Adding tests for user creation verifying `PasswordSalt` and `IsActive` defaults, and `UserRegisteredEvent` publishing.
+    - Enhancing password update tests to verify `PasswordSalt` usage and `PasswordChangedEvent` publishing.
+    - Updating user retrieval tests to confirm soft deletion logic (only active users by default).
+    - Modifying user deletion tests to verify soft deletion (setting `IsActive` to `false`) and `UserDeletedEvent` publishing.
+    - Adding tests for `UpdateUser` to confirm updates only on active users and `UserUpdatedEvent` publishing.

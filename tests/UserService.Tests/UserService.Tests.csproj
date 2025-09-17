@@ -25,6 +25,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\backend\services\UserService\UserService.csproj" />
+    <ProjectReference Include Include="..\..\backend\services\AuthenticationService\AuthenticationService.csproj" />
+    <ProjectReference Include="..\..\shared\Shared.csproj" />
   </ItemGroup>
 
 </Project>

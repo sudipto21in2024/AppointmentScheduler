@@ -8,6 +8,7 @@ using Shared.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using UserService.Utils;
+using Shared.Events; // Added for event types
 
 namespace UserService.Services
 {
@@ -26,11 +27,13 @@ namespace UserService.Services
         private static readonly ActivitySource ActivitySource = new ActivitySource("UserService.UserService");
         private readonly Shared.Data.ApplicationDbContext _context;
         private readonly ILogger<UserService> _logger;
+        private readonly IEventStore _eventStore;
 
-        public UserService(Shared.Data.ApplicationDbContext context, ILogger<UserService> logger)
+        public UserService(Shared.Data.ApplicationDbContext context, ILogger<UserService> logger, IEventStore eventStore)
         {
             _context = context;
             _logger = logger;
+            _eventStore = eventStore;
         }
         
         public async Task<User?> GetUserByUsername(string email)
@@ -42,7 +45,7 @@ namespace UserService.Services
             
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return user;
             }
@@ -63,23 +66,35 @@ namespace UserService.Services
             
             try
             {
-                // Handle null user case
-                if (user == null)
+                if (user == null || !user.IsActive)
                 {
-                    activity?.SetStatus(ActivityStatusCode.Error);
+                    activity?.SetStatus(ActivityStatusCode.Error, "User is null or inactive.");
+                    _logger.LogWarning("Attempted to update password for null or inactive user.");
                     return false;
                 }
                 
-                // Handle null/new empty password case
                 if (string.IsNullOrEmpty(newPassword))
                 {
-                    activity?.SetStatus(ActivityStatusCode.Error);
+                    activity?.SetStatus(ActivityStatusCode.Error, "New password cannot be null or empty.");
+                    _logger.LogWarning("Attempted to update password with null or empty newPassword for user {UserId}.", user.Id);
                     return false;
                 }
-                    
-                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+
+                string salt = BCrypt.Net.BCrypt.GenerateSalt();
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword, salt);
+                user.PasswordSalt = salt;
+                user.UpdatedAt = DateTime.UtcNow;
+
                 _context.Users.Update(user);
                 await _context.SaveChangesAsync();
+                
+                await _eventStore.Append((Shared.Contracts.IEvent)new PasswordChangedEvent
+                {
+                    UserId = user.Id,
+                    TenantId = user.TenantId,
+                    ChangedAt = user.UpdatedAt
+                });
+
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return true;
             }
@@ -100,7 +115,7 @@ namespace UserService.Services
             
             try
             {
-                var user = await _context.Users.FindAsync(id);
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.IsActive);
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return user;
             }
@@ -123,8 +138,27 @@ namespace UserService.Services
             try
             {
                 user.Id = Guid.NewGuid();
+                string salt = BCrypt.Net.BCrypt.GenerateSalt();
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash, salt); // Assuming PasswordHash initially holds the plain password
+                user.PasswordSalt = salt;
+                user.IsActive = true;
+                user.CreatedAt = DateTime.UtcNow;
+                user.UpdatedAt = DateTime.UtcNow;
+
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
+
+                await _eventStore.Append((Shared.Contracts.IEvent)new UserRegisteredEvent
+                {
+                    UserId = user.Id,
+                    Email = user.Email,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    UserType = user.UserType.ToString(),
+                    TenantId = user.TenantId,
+                    RegisteredAt = user.CreatedAt
+                });
+
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return user;
             }
@@ -145,14 +179,29 @@ namespace UserService.Services
             
             try
             {
-                if (user == null)
+                if (user == null || !user.IsActive)
                 {
-                    activity?.SetStatus(ActivityStatusCode.Error);
+                    activity?.SetStatus(ActivityStatusCode.Error, "User is null or inactive.");
+                    _logger.LogWarning("Attempted to update null or inactive user {UserId}.", user?.Id);
                     return null;
                 }
-                    
+
+                user.UpdatedAt = DateTime.UtcNow;
                 _context.Users.Update(user);
                 await _context.SaveChangesAsync();
+
+                await _eventStore.Append((Shared.Contracts.IEvent)new UserUpdatedEvent
+                {
+                    UserId = user.Id,
+                    Email = user.Email,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    PhoneNumber = user.PhoneNumber,
+                    IsActive = user.IsActive,
+                    TenantId = user.TenantId,
+                    UpdatedAt = user.UpdatedAt
+                });
+
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return user;
             }
@@ -173,15 +222,30 @@ namespace UserService.Services
             
             try
             {
-                var user = await _context.Users.FindAsync(id);
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.IsActive);
                 if (user == null)
                 {
-                    activity?.SetStatus(ActivityStatusCode.Error);
+                    activity?.SetStatus(ActivityStatusCode.Error, "User not found or already inactive.");
+                    _logger.LogWarning("Attempted to delete (soft) non-existent or inactive user {UserId}.", id);
                     return false;
                 }
-                    
-                _context.Users.Remove(user);
+
+                user.IsActive = false;
+                user.UpdatedAt = DateTime.UtcNow;
+                _context.Users.Update(user);
                 await _context.SaveChangesAsync();
+
+                await _eventStore.Append((Shared.Contracts.IEvent)new UserDeletedEvent
+                {
+                    UserId = user.Id,
+                    Email = user.Email,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    UserType = user.UserType.ToString(),
+                    TenantId = user.TenantId,
+                    DeletedAt = user.UpdatedAt
+                });
+
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return true;
             }

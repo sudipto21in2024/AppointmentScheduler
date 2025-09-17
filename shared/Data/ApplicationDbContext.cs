@@ -11,6 +11,7 @@ namespace Shared.Data
 
         // User Service Entities
         public DbSet<User> Users { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         // Service Management Service Entities
         public DbSet<ServiceCategory> ServiceCategories { get; set; }
@@ -394,6 +395,7 @@ namespace Shared.Data
             modelBuilder.Entity<Notification>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
             modelBuilder.Entity<NotificationPreference>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
             modelBuilder.Entity<BookingHistory>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
+            modelBuilder.Entity<RefreshToken>().HasQueryFilter(e => e.User.TenantId == GetCurrentTenantId());
 
             // Create indexes for better performance
             modelBuilder.Entity<User>()
@@ -439,6 +441,23 @@ namespace Shared.Data
                 
             modelBuilder.Entity<BookingHistory>()
                 .HasIndex(e => e.BookingId);
+
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Token).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Expires).IsRequired();
+                entity.Property(e => e.Created).IsRequired();
+                entity.Property(e => e.CreatedByIp).HasMaxLength(45); // IPv6 max length
+                entity.Property(e => e.Revoked);
+                entity.Property(e => e.RevokedByIp).HasMaxLength(45);
+                entity.Property(e => e.ReplacedByToken).HasMaxLength(255);
+
+                entity.HasOne(e => e.User)
+                    .WithMany() // No navigation property back to RefreshTokens in User model
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
             base.OnModelCreating(modelBuilder);
         }
