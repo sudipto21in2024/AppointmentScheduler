@@ -33,6 +33,72 @@ When creating new projects (e.g., new services, test projects), follow these ste
 *   **Adding to Solution**:
     *   Always add new projects to the main solution file: `dotnet sln <solution-file.sln> add <project.csproj>`
 
+### Detailed Step-by-Step Commands
+
+#### 1. Create a new ASP.NET Core Web API Project:
+```bash
+dotnet new webapi -n YourService -o backend/services/YourService
+```
+*This command creates a new Web API project named `YourService` in the `backend/services/` directory.*
+
+#### 2. Create a new xUnit Test Project:
+```bash
+dotnet new xunit -n YourService.Tests -o tests/YourService.Tests
+```
+*This command creates a new xUnit test project named `YourService.Tests` in the `tests/` directory.*
+
+#### 3. Add Project Reference (e.g., Test Project to Service Project):
+```bash
+dotnet add tests/YourService.Tests/YourService.Tests.csproj reference backend/services/YourService/YourService.csproj
+```
+*This command adds a project reference from `YourService.Tests.csproj` to `YourService.csproj`.*
+
+#### 4. Add Project Reference (e.g., Service Project to Shared Project):
+```bash
+dotnet add backend/services/YourService/YourService.csproj reference shared/Shared.csproj
+```
+*This command adds a project reference from `YourService.csproj` to `shared/Shared.csproj`.*
+
+#### 5. Add NuGet Package Reference:
+```bash
+dotnet add backend/services/YourService/YourService.csproj package <PackageName> --version <VersionNumber>
+```
+*This command adds a NuGet package reference with a specific version to `YourService.csproj`. Replace `<PackageName>` and `<VersionNumber>` accordingly.*
+
+#### 6. Add Project to Solution File:
+```bash
+dotnet sln backend/AppointmentBooking.sln add backend/services/YourService/YourService.csproj
+```
+*This command adds the newly created `YourService.csproj` to the `AppointmentBooking.sln` solution file.*
+
+#### 7. Create a new file (e.g., a service interface):
+```bash
+# First, ensure the directory exists
+mkdir -p backend/services/YourService/Services
+# Then, create the file with content
+write_to_file
+<path>backend/services/YourService/Services/IYourService.cs</path>
+<content>
+using System.Threading.Tasks;
+
+namespace YourService.Services
+{
+    public interface IYourService
+    {
+        Task<string> GetDataAsync();
+    }
+}
+</content>
+<line_count>8</line_count>
+```
+*This demonstrates how to create a new file with specific content. You would replace the path, content, and line count as needed.*
+
+#### 8. Build the entire application:
+```bash
+dotnet build backend/AppointmentBooking.sln
+```
+*This command builds the entire solution, checking for compilation errors and warnings across all projects.*
+
 ## 4. Common Error Scenarios and Fixes
 
 This section outlines common compilation errors and warnings encountered during development and how to resolve them.
@@ -132,6 +198,10 @@ These warnings (`CS8600`, `CS8602`, `CS8604`, `CS8625`, `CS8620`) are related to
 - **Change Description:** Documented common error scenarios and their fixes encountered during implementation of Notification Service features (BE-011). Added guidance on `xUnit1013` warnings.
 - **Reason:** To provide concrete guidance for AI agents on how to resolve frequently occurring build errors and warnings, improving development efficiency.
 - **Affected Components:** General development practices, all service projects.
+### 2025-09-17
+- **Change Description:** Added detailed step-by-step commands for project creation, adding references, creating files, and building the solution.
+- **Reason:** To assist AI agents in common project setup and build tasks, particularly to address issues with project references and build failures.
+- **Affected Components:** Project creation and management, build processes.
 
 ---
 
