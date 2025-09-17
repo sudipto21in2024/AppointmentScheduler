@@ -29,6 +29,7 @@ When creating new projects (e.g., new services, test projects), follow these ste
 *   **Initial File Structure and Cleanup**:
     *   After creating a new project, remove any default generated files that are not needed (e.g., `WeatherForecast.cs`, `WeatherForecastController.cs` for webapi projects).
     *   Place newly created files (controllers, services, validators) in their appropriate, logical subdirectories within the project.
+    *   **New**: Remember to explicitly install missing SDKs (e.g., .NET 9.0) if a project targets a newer framework.
 *   **Adding to Solution**:
     *   Always add new projects to the main solution file: `dotnet sln <solution-file.sln> add <project.csproj>`
 
@@ -83,6 +84,12 @@ These warnings (`CS8600`, `CS8602`, `CS8604`, `CS8625`, `CS8620`) are related to
     *   **Cause**: An exception variable in a `catch` block is declared but its value is not used (e.g., not logged, not rethrown with additional context).
     *   **Fix**: Always log exceptions in `catch` blocks using an `ILogger` instance. If logging is not desired or the exception is handled differently, consider removing the `ex` variable if it's truly not needed, or replace `catch (Exception ex)` with `catch (Exception)` if the exception details are irrelevant.
 
+### 4.5. xUnit Warnings
+
+*   **`xUnit1013`: Public method 'Dispose' on test class 'X' should be marked as a Fact.**
+    *   **Cause**: A public method named `Dispose` is present in a test class, but it's not a test method (lacks `[Fact]` or similar attribute). This usually occurs when implementing `IDisposable` for test cleanup.
+    *   **Fix**: Ensure the test class implements `IDisposable` and the `Dispose()` method is correctly defined as a public method required by the interface. Test runners will call this method automatically for cleanup. Do NOT mark `Dispose` with `[Fact]`.
+
 ## 5. Security Considerations
 
 *   **Vulnerable NuGet Packages (`NU1902` warnings):**
@@ -119,6 +126,12 @@ These warnings (`CS8600`, `CS8602`, `CS8604`, `CS8625`, `CS8620`) are related to
 *   **Review Interfaces and Implementations**: Ensure method signatures (return types, parameters, `async` keyword) match exactly between interfaces and their implementations.
 *   **Step-Through Debugging**: Use the debugger to step through code execution and inspect variable states.
 *   **Consult Existing Code**: Refer to existing, working code for examples of how similar functionalities are implemented.
+
+## 8. Change Log
+### 2025-09-17
+- **Change Description:** Documented common error scenarios and their fixes encountered during implementation of Notification Service features (BE-011). Added guidance on `xUnit1013` warnings.
+- **Reason:** To provide concrete guidance for AI agents on how to resolve frequently occurring build errors and warnings, improving development efficiency.
+- **Affected Components:** General development practices, all service projects.
 
 ---
 

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Shared.Data;
 using Shared.DTOs;
 using Shared.Models;
+using Hangfire; // Add using directive for Hangfire
 
 namespace NotificationService.Services
 {
@@ -34,9 +35,33 @@ namespace NotificationService.Services
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
 
+            // Enqueue Hangfire job to send the notification in the background
+            BackgroundJob.Enqueue<NotificationService>(x => x.SendNotificationJob(notification.Id));
+
+            Console.WriteLine($"Notification enqueued: {notification.Title} to user {notification.UserId}");
+        }
+
+        // This method will be called by Hangfire
+        public async Task SendNotificationJob(Guid notificationId)
+        {
+            // Retrieve notification details from DB using notificationId
+            var notification = await _context.Notifications.FindAsync(notificationId);
+            if (notification == null)
+            {
+                // Log error: Notification not found
+                Console.WriteLine($"Error: Notification with ID {notificationId} not found for sending.");
+                return;
+            }
+
             // In a real-world scenario, this would involve integrating with
-            // email/SMS/push notification providers based on notificationDto.Type
-            Console.WriteLine($"Notification sent: {notification.Title} to user {notification.UserId}");
+            // email/SMS/push notification providers based on notification.Type
+            // For now, we'll just simulate sending and update status
+            Console.WriteLine($"Simulating sending {notification.Type} notification: '{notification.Title}' to user {notification.UserId}");
+
+            // Update notification status in DB (e.g., Sent, Failed, Delivered)
+            notification.Status = "Sent"; // Assuming successful send for now
+            // In a real system, this would depend on the actual outcome of the external provider call
+            await _context.SaveChangesAsync();
         }
 
         public async Task<NotificationPreferenceDto> GetNotificationPreferencesAsync(Guid userId)

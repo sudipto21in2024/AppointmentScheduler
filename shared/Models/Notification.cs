@@ -10,6 +10,7 @@ namespace Shared.Models
         public string Message { get; set; } = null!;
         public string Type { get; set; } = null!;
         public bool IsRead { get; set; }
+        public string Status { get; set; } = "Pending"; // Add Status property
         public DateTime SentAt { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? ExpiresAt { get; set; }

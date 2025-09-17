@@ -44,6 +44,7 @@ This document provides a comprehensive catalog of events that are used for commu
 ### 5. Notification Events
 - NotificationSentEvent
 - NotificationFailedEvent
+- TemplateNotificationEvent
 
 ### 6. Slot Management Events
 - SlotCreatedEvent
@@ -64,3 +65,9 @@ This document provides a comprehensive catalog of events that are used for commu
 ## Implementation Guidelines
 
 All events implement the `IEvent` interface from `Shared.Contracts` and are handled through MassTransit with RabbitMQ as the message broker.
+
+## Change Log
+### 2025-09-17
+- **Change Description:** Added `TemplateNotificationEvent` to support dynamic, template-based notifications.
+- **Reason:** To enable personalized notification content generation and decouple notification content from the core services.
+- **Affected Components:** Notification Service, Booking Service (publishing).

@@ -168,9 +168,9 @@ namespace NotificationService.Tests
             var userId1 = Guid.NewGuid();
             var userId2 = Guid.NewGuid();
 
-            _context.Notifications.Add(new Notification { Id = Guid.NewGuid(), UserId = userId1, Title = "Note 1", Message = "Msg 1", Type = "email", SentAt = DateTime.UtcNow, CreatedAt = DateTime.UtcNow });
-            _context.Notifications.Add(new Notification { Id = Guid.NewGuid(), UserId = userId1, Title = "Note 2", Message = "Msg 2", Type = "sms", SentAt = DateTime.UtcNow, CreatedAt = DateTime.UtcNow });
-            _context.Notifications.Add(new Notification { Id = Guid.NewGuid(), UserId = userId2, Title = "Note 3", Message = "Msg 3", Type = "push", SentAt = DateTime.UtcNow, CreatedAt = DateTime.UtcNow });
+            _context.Notifications.Add(new Notification { Id = Guid.NewGuid(), UserId = userId1, Title = "Note 1", Message = "Msg 1", Type = "email", SentAt = DateTime.UtcNow, CreatedAt = DateTime.UtcNow, Status = "Sent" });
+            _context.Notifications.Add(new Notification { Id = Guid.NewGuid(), UserId = userId1, Title = "Note 2", Message = "Msg 2", Type = "sms", SentAt = DateTime.UtcNow, CreatedAt = DateTime.UtcNow, Status = "Sent" });
+            _context.Notifications.Add(new Notification { Id = Guid.NewGuid(), UserId = userId2, Title = "Note 3", Message = "Msg 3", Type = "push", SentAt = DateTime.UtcNow, CreatedAt = DateTime.UtcNow, Status = "Sent" });
             await _context.SaveChangesAsync();
 
             // Act

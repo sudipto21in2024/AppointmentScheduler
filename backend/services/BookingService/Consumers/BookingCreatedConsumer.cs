@@ -6,6 +6,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using BookingService.Consumers;
+using Shared.DTOs.EmailTemplates; // Add for BookingConfirmationEmailDto
+using Shared.Models; // Add for User, Service, Slot
+using Shared.Data; // Add for ApplicationDbContext
+using Microsoft.EntityFrameworkCore; // Add for Include, FirstOrDefaultAsync
 
 namespace BookingService.Consumers
 {
@@ -18,10 +22,14 @@ namespace BookingService.Consumers
         private static readonly ActivitySource ActivitySource = new ActivitySource("BookingService.BookingCreatedConsumer");
         private readonly ILogger<BookingCreatedConsumer> _logger;
         private readonly HashSet<Guid> _processedEvents = new HashSet<Guid>();
+        private readonly IPublishEndpoint _publishEndpoint; // Add IPublishEndpoint
+        private readonly ApplicationDbContext _dbContext; // Add DbContext
 
-        public BookingCreatedConsumer(ILogger<BookingCreatedConsumer> logger)
+        public BookingCreatedConsumer(ILogger<BookingCreatedConsumer> logger, IPublishEndpoint publishEndpoint, ApplicationDbContext dbContext)
         {
             _logger = logger;
+            _publishEndpoint = publishEndpoint;
+            _dbContext = dbContext;
         }
 
         public async Task Consume(ConsumeContext<BookingCreatedEvent> context)
@@ -233,44 +241,66 @@ namespace BookingService.Consumers
             try
             {
                 _logger.LogInformation("Sending booking confirmation notifications for booking {BookingId}", bookingEvent.BookingId);
-                
-                // Send notification to customer
-                var customerNotificationEvent = new NotificationSentEvent
+
+                // Fetch full booking details for templating
+                var booking = await _dbContext.Bookings
+                    .Include(b => b.Customer)
+                    .Include(b => b.Service)
+                        .ThenInclude(s => s.Provider) // Include provider for service
+                    .Include(b => b.Slot)
+                    .FirstOrDefaultAsync(b => b.Id == bookingEvent.BookingId);
+
+                if (booking == null)
+                {
+                    _logger.LogWarning("Booking {BookingId} not found for notification sending.", bookingEvent.BookingId);
+                    return;
+                }
+
+                // Publish TemplateNotificationEvent for customer
+                var customerTemplateNotificationEvent = new TemplateNotificationEvent
                 {
                     NotificationId = Guid.NewGuid(),
-                    UserId = bookingEvent.CustomerId,
-                    TenantId = bookingEvent.TenantId,
-                    NotificationType = "Email",
-                    Channel = "BookingConfirmation",
-                    Title = "Booking Confirmation",
-                    Message = $"Your booking for {bookingEvent.SlotStartDateTime:yyyy-MM-dd HH:mm} has been confirmed.",
-                    SentAt = DateTime.UtcNow,
-                    Provider = "SendGrid"
+                    UserId = booking.CustomerId,
+                    TemplateName = "BookingConfirmation.html",
+                    RecipientEmail = booking.Customer?.Email ?? string.Empty, // Ensure RecipientEmail is not null
+                    TemplateModel = new BookingConfirmationEmailDto
+                    {
+                        CustomerName = $"{booking.Customer?.FirstName} {booking.Customer?.LastName}",
+                        ServiceName = booking.Service?.Name ?? "Unknown Service",
+                        BookingDate = booking.BookingDate,
+                        BookingTime = booking.BookingDate.ToShortTimeString(),
+                        ProviderName = booking.Service?.Provider?.FirstName ?? "Unknown Provider"
+                    },
+                    Timestamp = DateTime.UtcNow
                 };
-                
-                await context.Publish(customerNotificationEvent);
-                
-                _logger.LogInformation("Customer notification sent for booking {BookingId}, Notification ID: {NotificationId}",
-                    bookingEvent.BookingId, customerNotificationEvent.NotificationId);
-                
-                // Send notification to provider
-                var providerNotificationEvent = new NotificationSentEvent
+
+                await _publishEndpoint.Publish(customerTemplateNotificationEvent);
+
+                _logger.LogInformation("Customer template notification event published for booking {BookingId}, Notification ID: {NotificationId}",
+                    bookingEvent.BookingId, customerTemplateNotificationEvent.NotificationId);
+
+                // Publish TemplateNotificationEvent for provider
+                var providerTemplateNotificationEvent = new TemplateNotificationEvent
                 {
                     NotificationId = Guid.NewGuid(),
-                    UserId = bookingEvent.ProviderId,
-                    TenantId = bookingEvent.TenantId,
-                    NotificationType = "Email",
-                    Channel = "BookingConfirmation",
-                    Title = "New Booking Received",
-                    Message = $"You have received a new booking for {bookingEvent.SlotStartDateTime:yyyy-MM-dd HH:mm}.",
-                    SentAt = DateTime.UtcNow,
-                    Provider = "SendGrid"
+                    UserId = booking.Service?.ProviderId ?? Guid.Empty, // Handle null Service or Provider
+                    TemplateName = "BookingConfirmation.html", // Re-use template for provider, content will differ based on model
+                    RecipientEmail = booking.Service?.Provider?.Email ?? string.Empty, // Ensure RecipientEmail is not null
+                    TemplateModel = new BookingConfirmationEmailDto // Use the same DTO, but might populate differently for provider view
+                    {
+                        CustomerName = $"{booking.Customer?.FirstName} {booking.Customer?.LastName}",
+                        ServiceName = booking.Service?.Name ?? "Unknown Service",
+                        BookingDate = booking.BookingDate,
+                        BookingTime = booking.BookingDate.ToShortTimeString(),
+                        ProviderName = booking.Service?.Provider?.FirstName ?? "Unknown Provider"
+                    },
+                    Timestamp = DateTime.UtcNow
                 };
-                
-                await context.Publish(providerNotificationEvent);
-                
-                _logger.LogInformation("Provider notification sent for booking {BookingId}, Notification ID: {NotificationId}",
-                    bookingEvent.BookingId, providerNotificationEvent.NotificationId);
+
+                await _publishEndpoint.Publish(providerTemplateNotificationEvent);
+
+                _logger.LogInformation("Provider template notification event published for booking {BookingId}, Notification ID: {NotificationId}",
+                    bookingEvent.BookingId, providerTemplateNotificationEvent.NotificationId);
             }
             catch (Exception ex)
             {

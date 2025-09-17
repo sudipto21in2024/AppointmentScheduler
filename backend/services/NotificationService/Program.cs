@@ -5,12 +5,15 @@ using Microsoft.Extensions.Hosting;
 using NotificationService.Services;
 using NotificationService.Validators;
 using Shared.Data;
+using Hangfire;
+using Hangfire.SqlServer;
+using MassTransit; // Add MassTransit namespace
+using NotificationService.Consumers; // Add consumer namespace
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -18,9 +21,40 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Add Hangfire services.
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection")));
+
+// Add the processing server as IHostedService
+builder.Services.AddHangfireServer();
+
 // Register custom services and validators
 builder.Services.AddScoped<INotificationService, NotificationService.Services.NotificationService>();
 builder.Services.AddScoped<INotificationValidator, NotificationValidator>();
+builder.Services.AddSingleton<ITemplateRendererService, TemplateRendererService>(); // Singleton as RazorLightEngine is thread-safe
+
+// MassTransit Configuration
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumer<TemplateNotificationConsumer>(); // Register the consumer
+
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host("localhost", "/", h =>
+        {
+            h.Username("guest");
+            h.Password("guest");
+        });
+
+        cfg.ReceiveEndpoint("template-notification-events", e =>
+        {
+            e.ConfigureConsumer<TemplateNotificationConsumer>(context);
+        });
+    });
+});
 
 var app = builder.Build();
 
@@ -34,6 +68,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+// Add Hangfire Dashboard
+app.UseHangfireDashboard();
 
 app.MapControllers();
 
