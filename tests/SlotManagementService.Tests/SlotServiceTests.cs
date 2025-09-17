@@ -26,9 +26,13 @@ namespace SlotManagementService.Tests
 
         public SlotServiceTests()
         {
+            // Set override tenant ID for testing
+            var tenantId = Guid.NewGuid();
+            ApplicationDbContext.OverrideTenantId = tenantId;
+            
             // Create a simple in-memory database context for testing
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: "TestDatabase_SlotService")
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
             _dbContext = new ApplicationDbContext(options);
             _loggerMock = new Mock<ILogger<SlotService>>();
@@ -42,7 +46,7 @@ namespace SlotManagementService.Tests
         {
             // Arrange
             var userId = Guid.NewGuid();
-            var tenantId = Guid.NewGuid();
+            var tenantId = ApplicationDbContext.OverrideTenantId.Value;
             var serviceId = Guid.NewGuid();
             var providerId = Guid.NewGuid();
 
@@ -117,7 +121,7 @@ namespace SlotManagementService.Tests
         {
             // Arrange
             var userId = Guid.NewGuid();
-            var tenantId = Guid.NewGuid();
+            var tenantId = ApplicationDbContext.OverrideTenantId.Value;
             var serviceId = Guid.NewGuid();
 
             // Add a customer user to the database (not a provider)
@@ -152,7 +156,7 @@ namespace SlotManagementService.Tests
                 .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act & Assert
-            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
                 _slotService.CreateSlotAsync(request, userId, tenantId));
         }
 
@@ -161,7 +165,7 @@ namespace SlotManagementService.Tests
         {
             // Arrange
             var userId = Guid.NewGuid();
-            var tenantId = Guid.NewGuid();
+            var tenantId = ApplicationDbContext.OverrideTenantId.Value;
             var slotId = Guid.NewGuid();
             var serviceId = Guid.NewGuid();
             var providerId = Guid.NewGuid();

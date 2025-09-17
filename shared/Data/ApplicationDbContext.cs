@@ -417,9 +417,18 @@ namespace Shared.Data
             base.OnModelCreating(modelBuilder);
         }
 
+        // Property to allow overriding the tenant ID for testing
+        public static Guid? OverrideTenantId { get; set; } = null;
+        
         // Placeholder for tenant ID - this would be implemented based on your tenant resolution strategy
         private Guid GetCurrentTenantId()
         {
+            // If there's an override tenant ID, use it (for testing purposes)
+            if (OverrideTenantId.HasValue)
+            {
+                return OverrideTenantId.Value;
+            }
+            
             // This is a placeholder implementation
             // In a real implementation, this would retrieve the current tenant ID from:
             // - HTTP context

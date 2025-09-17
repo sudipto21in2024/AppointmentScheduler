@@ -25,7 +25,7 @@ namespace ServiceManagementService.Tests
         {
             // Create a simple in-memory database context for testing
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: "TestDatabase_Service")
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
             _dbContext = new ApplicationDbContext(options);
             _loggerMock = new Mock<ILogger<ServiceService>>();
@@ -33,13 +33,43 @@ namespace ServiceManagementService.Tests
             _validatorMock = new Mock<IServiceValidator>();
             _serviceService = new ServiceService(_dbContext, _validatorMock.Object, _publishEndpointMock.Object);
         }
+        [Fact]
+        public async Task Test_Entity_Save_And_Retrieve()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var tenantId = ApplicationDbContext.OverrideTenantId.Value;
+            
+            // Add a provider user to the database
+            var provider = new User
+            {
+                Id = userId,
+                Email = "provider@test.com",
+                PasswordHash = "hash",
+                FirstName = "Test",
+                LastName = "Provider",
+                UserType = UserRole.Provider,
+                TenantId = tenantId,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _dbContext.Users.Add(provider);
+            await _dbContext.SaveChangesAsync();
+            
+            // Try to retrieve the user
+            var retrievedUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId && u.TenantId == tenantId);
+            Assert.NotNull(retrievedUser);
+            Assert.Equal(UserRole.Provider, retrievedUser.UserType);
+        }
+        
 
         [Fact]
         public async Task CreateServiceAsync_ValidRequest_CreatesService()
         {
             // Arrange
             var userId = Guid.NewGuid();
-            var tenantId = Guid.NewGuid();
+            var tenantId = ApplicationDbContext.OverrideTenantId.Value;
             var categoryId = Guid.NewGuid();
 
             // Add a provider user to the database
@@ -114,7 +144,7 @@ namespace ServiceManagementService.Tests
         {
             // Arrange
             var userId = Guid.NewGuid();
-            var tenantId = Guid.NewGuid();
+            var tenantId = ApplicationDbContext.OverrideTenantId.Value;
 
             // Add a customer user to the database (not a provider)
             var customer = new User
@@ -151,7 +181,7 @@ namespace ServiceManagementService.Tests
                 .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act & Assert
-            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
                 _serviceService.CreateServiceAsync(request, userId, tenantId));
         }
 
@@ -160,7 +190,7 @@ namespace ServiceManagementService.Tests
         {
             // Arrange
             var userId = Guid.NewGuid();
-            var tenantId = Guid.NewGuid();
+            var tenantId = ApplicationDbContext.OverrideTenantId.Value;
             var serviceId = Guid.NewGuid();
             var categoryId = Guid.NewGuid();
             var providerId = Guid.NewGuid();
@@ -239,7 +269,7 @@ namespace ServiceManagementService.Tests
         {
             // Arrange
             var userId = Guid.NewGuid();
-            var tenantId = Guid.NewGuid();
+            var tenantId = ApplicationDbContext.OverrideTenantId.Value;
             var serviceId = Guid.NewGuid();
             var categoryId = Guid.NewGuid();
 
@@ -323,7 +353,7 @@ namespace ServiceManagementService.Tests
         {
             // Arrange
             var userId = Guid.NewGuid();
-            var tenantId = Guid.NewGuid();
+            var tenantId = ApplicationDbContext.OverrideTenantId.Value;
             var serviceId = Guid.NewGuid();
             var providerId = Guid.NewGuid();
 
@@ -372,7 +402,7 @@ namespace ServiceManagementService.Tests
                 .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act & Assert
-            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
                 _serviceService.UpdateServiceAsync(serviceId, request, userId, tenantId));
         }
 
@@ -381,7 +411,7 @@ namespace ServiceManagementService.Tests
         {
             // Arrange
             var userId = Guid.NewGuid();
-            var tenantId = Guid.NewGuid();
+            var tenantId = ApplicationDbContext.OverrideTenantId.Value;
             var serviceId = Guid.NewGuid();
 
             // Add a provider user to the database
@@ -438,7 +468,7 @@ namespace ServiceManagementService.Tests
         {
             // Arrange
             var userId = Guid.NewGuid();
-            var tenantId = Guid.NewGuid();
+            var tenantId = ApplicationDbContext.OverrideTenantId.Value;
             var categoryId = Guid.NewGuid();
             var providerId = Guid.NewGuid();
 
