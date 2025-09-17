@@ -42,3 +42,12 @@
     - Updating user retrieval tests to confirm soft deletion logic (only active users by default).
     - Modifying user deletion tests to verify soft deletion (setting `IsActive` to `false`) and `UserDeletedEvent` publishing.
     - Adding tests for `UpdateUser` to confirm updates only on active users and `UserUpdatedEvent` publishing.
+
+### Multi-Tenancy (ApplicationDbContext) Enhancements
+- Modified `ApplicationDbContext` to inject `IHttpContextAccessor` for proper tenant ID resolution.
+- Implemented `GetCurrentTenantId()` to retrieve the `TenantId` from the authenticated user's claims in the HTTP context.
+- **Note**: The application's `Startup.cs` or `Program.cs` file needs to register `IHttpContextAccessor` with the dependency injection container (e.g., `services.AddHttpContextAccessor();`).
+
+### Build Fixes
+- Resolved `CS1503` errors by explicitly casting event objects to `Shared.Contracts.IEvent` in `UserService.Services.UserService`.
+- Corrected `ApplicationDbContext` instantiation in `backend/services/UserService/DesignTimeDbContextFactory.cs` and `tests/NotificationService.Tests/NotificationServiceTests.cs` to provide `IHttpContextAccessor` (or a mock/null) to the constructor.

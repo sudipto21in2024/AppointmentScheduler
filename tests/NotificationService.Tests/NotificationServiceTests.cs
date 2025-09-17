@@ -7,6 +7,7 @@ using Shared.Data;
 using Shared.DTOs;
 using Shared.Models;
 using NotificationService.Services;
+using Microsoft.AspNetCore.Http; // Required for IHttpContextAccessor
 
 namespace NotificationService.Tests
 {
@@ -20,7 +21,7 @@ namespace NotificationService.Tests
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-            _context = new ApplicationDbContext(options);
+            _context = new ApplicationDbContext(options, new Mock<IHttpContextAccessor>().Object);
             _notificationService = new NotificationService.Services.NotificationService(_context);
         }
 

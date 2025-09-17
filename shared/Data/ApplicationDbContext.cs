@@ -1,12 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Shared.Models;
+using Microsoft.AspNetCore.Http; // Required for IHttpContextAccessor
+using System.Security.Claims; // Required for ClaimsPrincipal
 
 namespace Shared.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IHttpContextAccessor httpContextAccessor) : base(options)
         {
+            _httpContextAccessor = httpContextAccessor;
         }
 
         // User Service Entities
@@ -473,13 +478,21 @@ namespace Shared.Data
             {
                 return OverrideTenantId.Value;
             }
-            
-            // This is a placeholder implementation
-            // In a real implementation, this would retrieve the current tenant ID from:
-            // - HTTP context
-            // - Claims principal
-            // - Service context
-            // - Configuration
+
+            // Retrieve TenantId from HttpContext.User.Claims
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext != null && httpContext.User.Identity is ClaimsIdentity claimsIdentity)
+            {
+                var tenantIdClaim = claimsIdentity.FindFirst("TenantId");
+                if (tenantIdClaim != null && Guid.TryParse(tenantIdClaim.Value, out Guid tenantId))
+                {
+                    return tenantId;
+                }
+            }
+
+            // Fallback: If no tenant ID is found in claims, return Guid.Empty or throw an exception
+            // depending on your application's security policy. Returning Guid.Empty might allow
+            // access to non-tenant-specific data or indicate an unauthenticated context.
             return Guid.Empty;
         }
     }
