@@ -2,30 +2,22 @@ using Xunit;
 using System.Threading.Tasks;
 using NotificationService.Services;
 using Shared.DTOs.EmailTemplates;
-using System.IO;
+using Moq;
+using RazorLight;
 using System;
+using System.IO;
 
 namespace NotificationService.Tests
 {
     public class TemplateRendererServiceTests : IDisposable
     {
         private readonly TemplateRendererService _templateRendererService;
-        private readonly string _templatesPath;
-        private readonly string _originalCurrentDirectory;
+        private readonly Mock<IRazorLightEngine> _mockRazorLightEngine;
 
         public TemplateRendererServiceTests()
         {
-            _originalCurrentDirectory = Directory.GetCurrentDirectory();
-            _templatesPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            Directory.CreateDirectory(_templatesPath);
-            Directory.SetCurrentDirectory(_templatesPath); // Set current directory for RazorLight to find templates
-
-            // Create a dummy template file for testing
-            File.WriteAllText(Path.Combine(_templatesPath, "TestTemplate.html"),
-                "<h1>Hello, {{Name}}!</h1><p>This is a test for {{Value}}.</p>");
-            
-            // Initialize TemplateRendererService with the temporary path
-            _templateRendererService = new TemplateRendererService();
+            _mockRazorLightEngine = new Mock<IRazorLightEngine>();
+            _templateRendererService = new TemplateRendererService(_mockRazorLightEngine.Object);
         }
 
         [Fact]
@@ -33,7 +25,10 @@ namespace NotificationService.Tests
         {
             // Arrange
             var model = new { Name = "World", Value = "RazorLight" };
-            var templateName = "TestTemplate.html";
+            var templateName = "TestTemplate"; // Removed .html extension
+
+            _mockRazorLightEngine.Setup(x => x.CompileRenderAsync(templateName, It.IsAny<object>(), null))
+                .ReturnsAsync("<h1>Hello, World!</h1><p>This is a test for RazorLight.</p>");
 
             // Act
             var result = await _templateRendererService.RenderTemplateAsync(templateName, model);
@@ -55,11 +50,10 @@ namespace NotificationService.Tests
                 BookingTime = "10:00 AM",
                 ProviderName = "Jane Smith"
             };
-            var templateName = "BookingConfirmation.html";
+            var templateName = "BookingConfirmation"; // Removed .html extension
 
-            // Create a dummy BookingConfirmation template file for testing
-            File.WriteAllText(Path.Combine(_templatesPath, templateName),
-                "Dear {{CustomerName}}, your booking for {{ServiceName}} on {{BookingDate}} at {{BookingTime}} with {{ProviderName}} is confirmed.");
+            _mockRazorLightEngine.Setup(x => x.CompileRenderAsync(templateName, It.IsAny<BookingConfirmationEmailDto>(), null))
+                .ReturnsAsync("Dear John Doe, your booking for Haircut on 10/26/2025 at 10:00 AM with Jane Smith is confirmed.");
 
             // Act
             var result = await _templateRendererService.RenderTemplateAsync(templateName, model);
@@ -68,14 +62,9 @@ namespace NotificationService.Tests
             Assert.Contains("Dear John Doe, your booking for Haircut on 10/26/2025 at 10:00 AM with Jane Smith is confirmed.", result);
         }
         
-        // Clean up the temporary directory after tests
         public void Dispose()
         {
-            Directory.SetCurrentDirectory(_originalCurrentDirectory); // Restore original current directory
-            if (Directory.Exists(_templatesPath))
-            {
-                Directory.Delete(_templatesPath, true);
-            }
+            // No cleanup needed as we are mocking the engine now
         }
     }
 }

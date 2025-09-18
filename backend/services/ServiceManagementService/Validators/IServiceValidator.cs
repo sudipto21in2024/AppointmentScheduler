@@ -22,7 +22,7 @@ namespace ServiceManagementService.Validators
         /// </summary>
         /// <param name="request">Service update request</param>
         /// <returns>Validation result</returns>
-        Task<Shared.DTOs.ValidationResult> ValidateUpdateServiceRequestAsync(UpdateServiceRequest request);
+        Task<Shared.DTOs.ValidationResult> ValidateUpdateServiceRequestAsync(UpdateServiceRequest request, Guid tenantId);
 
         /// <summary>
         /// Validates a category creation request
@@ -37,7 +37,7 @@ namespace ServiceManagementService.Validators
         /// </summary>
         /// <param name="request">Category update request</param>
         /// <returns>Validation result</returns>
-        Task<Shared.DTOs.ValidationResult> ValidateUpdateCategoryRequestAsync(UpdateCategoryRequest request);
+        Task<Shared.DTOs.ValidationResult> ValidateUpdateCategoryRequestAsync(UpdateCategoryRequest request, Guid tenantId);
     }
 
     /// <summary>

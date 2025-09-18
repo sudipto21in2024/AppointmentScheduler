@@ -297,9 +297,11 @@ namespace ReportingService.Services
 
             // Get bookings query
             var bookingsQuery = _dbContext.Bookings
-                .Where(b => b.Service.ProviderId == providerId && 
+                .Include(b => b.Service) // Eagerly load Service for Service.Name
+                .Include(b => b.Payments) // Eagerly load Payments for Amount calculation
+                .Where(b => b.Service.ProviderId == providerId &&
                            b.TenantId == tenantId &&
-                           b.CreatedAt >= startDate && 
+                           b.CreatedAt >= startDate &&
                            b.CreatedAt <= endDate);
 
             if (filter.ServiceId.HasValue)
@@ -308,7 +310,12 @@ namespace ReportingService.Services
             }
 
             // Get customer booking history
-            insights.CustomerBookingHistory = await bookingsQuery
+            var customerBookingHistory = await bookingsQuery
+                .Include(b => b.Service)
+                .Include(b => b.Payments)
+                .ToListAsync(); // Bring data into memory
+
+            insights.CustomerBookingHistory = customerBookingHistory
                 .GroupBy(b => new { b.CustomerId, b.Customer.FirstName, b.Customer.LastName, b.Customer.Email })
                 .Select(g => new CustomerBookingHistoryDto
                 {
@@ -327,13 +334,12 @@ namespace ReportingService.Services
                                           ServiceName = b.Service.Name,
                                           BookingDate = b.BookingDate,
                                           Status = b.Status,
-                                          Amount = b.Payments.FirstOrDefault(p => p.PaymentStatus == "Completed") != null ? 
-                                                   b.Payments.FirstOrDefault(p => p.PaymentStatus == "Completed").Amount : 0
+                                          Amount = b.Payments.Where(p => p.PaymentStatus == "Completed").Sum(p => (decimal?)p.Amount) ?? 0
                                       })
                                       .ToList()
                 })
                 .OrderByDescending(c => c.TotalBookings)
-                .ToListAsync();
+                .ToList(); // Convert to list
 
             // Get customer feedback
             insights.CustomerFeedback = await _dbContext.Reviews

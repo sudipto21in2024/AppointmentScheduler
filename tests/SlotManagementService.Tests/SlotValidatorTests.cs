@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using System;
 using Shared.DTOs;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace SlotManagementService.Tests
 {
@@ -16,14 +18,33 @@ namespace SlotManagementService.Tests
         private readonly Mock<ILogger<SlotValidator>> _loggerMock;
         private readonly SlotValidator _validator;
         private readonly ApplicationDbContext _dbContext;
+        private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
+        private readonly Guid _testTenantId;
 
         public SlotValidatorTests()
         {
+            // Create a test tenant ID that will be used consistently
+            _testTenantId = Guid.NewGuid();
+
+            // Create a mock IHttpContextAccessor with a tenant ID claim
+            _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
+            var mockHttpContext = new DefaultHttpContext();
+            
+            // Create a claims identity with a tenant ID claim
+            var claims = new List<Claim>
+            {
+                new Claim("TenantId", _testTenantId.ToString())
+            };
+            var claimsIdentity = new ClaimsIdentity(claims);
+            mockHttpContext.User = new ClaimsPrincipal(claimsIdentity);
+            
+            _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(mockHttpContext);
+
             // Create a simple in-memory database context for testing
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: "TestDatabase_SlotValidator")
                 .Options;
-            _dbContext = new ApplicationDbContext(options);
+            _dbContext = new ApplicationDbContext(options, _mockHttpContextAccessor.Object);
             _loggerMock = new Mock<ILogger<SlotValidator>>();
             _validator = new SlotValidator(_dbContext);
         }
@@ -32,7 +53,7 @@ namespace SlotManagementService.Tests
         public async Task ValidateCreateSlotRequestAsync_ValidRequest_ReturnsValidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var serviceId = Guid.NewGuid();
             
             // Add a service to the database
@@ -76,7 +97,7 @@ namespace SlotManagementService.Tests
         public async Task ValidateCreateSlotRequestAsync_MissingServiceId_ReturnsInvalidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var request = new CreateSlotRequest
             {
                 ServiceId = Guid.Empty, // Missing service ID
@@ -99,7 +120,7 @@ namespace SlotManagementService.Tests
         public async Task ValidateCreateSlotRequestAsync_InvalidServiceId_ReturnsInvalidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var request = new CreateSlotRequest
             {
                 ServiceId = Guid.NewGuid(), // Non-existent service
@@ -122,7 +143,7 @@ namespace SlotManagementService.Tests
         public async Task ValidateCreateSlotRequestAsync_StartAfterEnd_ReturnsInvalidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var serviceId = Guid.NewGuid();
             
             // Add a service to the database
@@ -166,7 +187,7 @@ namespace SlotManagementService.Tests
         public async Task ValidateCreateSlotRequestAsync_ZeroMaxBookings_ReturnsInvalidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var serviceId = Guid.NewGuid();
             
             // Add a service to the database
@@ -219,7 +240,7 @@ namespace SlotManagementService.Tests
             };
 
             // Act
-            var result = await _validator.ValidateUpdateSlotRequestAsync(request);
+            var result = _validator.ValidateUpdateSlotRequest(request);
 
             // Assert
             Assert.True(result.IsValid);
@@ -237,7 +258,7 @@ namespace SlotManagementService.Tests
             };
 
             // Act
-            var result = await _validator.ValidateUpdateSlotRequestAsync(request);
+            var result = _validator.ValidateUpdateSlotRequest(request);
 
             // Assert
             Assert.False(result.IsValid);
@@ -254,7 +275,7 @@ namespace SlotManagementService.Tests
             };
 
             // Act
-            var result = await _validator.ValidateUpdateSlotRequestAsync(request);
+            var result = _validator.ValidateUpdateSlotRequest(request);
 
             // Assert
             Assert.False(result.IsValid);
@@ -265,7 +286,7 @@ namespace SlotManagementService.Tests
         public async Task ValidateRecurringSlotRequestAsync_ValidRequest_ReturnsValidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var serviceId = Guid.NewGuid();
             
             // Add a service to the database
@@ -311,7 +332,7 @@ namespace SlotManagementService.Tests
         public async Task ValidateRecurringSlotRequestAsync_MissingServiceId_ReturnsInvalidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var request = new CreateRecurringSlotsRequest
             {
                 ServiceId = Guid.Empty, // Missing service ID
@@ -336,7 +357,7 @@ namespace SlotManagementService.Tests
         public async Task ValidateRecurringSlotRequestAsync_InvalidServiceId_ReturnsInvalidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var request = new CreateRecurringSlotsRequest
             {
                 ServiceId = Guid.NewGuid(), // Non-existent service
@@ -361,7 +382,7 @@ namespace SlotManagementService.Tests
         public async Task ValidateRecurringSlotRequestAsync_StartAfterEnd_ReturnsInvalidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var serviceId = Guid.NewGuid();
             
             // Add a service to the database
@@ -407,7 +428,7 @@ namespace SlotManagementService.Tests
         public async Task ValidateRecurringSlotRequestAsync_ZeroMaxBookings_ReturnsInvalidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var serviceId = Guid.NewGuid();
             
             // Add a service to the database
@@ -453,7 +474,7 @@ namespace SlotManagementService.Tests
         public async Task ValidateRecurringSlotRequestAsync_ZeroInterval_ReturnsInvalidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var serviceId = Guid.NewGuid();
             
             // Add a service to the database
@@ -499,7 +520,7 @@ namespace SlotManagementService.Tests
         public async Task ValidateRecurringSlotRequestAsync_ZeroOccurrences_ReturnsInvalidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var serviceId = Guid.NewGuid();
             
             // Add a service to the database
@@ -545,7 +566,7 @@ namespace SlotManagementService.Tests
         public async Task ValidateRecurringSlotRequestAsync_EndBeforeStart_ReturnsInvalidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var serviceId = Guid.NewGuid();
             
             // Add a service to the database

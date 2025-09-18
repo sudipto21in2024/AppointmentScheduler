@@ -12,10 +12,12 @@ namespace NotificationService.Services
     public class NotificationService : INotificationService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IBackgroundJobClient _backgroundJobClient;
 
-        public NotificationService(ApplicationDbContext context)
+        public NotificationService(ApplicationDbContext context, IBackgroundJobClient backgroundJobClient)
         {
             _context = context;
+            _backgroundJobClient = backgroundJobClient;
         }
 
         public async Task SendNotificationAsync(SendNotificationDto notificationDto)
@@ -36,7 +38,7 @@ namespace NotificationService.Services
             await _context.SaveChangesAsync();
 
             // Enqueue Hangfire job to send the notification in the background
-            BackgroundJob.Enqueue<NotificationService>(x => x.SendNotificationJob(notification.Id));
+            _backgroundJobClient.Enqueue<NotificationService>(x => x.SendNotificationJob(notification.Id));
 
             Console.WriteLine($"Notification enqueued: {notification.Title} to user {notification.UserId}");
         }

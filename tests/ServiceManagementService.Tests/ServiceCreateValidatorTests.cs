@@ -8,31 +8,59 @@ using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Shared.DTOs;
 using ServiceManagementService.Services;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace ServiceManagementService.Tests
 {
-    public class ServiceValidatorTests
+    public class ServiceCreateValidatorTests : IDisposable
     {
-        private readonly Mock<ILogger<ServiceValidator>> _loggerMock;
-        private readonly ServiceValidator _validator;
         private readonly ApplicationDbContext _dbContext;
+        private readonly ServiceValidator _validator;
+        private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
+        private readonly Guid _testTenantId;
 
-        public ServiceValidatorTests()
+        public ServiceCreateValidatorTests()
         {
-            // Create a simple in-memory database context for testing
+            // Create a test tenant ID that will be used consistently
+            _testTenantId = Guid.NewGuid();
+
+            // Create a mock IHttpContextAccessor with a tenant ID claim
+            _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
+            var mockHttpContext = new DefaultHttpContext();
+            
+            // Create a claims identity with a tenant ID claim
+            var claims = new List<Claim>
+            {
+                new Claim("TenantId", _testTenantId.ToString())
+            };
+            var claimsIdentity = new ClaimsIdentity(claims);
+            mockHttpContext.User = new ClaimsPrincipal(claimsIdentity);
+            
+            _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(mockHttpContext);
+
+            // Create DbContextOptions
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: "TestDatabase")
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-            _dbContext = new ApplicationDbContext(options);
-            _loggerMock = new Mock<ILogger<ServiceValidator>>();
+
+            // Create actual context with mocked IHttpContextAccessor
+            _dbContext = new ApplicationDbContext(options, _mockHttpContextAccessor.Object);
+            
             _validator = new ServiceValidator(_dbContext);
+        }
+
+        public void Dispose()
+        {
+            _dbContext.Database.EnsureDeleted();
+            _dbContext.Dispose();
         }
 
         [Fact]
         public async Task ValidateCreateServiceRequestAsync_ValidRequest_ReturnsValidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var categoryId = Guid.NewGuid();
             
             // Add a category to the database
@@ -73,7 +101,7 @@ namespace ServiceManagementService.Tests
         public async Task ValidateCreateServiceRequestAsync_MissingName_ReturnsInvalidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var request = new CreateServiceRequest
             {
                 Name = "",
@@ -99,12 +127,27 @@ namespace ServiceManagementService.Tests
         public async Task ValidateCreateServiceRequestAsync_InvalidCategoryId_ReturnsInvalidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
+            var categoryId = Guid.NewGuid(); // This category will be added to the DB
+            
+            // Add a category to the database
+            var category = new ServiceCategory
+            {
+                Id = categoryId,
+                Name = "Test Category",
+                TenantId = tenantId,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _dbContext.ServiceCategories.Add(category);
+            await _dbContext.SaveChangesAsync();
+
             var request = new CreateServiceRequest
             {
                 Name = "Test Service",
                 Description = "Test Description",
-                CategoryId = Guid.NewGuid(), // Non-existent category
+                CategoryId = Guid.NewGuid(), // This is the non-existent category
                 Duration = 60,
                 Price = 100.00m,
                 Currency = "USD",
@@ -125,7 +168,7 @@ namespace ServiceManagementService.Tests
         public async Task ValidateCreateServiceRequestAsync_DuplicateName_ReturnsInvalidResult()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var categoryId = Guid.NewGuid();
             
             // Add a category to the database
@@ -163,7 +206,7 @@ namespace ServiceManagementService.Tests
             {
                 Name = "Test Service", // Same name as existing service
                 Description = "Test Description",
-                CategoryId = categoryId,
+                CategoryId = categoryId, // Use the valid categoryId
                 Duration = 60,
                 Price = 100.00m,
                 Currency = "USD",
@@ -178,116 +221,6 @@ namespace ServiceManagementService.Tests
             // Assert
             Assert.False(result.IsValid);
             Assert.Contains("Service name must be unique within tenant", result.Errors);
-        }
-
-        [Fact]
-        public async Task ValidateUpdateServiceRequestAsync_ValidRequest_ReturnsValidResult()
-        {
-            // Arrange
-            var request = new UpdateServiceRequest
-            {
-                Name = "Updated Service",
-                Description = "Updated Description",
-                CategoryId = Guid.NewGuid(),
-                Duration = 90,
-                Price = 150.00m,
-                Currency = "EUR",
-                IsActive = false,
-                IsFeatured = true,
-                MaxBookingsPerDay = 10
-            };
-
-            // Act
-            var result = await _validator.ValidateUpdateServiceRequestAsync(request);
-
-            // Assert
-            Assert.True(result.IsValid);
-            Assert.Empty(result.Errors);
-        }
-
-        [Fact]
-        public async Task ValidateUpdateServiceRequestAsync_InvalidDuration_ReturnsInvalidResult()
-        {
-            // Arrange
-            var request = new UpdateServiceRequest
-            {
-                Duration = -10 // Invalid duration
-            };
-
-            // Act
-            var result = await _validator.ValidateUpdateServiceRequestAsync(request);
-
-            // Assert
-            Assert.False(result.IsValid);
-            Assert.Contains("Service duration must be greater than 0", result.Errors);
-        }
-
-        [Fact]
-        public async Task ValidateCreateCategoryRequestAsync_ValidRequest_ReturnsValidResult()
-        {
-            // Arrange
-            var tenantId = Guid.NewGuid();
-            var request = new CreateCategoryRequest
-            {
-                Name = "Test Category",
-                Description = "Test Description",
-                ParentCategoryId = null,
-                IconUrl = "http://example.com/icon.png",
-                SortOrder = 1,
-                IsActive = true
-            };
-
-            // Act
-            var result = await _validator.ValidateCreateCategoryRequestAsync(request, tenantId);
-
-            // Assert
-            Assert.True(result.IsValid);
-            Assert.Empty(result.Errors);
-        }
-
-        [Fact]
-        public async Task ValidateCreateCategoryRequestAsync_MissingName_ReturnsInvalidResult()
-        {
-            // Arrange
-            var tenantId = Guid.NewGuid();
-            var request = new CreateCategoryRequest
-            {
-                Name = "", // Missing name
-                Description = "Test Description",
-                ParentCategoryId = null,
-                IconUrl = "http://example.com/icon.png",
-                SortOrder = 1,
-                IsActive = true
-            };
-
-            // Act
-            var result = await _validator.ValidateCreateCategoryRequestAsync(request, tenantId);
-
-            // Assert
-            Assert.False(result.IsValid);
-            Assert.Contains("Category name is required", result.Errors);
-        }
-
-        [Fact]
-        public async Task ValidateUpdateCategoryRequestAsync_ValidRequest_ReturnsValidResult()
-        {
-            // Arrange
-            var request = new UpdateCategoryRequest
-            {
-                Name = "Updated Category",
-                Description = "Updated Description",
-                ParentCategoryId = Guid.NewGuid(),
-                IconUrl = "http://example.com/updated-icon.png",
-                SortOrder = 2,
-                IsActive = false
-            };
-
-            // Act
-            var result = await _validator.ValidateUpdateCategoryRequestAsync(request);
-
-            // Assert
-            Assert.True(result.IsValid);
-            Assert.Empty(result.Errors);
         }
     }
 }

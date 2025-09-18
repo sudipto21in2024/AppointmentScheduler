@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace ReportingService.Tests
 {
@@ -18,15 +20,29 @@ namespace ReportingService.Tests
         private readonly ApplicationDbContext _dbContext;
         private readonly DashboardService _dashboardService;
         private readonly Mock<ILogger<DashboardService>> _loggerMock;
+        private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
+        private readonly Guid _testTenantId;
 
         public DashboardServiceTests()
         {
+            _testTenantId = Guid.NewGuid();
+
+            _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
+            var mockHttpContext = new DefaultHttpContext();
+            var claims = new List<Claim>
+            {
+                new Claim("TenantId", _testTenantId.ToString())
+            };
+            var claimsIdentity = new ClaimsIdentity(claims);
+            mockHttpContext.User = new ClaimsPrincipal(claimsIdentity);
+            _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(mockHttpContext);
+
             // Create a new in-memory database for each test
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: "TestDatabase" + Guid.NewGuid().ToString())
                 .Options;
             
-            _dbContext = new ApplicationDbContext(options);
+            _dbContext = new ApplicationDbContext(options, _mockHttpContextAccessor.Object);
             _loggerMock = new Mock<ILogger<DashboardService>>();
             _dashboardService = new DashboardService(_dbContext);
         }
@@ -36,7 +52,7 @@ namespace ReportingService.Tests
         {
             // Arrange
             var providerId = Guid.NewGuid();
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             var customerId = Guid.NewGuid();
             var serviceId = Guid.NewGuid();
             
@@ -45,6 +61,8 @@ namespace ReportingService.Tests
             {
                 Id = providerId,
                 Email = "provider@test.com",
+                PasswordHash = "hash",
+                PasswordSalt = "salt",
                 FirstName = "Test",
                 LastName = "Provider",
                 TenantId = tenantId
@@ -54,6 +72,8 @@ namespace ReportingService.Tests
             {
                 Id = customerId,
                 Email = "customer@test.com",
+                PasswordHash = "hash",
+                PasswordSalt = "salt",
                 FirstName = "Test",
                 LastName = "Customer",
                 TenantId = tenantId
@@ -134,7 +154,7 @@ namespace ReportingService.Tests
         {
             // Arrange
             var providerId = Guid.NewGuid();
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             
             var filter = new DashboardFilterDto
             {
@@ -152,7 +172,7 @@ namespace ReportingService.Tests
         public async Task GetSystemHealthAsync_ReturnsSystemHealthData()
         {
             // Arrange
-            var tenantId = Guid.NewGuid();
+            var tenantId = _testTenantId;
             
             // Act
             var result = await _dashboardService.GetSystemHealthAsync(tenantId);

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shared.Data;
@@ -38,7 +39,8 @@ namespace BookingService.Tests
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: "TestDatabase" + Guid.NewGuid().ToString())
                 .Options;
-            var dbContext = new ApplicationDbContext(options);
+            var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+            var dbContext = new ApplicationDbContext(options, httpContextAccessorMock.Object);
             
             var loggerMock = new Mock<ILogger<PaymentProcessedConsumer>>();
             var consumer = new PaymentProcessedConsumer(
@@ -78,7 +80,8 @@ namespace BookingService.Tests
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: "TestDatabase" + Guid.NewGuid().ToString())
                 .Options;
-            var dbContext = new ApplicationDbContext(options);
+            var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+            var dbContext = new ApplicationDbContext(options, httpContextAccessorMock.Object);
             
             var loggerMock = new Mock<ILogger<PaymentProcessedConsumer>>();
             var consumer = new PaymentProcessedConsumer(

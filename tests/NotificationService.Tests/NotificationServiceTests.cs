@@ -8,6 +8,9 @@ using Shared.DTOs;
 using Shared.Models;
 using NotificationService.Services;
 using Microsoft.AspNetCore.Http; // Required for IHttpContextAccessor
+using Hangfire;
+using Hangfire.Common;
+using Hangfire.States;
 
 namespace NotificationService.Tests
 {
@@ -15,6 +18,7 @@ namespace NotificationService.Tests
     {
         private readonly ApplicationDbContext _context;
         private readonly NotificationService.Services.NotificationService _notificationService;
+        private readonly Mock<IBackgroundJobClient> _mockBackgroundJobClient;
 
         public NotificationServiceTests()
         {
@@ -22,7 +26,8 @@ namespace NotificationService.Tests
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
             _context = new ApplicationDbContext(options, new Mock<IHttpContextAccessor>().Object);
-            _notificationService = new NotificationService.Services.NotificationService(_context);
+            _mockBackgroundJobClient = new Mock<IBackgroundJobClient>();
+            _notificationService = new NotificationService.Services.NotificationService(_context, _mockBackgroundJobClient.Object);
         }
 
         [Fact]
@@ -49,6 +54,10 @@ namespace NotificationService.Tests
             Assert.False(notification.IsRead);
             Assert.NotEqual(default(DateTime), notification.SentAt);
             Assert.NotEqual(default(DateTime), notification.CreatedAt);
+
+            _mockBackgroundJobClient.Verify(x => x.Create(
+                It.IsAny<Job>(),
+                It.IsAny<EnqueuedState>()), Times.Once);
         }
 
         [Fact]

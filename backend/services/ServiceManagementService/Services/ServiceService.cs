@@ -130,7 +130,7 @@ namespace ServiceManagementService.Services
         public async Task<Service> UpdateServiceAsync(Guid serviceId, UpdateServiceRequest request, Guid userId, Guid tenantId)
         {
             // Validate the request
-            var validationResult = await _validator.ValidateUpdateServiceRequestAsync(request) as Shared.DTOs.ValidationResult;
+            var validationResult = await _validator.ValidateUpdateServiceRequestAsync(request, tenantId) as Shared.DTOs.ValidationResult;
             if (!validationResult.IsValid)
             {
                 throw new ArgumentException(string.Join("; ", validationResult.Errors));
@@ -394,7 +394,7 @@ namespace ServiceManagementService.Services
         public async Task<ServiceCategory> UpdateServiceCategoryAsync(Guid categoryId, UpdateCategoryRequest request, Guid userId, Guid tenantId)
         {
             // Validate the request
-            var validationResult = await _validator.ValidateUpdateCategoryRequestAsync(request) as Shared.DTOs.ValidationResult;
+            var validationResult = await _validator.ValidateUpdateCategoryRequestAsync(request, tenantId) as Shared.DTOs.ValidationResult;
             if (!validationResult.IsValid)
             {
                 throw new ArgumentException(string.Join("; ", validationResult.Errors));

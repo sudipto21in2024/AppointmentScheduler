@@ -98,7 +98,7 @@ namespace Shared.Validators
         /// </summary>
         /// <param name="request">Slot update request</param>
         /// <returns>Validation result</returns>
-        public ValidationResult ValidateUpdateSlotRequestAsync(UpdateSlotRequest request)
+        public ValidationResult ValidateUpdateSlotRequest(UpdateSlotRequest request)
         {
             var result = new ValidationResult { IsValid = true };
 

@@ -134,7 +134,7 @@ namespace ServiceManagementService.Services
         public async Task<Slot> UpdateSlotAsync(Guid slotId, Shared.DTOs.UpdateSlotRequest request, Guid userId, Guid tenantId)
         {
             // Validate the request
-            var validationResult = _validator.ValidateUpdateSlotRequestAsync(request);
+            var validationResult = _validator.ValidateUpdateSlotRequest(request);
             if (!validationResult.IsValid)
             {
                 throw new ArgumentException(string.Join("; ", validationResult.Errors));

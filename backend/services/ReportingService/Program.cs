@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using ReportingService.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System; // Added for Uri
 
 
 namespace ReportingService
@@ -33,7 +34,7 @@ namespace ReportingService
 
             // Add health checks
             builder.Services.AddHealthChecks()
-                 .AddCheck("self", () => new HealthCheckResult(HealthStatus.Healthy, "A healthy check result."));
+                 .AddCheck("self", () => new HealthCheckResult(Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Healthy, "A healthy check result."));
 
             // Add Consul client and hosted service for registration
             builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient(cfg =>

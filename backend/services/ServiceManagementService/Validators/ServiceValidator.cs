@@ -93,7 +93,7 @@ namespace ServiceManagementService.Validators
         /// </summary>
         /// <param name="request">Service update request</param>
         /// <returns>Validation result</returns>
-        public async Task<Shared.DTOs.ValidationResult> ValidateUpdateServiceRequestAsync(UpdateServiceRequest request)
+        public async Task<Shared.DTOs.ValidationResult> ValidateUpdateServiceRequestAsync(UpdateServiceRequest request, Guid tenantId)
         {
             var result = new Shared.DTOs.ValidationResult { IsValid = true };
 
@@ -120,7 +120,7 @@ namespace ServiceManagementService.Validators
             if (request.CategoryId.HasValue && request.CategoryId.Value != Guid.Empty)
             {
                 var categoryExists = await _dbContext.ServiceCategories
-                    .AnyAsync(c => c.Id == request.CategoryId.Value);
+                    .AnyAsync(c => c.Id == request.CategoryId.Value && c.TenantId == tenantId);
                 
                 if (!categoryExists)
                 {
@@ -183,7 +183,7 @@ namespace ServiceManagementService.Validators
         /// </summary>
         /// <param name="request">Category update request</param>
         /// <returns>Validation result</returns>
-        public async Task<Shared.DTOs.ValidationResult> ValidateUpdateCategoryRequestAsync(UpdateCategoryRequest request)
+        public async Task<Shared.DTOs.ValidationResult> ValidateUpdateCategoryRequestAsync(UpdateCategoryRequest request, Guid tenantId)
         {
             var result = new Shared.DTOs.ValidationResult { IsValid = true };
 
@@ -191,7 +191,7 @@ namespace ServiceManagementService.Validators
             if (request.ParentCategoryId.HasValue && request.ParentCategoryId.Value != Guid.Empty)
             {
                 var parentCategoryExists = await _dbContext.ServiceCategories
-                    .AnyAsync(c => c.Id == request.ParentCategoryId.Value);
+                    .AnyAsync(c => c.Id == request.ParentCategoryId.Value && c.TenantId == tenantId);
                 
                 if (!parentCategoryExists)
                 {

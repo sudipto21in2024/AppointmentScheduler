@@ -196,6 +196,7 @@ namespace PaymentService.Validators
                 {
                     result.IsValid = false;
                     result.Errors.Add("Invalid payment ID or payment does not belong to the tenant");
+                    return result; // Exit early if payment is not found
                 }
                 else
                 {
@@ -333,7 +334,7 @@ namespace PaymentService.Validators
             }
 
             // Validate start date is not in the past
-            if (request.StartDate < DateTime.UtcNow.Date)
+            if (request.StartDate.Date < DateTime.UtcNow.Date)
             {
                 result.IsValid = false;
                 result.Errors.Add("Start date cannot be in the past");

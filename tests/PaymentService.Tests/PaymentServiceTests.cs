@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -14,19 +15,22 @@ namespace PaymentService.Tests
 {
     public class PaymentServiceTests
     {
-        private readonly Mock<ApplicationDbContext> _mockDbContext;
+        private readonly ApplicationDbContext _context;
         private readonly Mock<ILogger<PaymentService.Services.PaymentService>> _mockLogger;
         private readonly Mock<IPublishEndpoint> _mockPublishEndpoint;
         private readonly PaymentService.Services.PaymentService _paymentService;
 
         public PaymentServiceTests()
         {
-            _mockDbContext = new Mock<ApplicationDbContext>(new DbContextOptions<ApplicationDbContext>());
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+            _context = new ApplicationDbContext(options, new Mock<IHttpContextAccessor>().Object);
             _mockLogger = new Mock<ILogger<PaymentService.Services.PaymentService>>();
             _mockPublishEndpoint = new Mock<IPublishEndpoint>();
             
             _paymentService = new PaymentService.Services.PaymentService(
-                _mockDbContext.Object,
+                _context,
                 _mockLogger.Object,
                 _mockPublishEndpoint.Object);
         }
@@ -74,7 +78,7 @@ namespace PaymentService.Tests
                 BookingId = Guid.NewGuid(),
                 Amount = 100.00m,
                 Currency = "USD",
-                PaymentMethod = "CreditCard",
+                PaymentMethod = "CreditCard", // Added missing required property
                 PaymentStatus = "Completed",
                 TransactionId = "txn_123456",
                 PaymentGateway = "SimulatedGateway",
@@ -85,8 +89,8 @@ namespace PaymentService.Tests
                 TenantId = tenantId
             };
 
-            _mockDbContext.Setup(db => db.Payments.FindAsync(paymentId))
-                .Returns(new ValueTask<Payment?>(payment));
+            _context.Payments.Add(payment);
+            _context.SaveChanges();
 
             var request = new RefundPaymentRequest
             {
@@ -121,8 +125,7 @@ namespace PaymentService.Tests
             var paymentId = Guid.NewGuid();
             var tenantId = Guid.NewGuid();
 
-            _mockDbContext.Setup(db => db.Payments.FindAsync(paymentId))
-                .Returns(new ValueTask<Payment?>((Payment?)null));
+            // No setup needed as in-memory database will handle this
 
             var request = new RefundPaymentRequest
             {
@@ -153,7 +156,7 @@ namespace PaymentService.Tests
                 BookingId = Guid.NewGuid(),
                 Amount = 100.00m,
                 Currency = "USD",
-                PaymentMethod = "CreditCard",
+                PaymentMethod = "CreditCard", // Added missing required property
                 PaymentStatus = "Completed",
                 TransactionId = "txn_123456",
                 PaymentGateway = "SimulatedGateway",
@@ -164,8 +167,8 @@ namespace PaymentService.Tests
                 TenantId = tenantId
             };
 
-            _mockDbContext.Setup(db => db.Payments.FindAsync(paymentId))
-                .Returns(new ValueTask<Payment?>(payment));
+            _context.Payments.Add(payment);
+            _context.SaveChanges();
 
             // Act
             var result = await _paymentService.GetPaymentDetailsAsync(paymentId, tenantId);
@@ -194,8 +197,7 @@ namespace PaymentService.Tests
             var paymentId = Guid.NewGuid();
             var tenantId = Guid.NewGuid();
 
-            _mockDbContext.Setup(db => db.Payments.FindAsync(paymentId))
-                .Returns(new ValueTask<Payment?>((Payment?)null));
+            // No setup needed as in-memory database will handle this
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentException>(() => _paymentService.GetPaymentDetailsAsync(paymentId, tenantId));

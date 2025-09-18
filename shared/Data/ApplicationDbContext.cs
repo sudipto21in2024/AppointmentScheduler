@@ -15,32 +15,32 @@ namespace Shared.Data
         }
 
         // User Service Entities
-        public DbSet<User> Users { get; set; }
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
         // Service Management Service Entities
-        public DbSet<ServiceCategory> ServiceCategories { get; set; }
-        public DbSet<Service> Services { get; set; }
+        public virtual DbSet<ServiceCategory> ServiceCategories { get; set; }
+        public virtual DbSet<Service> Services { get; set; }
 
         // Booking Service Entities
-        public DbSet<Slot> Slots { get; set; }
-        public DbSet<Booking> Bookings { get; set; }
+        public virtual DbSet<Slot> Slots { get; set; }
+        public virtual DbSet<Booking> Bookings { get; set; }
 
         // Payment Service Entities
-        public DbSet<Payment> Payments { get; set; }
+        public virtual DbSet<Payment> Payments { get; set; }
 
         // Review Service Entities
-        public DbSet<Review> Reviews { get; set; }
+        public virtual DbSet<Review> Reviews { get; set; }
 
         // Notification Service Entities
-        public DbSet<Notification> Notifications { get; set; }
-        public DbSet<NotificationPreference> NotificationPreferences { get; set; }
+        public virtual DbSet<Notification> Notifications { get; set; }
+        public virtual DbSet<NotificationPreference> NotificationPreferences { get; set; }
 
         // Tenant Management Entities
-        public DbSet<Tenant> Tenants { get; set; }
+        public virtual DbSet<Tenant> Tenants { get; set; }
 
         // Booking History Entities
-        public DbSet<BookingHistory> BookingHistories { get; set; }
+        public virtual DbSet<BookingHistory> BookingHistories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -473,12 +473,6 @@ namespace Shared.Data
         // Placeholder for tenant ID - this would be implemented based on your tenant resolution strategy
         private Guid GetCurrentTenantId()
         {
-            // If there's an override tenant ID, use it (for testing purposes)
-            if (OverrideTenantId.HasValue)
-            {
-                return OverrideTenantId.Value;
-            }
-
             // Retrieve TenantId from HttpContext.User.Claims
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext != null && httpContext.User.Identity is ClaimsIdentity claimsIdentity)
