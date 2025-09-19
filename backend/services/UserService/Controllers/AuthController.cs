@@ -130,7 +130,7 @@ namespace UserService.Controllers
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
-                    TenantId = request.TenantId ?? Guid.NewGuid() // Generate a new tenant ID if not provided
+                    TenantId = request.TenantId
                 };
             
                 // Save user to database

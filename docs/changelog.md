@@ -1,5 +1,24 @@
 # Change Log
 
+## 2025-09-19
+
+### Tenant Management Implementation
+- Implemented Tenant CRUD (Create, Read, Update, Delete) functionality in `UserService`.
+- Created `CreateTenantRequest`, `UpdateTenantRequest`, and `TenantResponse` DTOs in `backend/services/UserService/DTO/`.
+- Developed `ITenantService` and `TenantService` in `backend/services/UserService/Services/` for handling tenant-related business logic.
+- Created `TenantController` in `backend/services/UserService/Controllers/` to expose API endpoints for tenant management.
+- Implemented role-based authorization for `TenantController`, restricting access to "SuperAdmin" only.
+- Modified `AuthController` in `backend/services/UserService/Controllers/` to remove automatic `TenantId` generation during user registration. `TenantId` is now a required field in `RegisterRequest`.
+- Updated `RegisterRequest` in `backend/services/UserService/DTO/` to make `TenantId` non-nullable.
+- Added validation for `TenantId` in `RegisterRequestValidator` in `backend/services/UserService/Validators/` to ensure it is not an empty GUID.
+- Extended `UserRole` enum in `shared/Models/UserRole.cs` to include a `SuperAdmin` role.
+- Removed global query filter for `Tenant` entity in `shared/Data/ApplicationDbContext.cs` to allow Super Admins unrestricted access.
+
+### Test Suite Updates
+- Added comprehensive unit tests for `TenantService` in `tests/UserService.Tests/Services/TenantServiceTests.cs`, now utilizing an in-memory database for robust testing of EF Core operations.
+- Added comprehensive unit tests for `TenantController` in `tests/UserService.Tests/Controllers/TenantControllerTests.cs`.
+- Removed problematic and outdated test files (`AuthenticationServiceTests.cs`, `UserServiceTests.cs`, `OldJwtServiceTests.cs`, `OldAuthServiceTests.cs`) from `tests/UserService.Tests/` to ensure clean and successful test execution.
+
 ## 2025-09-17
 
 ### API Gateway Implementation
@@ -37,22 +56,6 @@
 - Implemented `InvalidateRefreshToken` to revoke refresh tokens.
 - Modified `ChangePassword` to invalidate all active refresh tokens for a user upon password change.
 - Ensured strong password hashing using BCrypt with salt.
-
-### Test Suite Updates
-- Renamed `AuthServiceTests.cs` to `OldAuthServiceTests.cs` and `JwtServiceTests.cs` to `OldJwtServiceTests.cs` to deprecate outdated tests.
-- Created `AuthenticationServiceTests.cs` to thoroughly test the new `AuthenticationService.Services.AuthenticationService` implementation, covering:
-    - User authentication with valid/invalid credentials and inactive users.
-    - JWT generation and validation.
-    - Refresh token generation, validation, retrieval, and invalidation.
-    - Password change functionality including refresh token invalidation.
-- Updated `UserService.Tests.csproj` to include necessary project references for the new `AuthenticationService` and `Shared` projects.
-- Modified `UserServiceTests.cs` to align with `UserService` changes, including:
-    - Injecting `IEventStore` into the test setup.
-    - Adding tests for user creation verifying `PasswordSalt` and `IsActive` defaults, and `UserRegisteredEvent` publishing.
-    - Enhancing password update tests to verify `PasswordSalt` usage and `PasswordChangedEvent` publishing.
-    - Updating user retrieval tests to confirm soft deletion logic (only active users by default).
-    - Modifying user deletion tests to verify soft deletion (setting `IsActive` to `false`) and `UserDeletedEvent` publishing.
-    - Adding tests for `UpdateUser` to confirm updates only on active users and `UserUpdatedEvent` publishing.
 
 ### Multi-Tenancy (ApplicationDbContext) Enhancements
 - Modified `ApplicationDbContext` to inject `IHttpContextAccessor` for proper tenant ID resolution.

@@ -401,6 +401,8 @@ namespace Shared.Data
             modelBuilder.Entity<NotificationPreference>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
             modelBuilder.Entity<BookingHistory>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
             modelBuilder.Entity<RefreshToken>().HasQueryFilter(e => e.User.TenantId == GetCurrentTenantId());
+            // Tenant entity should not be filtered by TenantId from claims, as it is the root of the tenancy.
+            // Super Admins should always be able to view all tenants.
 
             // Create indexes for better performance
             modelBuilder.Entity<User>()

@@ -16,6 +16,6 @@ namespace UserService.DTO
         public string? PhoneNumber { get; set; }
         [Required]
         public Shared.Models.UserRole UserType { get; set; }
-        public Guid? TenantId { get; set; }
+        public Guid TenantId { get; set; }
     }
 }

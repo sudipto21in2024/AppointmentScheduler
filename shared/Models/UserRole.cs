@@ -4,6 +4,7 @@ namespace Shared.Models
     {
         Customer,
         Provider,
-        Admin
+        Admin,
+        SuperAdmin
     }
 }

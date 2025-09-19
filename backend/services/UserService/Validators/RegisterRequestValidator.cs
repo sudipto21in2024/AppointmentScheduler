@@ -29,6 +29,9 @@ namespace UserService.Validators
 
             RuleFor(x => x.UserType)
                 .IsInEnum().WithMessage("User type must be a valid value.");
+
+            RuleFor(x => x.TenantId)
+                .NotEmpty().WithMessage("Tenant ID is required.");
         }
     }
 }
