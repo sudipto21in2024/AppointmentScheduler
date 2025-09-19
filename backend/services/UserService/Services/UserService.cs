@@ -15,6 +15,8 @@ namespace UserService.Services
     public interface IUserService
     {
         Task<User?> GetUserByUsername(string email);
+        Task<User?> GetUserByUsernameAndTenantAsync(string email, Guid tenantId);
+        Task<User?> GetSuperAdminUserByUsernameAsync(string email);
         Task<bool> UpdatePassword(User user, string newPassword);
         Task<User?> GetUserById(Guid id);
         Task<User> CreateUser(User user);
@@ -52,6 +54,57 @@ namespace UserService.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving user by email {Email}", email);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
+        }
+
+        public async Task<User?> GetUserByUsernameAndTenantAsync(string email, Guid tenantId)
+        {
+            using var activity = ActivitySource.StartActivity("UserService.GetUserByUsernameAndTenantAsync");
+            activity?.SetTag("user.email", email);
+            activity?.SetTag("tenant.id", tenantId.ToString());
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                // Use IgnoreQueryFilters to bypass the global tenant filter
+                // and explicitly filter by the provided tenantId
+                var user = await _context.Users.IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(u => u.Email == email && u.TenantId == tenantId && u.IsActive);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving user by email {Email} and tenant {TenantId}", email, tenantId);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
+        }
+
+        public async Task<User?> GetSuperAdminUserByUsernameAsync(string email)
+        {
+            using var activity = ActivitySource.StartActivity("UserService.GetSuperAdminUserByUsernameAsync");
+            activity?.SetTag("user.email", email);
+            
+            LoggingExtensions.AddTraceIdToLogContext();
+            
+            try
+            {
+                // Use IgnoreQueryFilters to bypass the global tenant filter
+                // and explicitly filter for SuperAdmin users.
+                // Assuming SuperAdmins have UserRole.SuperAdmin and potentially TenantId = Guid.Empty
+                // or another distinguishing feature.
+                var user = await _context.Users.IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(u => u.Email == email && u.UserType == Shared.Models.UserRole.SuperAdmin && u.IsActive);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving SuperAdmin user by email {Email}", email);
                 activity?.SetStatus(ActivityStatusCode.Error);
                 throw;
             }

@@ -19,6 +19,19 @@
 - Added comprehensive unit tests for `TenantController` in `tests/UserService.Tests/Controllers/TenantControllerTests.cs`.
 - Removed problematic and outdated test files (`AuthenticationServiceTests.cs`, `UserServiceTests.cs`, `OldJwtServiceTests.cs`, `OldAuthServiceTests.cs`) from `tests/UserService.Tests/` to ensure clean and successful test execution.
 
+## 2025-09-19
+
+
+### Multi-Tenant Login Flow Implementation
+- Implemented tenant resolution logic in `UserService` to identify `TenantId` from the request URL subdomain.
+- Created `TenantResolutionService` and `TenantResolutionResult` in `backend/services/UserService/Utils/` to handle the logic for distinguishing SuperAdmin (`admin.*`) requests from tenant-specific (`[tenant].*`) requests.
+- Updated `UserService` with new methods `GetUserByUsernameAndTenantAsync` and `GetSuperAdminUserByUsernameAsync` to allow secure, tenant-aware user lookups during the login process, bypassing global query filters.
+- Modified `AuthenticationService.Authenticate` to accept tenant context (`isSuperAdmin`, `tenantId`) and use the appropriate `UserService` method for user lookup.
+- Updated `JwtService.GenerateToken` to include `UserRole` and `TenantId` claims in the JWT, omitting `TenantId` for SuperAdmins.
+- Modified `AuthController.Login` to integrate tenant resolution, ensuring the correct context is passed to the authentication service.
+- Ensured SuperAdmin login works with a dedicated subdomain (`admin.yourdomain.com`) and that SuperAdmin JWTs do not contain a `TenantId` claim.
+- Added comprehensive unit tests for `TenantResolutionService`, the new `UserService` methods, `AuthenticationService`, and `AuthController` to validate the login flow for all user roles.
+
 ## 2025-09-17
 
 ### API Gateway Implementation

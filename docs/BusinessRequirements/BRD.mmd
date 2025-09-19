@@ -149,6 +149,12 @@ This document describes the functional and non-functional requirements for the a
 - FR-9.2: Review and approve service listings
 - FR-9.3: Handle booking disputes between providers and customers
 - FR-9.4: Monitor platform health, performance metrics, and error tracking
+### 5.4 Authentication and Login
+- FR-10.1: Implement multi-tenant aware login process where users access the platform via tenant-specific URLs (e.g., `[tenant_name].yourdomain.com`).
+- FR-10.2: Implement a distinct login endpoint for SuperAdmin users via a dedicated subdomain (e.g., `admin.yourdomain.com`).
+- FR-10.3: Ensure user email addresses are unique within a tenant, but not globally across the platform.
+- FR-10.4: Generate JSON Web Tokens (JWT) upon successful authentication, containing user role and tenant information (where applicable).
+- FR-10.5: Omit tenant information from JWTs issued to SuperAdmin users.
 
 ## 6. Non-Functional Requirements
 

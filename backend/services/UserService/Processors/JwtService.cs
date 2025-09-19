@@ -13,7 +13,7 @@ namespace UserService.Processors
 {
     public interface IJwtService
     {
-        string GenerateToken(string userId);
+        string GenerateToken(Shared.Models.User user);
         string? GetUserIdFromToken(string token);
         bool ValidateToken(string token);
     }
@@ -33,27 +33,46 @@ namespace UserService.Processors
             _logger = logger;
         }
 
-        public string GenerateToken(string userId)
+        public string GenerateToken(Shared.Models.User user)
         {
             using var activity = ActivitySource.StartActivity("JwtService.GenerateToken");
-            activity?.SetTag("user.id", userId);
+            activity?.SetTag("user.id", user?.Id.ToString());
+            activity?.SetTag("user.role", user?.UserType.ToString());
+            activity?.SetTag("tenant.id", user?.TenantId.ToString());
             
             LoggingExtensions.AddTraceIdToLogContext();
             
             try
             {
+                if (user == null)
+                {
+                    throw new ArgumentNullException(nameof(user), "User cannot be null.");
+                }
+
                 var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
                 var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-                var claims = new[] {
-                    new Claim(ClaimTypes.NameIdentifier, userId)
+                var claimsList = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim("UserRole", user.UserType.ToString())
                 };
 
-                var token = new JwtSecurityToken(_configuration["Jwt:Issuer"] ?? "Issuer",
+                // Add TenantId claim only if the user is not a SuperAdmin
+                // SuperAdmins have TenantId = Guid.Empty
+                if (user.UserType != Shared.Models.UserRole.SuperAdmin)
+                {
+                    claimsList.Add(new Claim("TenantId", user.TenantId.ToString()));
+                }
+                // For SuperAdmin, we omit the TenantId claim
+
+                var token = new JwtSecurityToken(
+                    _configuration["Jwt:Issuer"] ?? "Issuer",
                     _configuration["Jwt:Audience"] ?? "Audience",
-                    claims,
+                    claimsList,
                     expires: DateTime.Now.AddMinutes(120),
-                    signingCredentials: credentials);
+                    signingCredentials: credentials
+                );
 
                 var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
                 activity?.SetStatus(ActivityStatusCode.Ok);
@@ -61,7 +80,7 @@ namespace UserService.Processors
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating JWT token for user {UserId}", userId);
+                _logger.LogError(ex, "Error generating JWT token for user {UserId}", user?.Id);
                 activity?.SetStatus(ActivityStatusCode.Error);
                 throw;
             }

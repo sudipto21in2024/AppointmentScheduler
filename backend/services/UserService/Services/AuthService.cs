@@ -29,19 +29,38 @@ namespace UserService.Services
             _logger = logger;
         }
 
-        public async Task<(User?, string?)> Authenticate(string username, string password)
+        public async Task<(User?, string?)> Authenticate(string username, string password, bool isSuperAdmin, Guid? tenantId)
         {
             using var activity = ActivitySource.StartActivity("AuthenticationService.Authenticate");
             activity?.SetTag("user.username", username);
+            activity?.SetTag("is.superadmin", isSuperAdmin);
+            activity?.SetTag("tenant.id", tenantId?.ToString() ?? "null");
             
             LoggingExtensions.AddTraceIdToLogContext();
             
             try
             {
-                var user = await _userService.GetUserByUsername(username);
+                User? user = null;
+                
+                if (isSuperAdmin)
+                {
+                    user = await _userService.GetSuperAdminUserByUsernameAsync(username);
+                }
+                else if (tenantId.HasValue)
+                {
+                    user = await _userService.GetUserByUsernameAndTenantAsync(username, tenantId.Value);
+                }
+                else
+                {
+                    // This should not happen for a valid tenant-specific login request
+                    _logger.LogWarning($"Authentication failed for username: {username}. Invalid tenant context: isSuperAdmin=false, tenantId=null.");
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return (null, "Invalid tenant context.");
+                }
+
                 if (user == null)
                 {
-                    _logger.LogInformation($"Authentication failed for username: {username}. User not found.");
+                    _logger.LogInformation($"Authentication failed for username: {username}. User not found in the specified context (SuperAdmin: {isSuperAdmin}, TenantId: {tenantId?.ToString() ?? "null"}).");
                     activity?.SetStatus(ActivityStatusCode.Error);
                     return (null, "Invalid username or password.");
                 }
@@ -74,7 +93,7 @@ namespace UserService.Services
             
             try
             {
-                var token = _jwtService.GenerateToken(user?.Id.ToString() ?? throw new ArgumentNullException(nameof(user), "User cannot be null."));
+                var token = _jwtService.GenerateToken(user ?? throw new ArgumentNullException(nameof(user), "User cannot be null."));
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return token;
             }

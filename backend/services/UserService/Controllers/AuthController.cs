@@ -22,6 +22,7 @@ namespace UserService.Controllers
     {
         private readonly Shared.Contracts.IAuthenticationService _authenticationService;
         private readonly UserService.Services.IUserService _userService;
+        private readonly UserService.Utils.ITenantResolutionService _tenantResolutionService;
         private readonly ILogger<AuthController> _logger;
         private static readonly ActivitySource ActivitySource = new ActivitySource("UserService.AuthController");
         private readonly IPublishEndpoint _publishEndpoint;
@@ -31,13 +32,14 @@ namespace UserService.Controllers
         private readonly IValidator<PasswordResetRequest> _passwordResetRequestValidator;
         private readonly IValidator<ResetPasswordRequest> _resetPasswordRequestValidator;
 
-        public AuthController(Shared.Contracts.IAuthenticationService authenticationService, UserService.Services.IUserService userService, ILogger<AuthController> logger, IPublishEndpoint publishEndpoint,
+        public AuthController(Shared.Contracts.IAuthenticationService authenticationService, UserService.Services.IUserService userService, UserService.Utils.ITenantResolutionService tenantResolutionService, ILogger<AuthController> logger, IPublishEndpoint publishEndpoint,
             IValidator<LoginRequest> loginRequestValidator, IValidator<RegisterRequest> registerRequestValidator,
             IValidator<RefreshRequest> refreshRequestValidator, IValidator<PasswordResetRequest> passwordResetRequestValidator,
             IValidator<ResetPasswordRequest> resetPasswordRequestValidator)
         {
             _authenticationService = authenticationService;
             _userService = userService;
+            _tenantResolutionService = tenantResolutionService;
             _logger = logger;
             _publishEndpoint = publishEndpoint;
             _loginRequestValidator = loginRequestValidator;
@@ -65,7 +67,22 @@ namespace UserService.Controllers
                     return BadRequest(validationResult.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }));
                 }
 
-                (Shared.Models.User? user, string? message) = await _authenticationService.Authenticate(request.Username, request.Password);
+                // Resolve tenant context
+                var tenantResolutionResult = await _tenantResolutionService.ResolveTenantAsync(HttpContext);
+                if (!tenantResolutionResult.IsResolved)
+                {
+                    _logger.LogWarning($"Login failed for user {request.Username}: Unable to resolve tenant context.");
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return BadRequest("Unable to resolve tenant context. Please check the URL.");
+                }
+
+                (Shared.Models.User? user, string? message) = await _authenticationService.Authenticate(
+                    request.Username,
+                    request.Password,
+                    tenantResolutionResult.IsSuperAdmin,
+                    tenantResolutionResult.TenantId
+                );
+                
                 if (user is null)
                 {
                     _logger.LogWarning($"Login failed for user {request.Username}: {message}");
@@ -75,6 +92,8 @@ namespace UserService.Controllers
                 
                 _logger.LogInformation($"User {request.Username} logged in successfully.");
                 activity?.SetTag("user.id", user.Id.ToString());
+                activity?.SetTag("user.role", user.UserType.ToString());
+                activity?.SetTag("tenant.id", user.TenantId.ToString());
                 
                 var token = _authenticationService.GenerateToken(user);
                 activity?.SetStatus(ActivityStatusCode.Ok);

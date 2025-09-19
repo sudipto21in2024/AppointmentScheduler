@@ -2,7 +2,7 @@ namespace Shared.Contracts
 {
     public interface IAuthenticationService
     {
-        Task<(Shared.Models.User?, string?)> Authenticate(string username, string password);
+        Task<(Shared.Models.User?, string?)> Authenticate(string username, string password, bool isSuperAdmin, Guid? tenantId);
         string GenerateToken(Shared.Models.User user);
         string GenerateRefreshToken(Shared.Models.User user);
         bool ValidateRefreshToken(string refreshToken);

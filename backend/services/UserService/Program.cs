@@ -73,6 +73,7 @@ public class Program
             new Processors.TokenService(sp.GetRequiredService<ILogger<Processors.TokenService>>()));
         builder.Services.AddScoped<IUserService, UserService.Services.UserService>();
         builder.Services.AddScoped<Shared.Contracts.IAuthenticationService, UserService.Services.AuthenticationService>();
+        builder.Services.AddScoped<UserService.Utils.ITenantResolutionService, UserService.Utils.TenantResolutionService>();
         
         // Register the shared ApplicationDbContext
         builder.Services.AddDbContext<Shared.Data.ApplicationDbContext>(options =>
