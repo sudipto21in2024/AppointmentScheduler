@@ -13,7 +13,7 @@ paths:
   /auth/login:
     post:
       summary: User login
-      description: Authenticate user with email and password
+      description: Authenticate user with username and password. The request must come from a tenant-specific URL (e.g., `[tenant].yourdomain.com`) or the SuperAdmin URL (e.g., `admin.yourdomain.com`).
       tags:
         - Authentication
       requestBody:
@@ -51,7 +51,7 @@ paths:
   /auth/register:
     post:
       summary: Register new user
-      description: Create a new user account
+      description: Create a new user account. Requires TenantId in the request body for non-SuperAdmin users.
       tags:
         - Authentication
       requestBody:
@@ -133,13 +133,12 @@ components:
     LoginRequest:
       type: object
       required:
-        - email
+        - username
         - password
       properties:
-        email:
+        username:
           type: string
-          format: email
-          description: User's email address
+          description: User's username (typically email address)
         password:
           type: string
           description: User's password
@@ -153,7 +152,7 @@ components:
       properties:
         accessToken:
           type: string
-          description: JWT access token
+          description: JWT access token. Contains `UserRole` and `TenantId` claims (for non-SuperAdmins).
         refreshToken:
           type: string
           description: Refresh token for obtaining new access tokens
@@ -167,6 +166,8 @@ components:
         - password
         - firstName
         - lastName
+        - userType
+        - tenantId
       properties:
         email:
           type: string
@@ -184,6 +185,12 @@ components:
         phoneNumber:
           type: string
           description: User's phone number (optional)
+        userType:
+          $ref: '../common/enums.yaml#/components/schemas/UserType'
+        tenantId:
+          type: string
+          format: uuid
+          description: Tenant ID for the user (required for non-SuperAdmin users)
           
     RefreshRequest:
       type: object

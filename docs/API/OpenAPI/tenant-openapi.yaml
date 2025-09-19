@@ -273,7 +273,7 @@ components:
           description: Tenant description
         domain:
           type: string
-          description: Custom domain (if applicable)
+          description: Custom domain (e.g., `tenant1.yourdomain.com`). Used for tenant-specific login.
         isActive:
           type: boolean
           description: Tenant status
@@ -307,7 +307,7 @@ components:
           description: Tenant description
         domain:
           type: string
-          description: Custom domain (if applicable)
+          description: Custom domain (e.g., `tenant1.yourdomain.com`). Used for tenant-specific login.
         logoUrl:
           type: string
           description: Tenant logo/image URL
@@ -327,7 +327,7 @@ components:
           description: Tenant description
         domain:
           type: string
-          description: Custom domain (if applicable)
+          description: Custom domain (e.g., `tenant1.yourdomain.com`). Used for tenant-specific login.
         logoUrl:
           type: string
           description: Tenant logo/image URL

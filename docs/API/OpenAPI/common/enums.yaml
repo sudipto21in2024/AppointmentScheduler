@@ -13,6 +13,7 @@ components:
         - Customer
         - Provider
         - Admin
+        - SuperAdmin
       example: Customer
 
     BookingStatus:

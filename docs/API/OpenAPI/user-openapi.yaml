@@ -307,7 +307,7 @@ components:
         tenantId:
           type: string
           format: uuid
-          description: Reference to tenant (for multi-tenancy)
+          description: Reference to tenant (for multi-tenancy). Required for non-SuperAdmin users.
 
     CreateUserRequest:
       type: object
@@ -339,7 +339,7 @@ components:
         tenantId:
           type: string
           format: uuid
-          description: Reference to tenant (for multi-tenancy)
+          description: Reference to tenant (for multi-tenancy). Required for non-SuperAdmin users.
 
     UpdateUserRequest:
       type: object

@@ -32,6 +32,17 @@
 - Ensured SuperAdmin login works with a dedicated subdomain (`admin.yourdomain.com`) and that SuperAdmin JWTs do not contain a `TenantId` claim.
 - Added comprehensive unit tests for `TenantResolutionService`, the new `UserService` methods, `AuthenticationService`, and `AuthController` to validate the login flow for all user roles.
 
+### API Documentation Updates
+- Updated `docs/API/OpenAPI/common/enums.yaml` to include `SuperAdmin` in the `UserType` enum.
+- Updated `docs/API/OpenAPI/auth-openapi.yaml` to reflect changes in the authentication flow:
+    - `LoginRequest` schema now uses `username` instead of `email`.
+    - Description of `/auth/login` endpoint now mentions tenant-specific and SuperAdmin URLs.
+    - Description of `/auth/register` endpoint now mentions `TenantId` requirement.
+    - `RegisterRequest` schema now includes `TenantId` as a required field.
+    - `LoginResponse` schema description now mentions `UserRole` and `TenantId` claims in the token.
+- Updated `docs/API/OpenAPI/tenant-openapi.yaml` to clarify the use of `domain` for tenant-specific login in `CreateTenantRequest`, `UpdateTenantRequest`, and `Tenant` schemas.
+- Updated `docs/API/OpenAPI/user-openapi.yaml` to clarify that `TenantId` is required for non-SuperAdmin users in `User` and `CreateUserRequest` schemas.
+
 ## 2025-09-17
 
 ### API Gateway Implementation
