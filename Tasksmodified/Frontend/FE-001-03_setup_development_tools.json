@@ -58,10 +58,10 @@
   ],
   "related_files": {
     "will_create": [
-      "frontend/.eslintrc.json",
-      "frontend/.prettierrc",
-      "frontend/src/environments/environment.ts",
-      "frontend/src/environments/environment.prod.ts"
+      "frontend/AppointmentSaas/.eslintrc.json",
+      "frontend/AppointmentSaas/.prettierrc",
+      "frontend/AppointmentSaas/src/environments/environment.ts",
+      "frontend/AppointmentSaas/src/environments/environment.prod.ts"
     ],
     "will_modify": [],
     "dependencies": [
@@ -106,10 +106,10 @@
     "optional_subtasks": [],
     "minimum_completion_percentage": 100,
     "required_deliverables": [
-      "frontend/.eslintrc.json",
-      "frontend/.prettierrc",
-      "frontend/src/environments/environment.ts",
-      "frontend/src/environments/environment.prod.ts"
+      "frontend/AppointmentSaas/.eslintrc.json",
+      "frontend/AppointmentSaas/.prettierrc",
+      "frontend/AppointmentSaas/src/environments/environment.ts",
+      "frontend/AppointmentSaas/src/environments/environment.prod.ts"
     ]
   },
   "subtasks": []

@@ -53,8 +53,8 @@
   ],
   "related_files": {
     "will_create": [
-      "frontend/src/assets/design-tokens.json",
-      "frontend/src/styles/tokens.css"
+      "frontend/AppointmentSaas/src/assets/design-tokens.json",
+      "frontend/AppointmentSaas/src/styles/tokens.css"
     ],
     "will_modify": [],
     "dependencies": [
@@ -100,8 +100,8 @@
     "optional_subtasks": [],
     "minimum_completion_percentage": 100,
     "required_deliverables": [
-      "frontend/src/assets/design-tokens.json",
-      "frontend/src/styles/tokens.css"
+      "frontend/AppointmentSaas/src/assets/design-tokens.json",
+      "frontend/AppointmentSaas/src/styles/tokens.css"
     ]
   },
   "subtasks": []
