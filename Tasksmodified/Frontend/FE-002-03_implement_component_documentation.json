@@ -55,9 +55,9 @@
   ],
   "related_files": {
     "will_create": [
-      "frontend/docs/component-documentation.md",
-      "frontend/src/app/components/button/button.component.md",
-      "frontend/src/app/components/input/input.component.md"
+      "frontend/AppointmentSaas/docs/component-documentation.md",
+      "frontend/AppointmentSaas/src/app/components/button/button.component.md",
+      "frontend/AppointmentSaas/src/app/components/input/input.component.md"
     ],
     "will_modify": [],
     "dependencies": [
@@ -103,9 +103,9 @@
     "optional_subtasks": [],
     "minimum_completion_percentage": 100,
     "required_deliverables": [
-      "frontend/docs/component-documentation.md",
-      "frontend/src/app/components/button/button.component.md",
-      "frontend/src/app/components/input.component.md"
+      "frontend/AppointmentSaas/docs/component-documentation.md",
+      "frontend/AppointmentSaas/src/app/components/button/button.component.md",
+      "frontend/AppointmentSaas/src/app/components/input.component.md"
     ]
   },
   "subtasks": []
