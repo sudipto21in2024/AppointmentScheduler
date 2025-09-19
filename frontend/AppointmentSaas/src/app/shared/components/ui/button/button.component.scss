@@ -1,0 +1,112 @@
+@use "sass:color";
+@use '../../../../../styles/abstracts/variables' as *;
+
+.app-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  border-radius: var(--borderRadius-md);
+  cursor: pointer;
+  font-family: var(--typography-fontFamily);
+  font-size: var(--typography-fontSize-base);
+  font-weight: var(--typography-fontWeight-medium);
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+
+  &--primary {
+    background-color: var(--color-primary-500);
+    color: var(--color-text-light);
+
+    &:hover {
+      background-color: var(--color-primary-600);
+    }
+  }
+
+  &--secondary {
+    background-color: var(--color-background-paper);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-default);
+
+    &:hover {
+      background-color: var(--color-background-default);
+    }
+  }
+
+  &--accent {
+    background-color: var(--color-accent-500);
+    color: var(--color-text-light);
+
+    &:hover {
+      background-color: var(--color-accent-600);
+    }
+  }
+
+  &--warn {
+    background-color: var(--color-warn-500);
+    color: var(--color-text-light);
+
+    &:hover {
+      background-color: color.adjust($color-warn-500, $lightness: -10%);
+    }
+  }
+
+  &--success {
+    background-color: var(--color-success-500);
+    color: var(--color-text-light);
+
+    &:hover {
+      background-color: color.adjust($color-success-500, $lightness: -10%);
+    }
+  }
+
+  &--text {
+    background-color: transparent;
+    color: var(--color-primary-500);
+    padding: var(--spacing-xxs) var(--spacing-xs);
+
+    &:hover {
+      background-color: var(--color-primary-50);
+    }
+  }
+
+  &--small {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--typography-fontSize-small);
+  }
+
+  &--large {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--typography-fontSize-large);
+  }
+
+  &--full-width {
+    width: 100%;
+  }
+
+  &--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &--loading {
+    position: relative;
+    color: transparent;
+
+    .app-button__spinner {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--color-text-light);
+      animation: spin 1s ease-in-out infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
