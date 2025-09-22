@@ -124,9 +124,9 @@
     "can_start_date": "After FE-005-01 completion"
   },
   "additional_context": {
-    "technical_notes": "Follow best practices for API service implementation with focus on real-time updates. Ensure proper error handling and data transformation. Implement efficient data fetching with pagination support.",
+    "technical_notes": "Follow best practices for API service implementation with focus on real-time updates. Ensure proper error handling and data transformation. Implement efficient data fetching with pagination support. Include methods for notification preference management.",
     "design_references": "docs/API/OpenAPI/notification-openapi.yaml",
-    "security_considerations": "Ensure proper authorization checks for notification management operations. Validate all user inputs to prevent injection attacks. Protect sensitive notification information."
+    "security_considerations": "Ensure proper authorization checks for notification management operations. Validate all user inputs to prevent injection attacks. Protect sensitive notification information. Implement proper authorization for notification preference management."
   },
   "implementation_guidance": {
     "method_signatures": [],

@@ -1,7 +1,7 @@
 {
   "task_id": "FE-003-02",
   "title": "Create Service Management UI Components",
- "description": "Develop UI components for service management including service listing, creation, and editing forms",
+ "description": "Develop UI components for service management including service listing, creation, and editing forms for service providers, and service approval/rejection for tenant administrators.",
   "priority": "HIGH",
   "complexity": 3,
   "effort_estimate": {
@@ -56,10 +56,11 @@
   ],
   "related_files": {
     "will_create": [
-      "frontend/src/app/components/service/service-list.component.ts",
-      "frontend/src/app/components/service/service-create.component.ts",
-      "frontend/src/app/components/service/service-edit.component.ts",
-      "frontend/src/app/components/service/service-card.component.ts"
+      "frontend/AppointmentSaas/src/app/components/service/service-list.component.ts",
+      "frontend/AppointmentSaas/src/app/components/service/service-create.component.ts",
+      "frontend/AppointmentSaas/src/app/components/service/service-edit.component.ts",
+      "frontend/AppointmentSaas/src/app/components/service/service-card.component.ts",
+      "frontend/AppointmentSaas/src/app/components/service/tenant-admin-service-approval/tenant-admin-service-approval.component.ts"
     ],
     "will_modify": [],
     "dependencies": [
@@ -150,5 +151,62 @@
       "frontend/src/app/components/service/service-card.component.ts"
     ]
   },
-  "subtasks": []
+  "subtasks": [
+    {
+      "task_id": "FE-003-02.1",
+      "title": "Create Tenant Admin Service Approval Component",
+      "description": "Develop UI component for tenant administrators to review and approve/reject service listings.",
+      "priority": "HIGH",
+      "complexity": 3,
+      "effort_estimate": {
+        "hours": 12,
+        "story_points": 5
+      },
+      "status": "NOT_STARTED",
+      "progress": 0,
+      "blocking_information": {
+        "is_blocked": true,
+        "blocking_tasks": ["FE-002", "FE-005-01", "BE-XXX-02"],
+        "can_start_date": "After FE-002, FE-005-01, and BE-XXX-02 completion"
+      },
+      "related_files": {
+        "will_create": [
+          "frontend/AppointmentSaas/src/app/components/service/tenant-admin-service-approval/tenant-admin-service-approval.component.ts",
+          "frontend/AppointmentSaas/src/app/components/service/tenant-admin-service-approval/tenant-admin-service-approval.component.html",
+          "frontend/AppointmentSaas/src/app/components/service/tenant-admin-service-approval/tenant-admin-service-approval.component.scss"
+        ],
+        "dependencies": [
+          "docs/UI/Requirements.mmd",
+          "docs/knowledgebase/UiFlow/TenantAdmin_ServiceApprovalManagement_Flow.md"
+        ]
+      },
+      "api_information": {
+        "endpoints": [
+          {
+            "method": "PUT",
+            "path": "/services/{id}/approve",
+            "description": "Approve a service listing."
+          },
+          {
+            "method": "PUT",
+            "path": "/services/{id}/reject",
+            "description": "Reject a service listing."
+          }
+        ],
+        "data_contracts": "docs/API/OpenAPI/service-openapi.yaml"
+      },
+      "acceptance_criteria": [
+        "Component displays a list of services with pending approval status.",
+        "Allows tenant admin to view service details.",
+        "Provides buttons to approve or reject services.",
+        "Integrates with backend API for approval/rejection actions.",
+        "Component follows design system and is responsive."
+      ],
+      "additional_context": {
+        "technical_notes": "Use AG Grid for service listing if applicable. Implement modal or new page for detail view and approval/rejection reasons. Ensure proper status updates after actions.",
+        "design_references": "docs/knowledgebase/UiFlow/TenantAdmin_ServiceApprovalManagement_Flow.md",
+        "security_considerations": "Ensure only authorized tenant admins can approve/reject services. Validate input for rejection reasons."
+      }
+    }
+  ]
 }

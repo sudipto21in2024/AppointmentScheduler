@@ -1,7 +1,7 @@
 {
   "task_id": "FE-003-05",
  "title": "Create Notification Management UI Components",
-  "description": "Develop UI components for notification management including notification listing, detail views, and preference settings",
+  "description": "Develop UI components for notification management including notification listing, detail views, and user-specific preference settings.",
   "priority": "HIGH",
   "complexity": 3,
   "effort_estimate": {
@@ -58,9 +58,9 @@
   ],
   "related_files": {
     "will_create": [
-      "frontend/src/app/components/notification/notification-list.component.ts",
-      "frontend/src/app/components/notification/notification-detail.component.ts",
-      "frontend/src/app/components/notification/notification-preferences.component.ts"
+      "frontend/AppointmentSaas/src/app/components/notification/notification-list.component.ts",
+      "frontend/AppointmentSaas/src/app/components/notification/notification-detail.component.ts",
+      "frontend/AppointmentSaas/src/app/components/notification/notification-preferences.component.ts"
     ],
     "will_modify": [],
     "dependencies": [
@@ -143,5 +143,62 @@
       "frontend/src/app/components/notification/notification-preferences.component.ts"
     ]
   },
-  "subtasks": []
+  "subtasks": [
+    {
+      "task_id": "FE-003-05.1",
+      "title": "Create Notification Preferences UI Component",
+      "description": "Develop UI component for managing user-specific notification preferences (e.g., toggling email/SMS for different notification types).",
+      "priority": "MEDIUM",
+      "complexity": 3,
+      "effort_estimate": {
+        "hours": 8,
+        "story_points": 3
+      },
+      "status": "NOT_STARTED",
+      "progress": 0,
+      "blocking_information": {
+        "is_blocked": true,
+        "blocking_tasks": ["FE-002", "FE-005-01", "BE-XXX-04"],
+        "can_start_date": "After FE-002, FE-005-01, and BE-XXX-04 completion"
+      },
+      "related_files": {
+        "will_create": [
+          "frontend/AppointmentSaas/src/app/components/notification/notification-preferences/notification-preferences.component.ts",
+          "frontend/AppointmentSaas/src/app/components/notification/notification-preferences/notification-preferences.component.html",
+          "frontend/AppointmentSaas/src/app/components/notification/notification-preferences/notification-preferences.component.scss"
+        ],
+        "dependencies": [
+          "docs/UI/Requirements.mmd",
+          "docs/knowledgebase/UiFlow/Customer_ProfileManagement_Flow.md"
+        ]
+      },
+      "api_information": {
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/users/{userId}/notification-preferences",
+            "description": "Retrieve user's notification preferences."
+          },
+          {
+            "method": "PUT",
+            "path": "/users/{userId}/notification-preferences",
+            "description": "Update user's notification preferences."
+          }
+        ],
+        "data_contracts": "docs/API/OpenAPI/user-openapi.yaml"
+      },
+      "acceptance_criteria": [
+        "Component displays user's current notification preferences.",
+        "Allows users to enable/disable different notification types (email/SMS).",
+        "Form validates input and displays errors.",
+        "Component integrates with backend API to save preferences.",
+        "Component follows design system and is responsive."
+      ],
+      "additional_context": {
+        "technical_notes": "Implement using Angular Reactive Forms. Use toggle switches for preferences. Ensure proper authorization for updating preferences. Integrate with new API endpoint.",
+        "design_references": "docs/knowledgebase/UiFlow/Customer_ProfileManagement_Flow.md",
+        "security_considerations": "Ensure only the authenticated user can modify their own preferences. Validate preference inputs."
+      }
+    }
+  ]
 }

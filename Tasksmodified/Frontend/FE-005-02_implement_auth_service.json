@@ -121,9 +121,9 @@
     "can_start_date": "After FE-005-01 completion"
   },
   "additional_context": {
-    "technical_notes": "Follow security best practices for authentication implementation. Ensure proper token management and storage. Implement robust error handling for authentication flows.",
+    "technical_notes": "Follow security best practices for authentication implementation. Ensure proper token management and storage. Implement robust error handling for authentication flows. Handle service provider registration, including potential subdomain creation and initial subscription association.",
     "design_references": "docs/API/OpenAPI/auth-openapi.yaml",
-    "security_considerations": "Implement secure token storage using HttpOnly cookies or secure local storage. Ensure proper input validation for credentials. Protect against common authentication vulnerabilities."
+    "security_considerations": "Implement secure token storage using HttpOnly cookies or secure local storage. Ensure proper input validation for credentials. Protect against common authentication vulnerabilities. Securely handle service provider registration data, especially tenant details and subscription information."
   },
   "implementation_guidance": {
     "method_signatures": [],

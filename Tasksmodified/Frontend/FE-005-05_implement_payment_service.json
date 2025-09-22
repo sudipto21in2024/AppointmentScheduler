@@ -126,9 +126,9 @@
     "can_start_date": "After FE-005-01 completion"
   },
   "additional_context": {
-    "technical_notes": "Follow best practices for API service implementation with focus on security. Ensure proper error handling and data transformation. Implement secure handling of payment information.",
+    "technical_notes": "Follow best practices for API service implementation with focus on security. Ensure proper error handling and data transformation. Implement secure handling of payment information. Include methods for payment method CRUD operations.",
     "design_references": "docs/API/OpenAPI/payment-openapi.yaml",
-    "security_considerations": "Ensure PCI compliance for payment information handling. Implement proper authorization checks for payment management operations. Validate all user inputs to prevent injection attacks. Protect sensitive payment information."
+    "security_considerations": "Ensure PCI compliance for payment information handling. Implement proper authorization checks for payment management operations. Validate all user inputs to prevent injection attacks. Protect sensitive payment information. Ensure secure storage and transmission of payment method details."
   },
   "implementation_guidance": {
     "method_signatures": [],

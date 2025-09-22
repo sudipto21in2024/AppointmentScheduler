@@ -1,7 +1,7 @@
 {
   "task_id": "FE-003-04",
   "title": "Create Payment Management UI Components",
-  "description": "Develop UI components for payment management including payment processing, history, and status tracking",
+  "description": "Develop UI components for payment management including payment processing, history, status tracking, and saved payment method management.",
   "priority": "HIGH",
   "complexity": 3,
   "effort_estimate": {
@@ -58,9 +58,10 @@
   ],
   "related_files": {
     "will_create": [
-      "frontend/src/app/components/payment/payment-form.component.ts",
-      "frontend/src/app/components/payment/payment-history.component.ts",
-      "frontend/src/app/components/payment/payment-status.component.ts"
+      "frontend/AppointmentSaas/src/app/components/payment/payment-form.component.ts",
+      "frontend/AppointmentSaas/src/app/components/payment/payment-history.component.ts",
+      "frontend/AppointmentSaas/src/app/components/payment/payment-status.component.ts",
+      "frontend/AppointmentSaas/src/app/components/payment/payment-method-management/payment-method-management.component.ts"
     ],
     "will_modify": [],
     "dependencies": [
@@ -151,5 +152,73 @@
       "frontend/src/app/components/payment/payment-status.component.ts"
     ]
   },
-  "subtasks": []
+  "subtasks": [
+    {
+      "task_id": "FE-003-04.1",
+      "title": "Create Payment Method Management Component",
+      "description": "Develop UI component for managing saved payment methods (listing, adding, deleting, setting default) for customer and tenant admin profiles.",
+      "priority": "HIGH",
+      "complexity": 3,
+      "effort_estimate": {
+        "hours": 12,
+        "story_points": 5
+      },
+      "status": "NOT_STARTED",
+      "progress": 0,
+      "blocking_information": {
+        "is_blocked": true,
+        "blocking_tasks": ["FE-002", "FE-005-01", "BE-XXX-03"],
+        "can_start_date": "After FE-002, FE-005-01, and BE-XXX-03 completion"
+      },
+      "related_files": {
+        "will_create": [
+          "frontend/AppointmentSaas/src/app/components/payment/payment-method-management/payment-method-management.component.ts",
+          "frontend/AppointmentSaas/src/app/components/payment/payment-method-management/payment-method-management.component.html",
+          "frontend/AppointmentSaas/src/app/components/payment/payment-method-management/payment-method-management.component.scss"
+        ],
+        "dependencies": [
+          "docs/UI/Requirements.mmd",
+          "docs/knowledgebase/UiFlow/Customer_ProfileManagement_Flow.md",
+          "docs/knowledgebase/UiFlow/TenantAdmin_SubscriptionBillingManagement_Flow.md"
+        ]
+      },
+      "api_information": {
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/payment-methods",
+            "description": "List saved payment methods for a user/tenant."
+          },
+          {
+            "method": "POST",
+            "path": "/payment-methods",
+            "description": "Add a new payment method."
+          },
+          {
+            "method": "DELETE",
+            "path": "/payment-methods/{id}",
+            "description": "Remove a saved payment method."
+          },
+          {
+            "method": "PUT",
+            "path": "/payment-methods/{id}/default",
+            "description": "Set a payment method as default."
+          }
+        ],
+        "data_contracts": "docs/API/OpenAPI/payment-openapi.yaml"
+      },
+      "acceptance_criteria": [
+        "Component displays a list of saved payment methods.",
+        "Allows adding new payment methods securely.",
+        "Provides options to delete and set default payment methods.",
+        "Integrates with backend API for payment method management.",
+        "Component follows design system and is responsive."
+      ],
+      "additional_context": {
+        "technical_notes": "Implement using Angular Reactive Forms. Integrate with payment gateway for secure tokenization of card details. Ensure proper display of masked card numbers. Handle error states and success messages.",
+        "design_references": "docs/knowledgebase/UiFlow/Customer_ProfileManagement_Flow.md, docs/knowledgebase/UiFlow/TenantAdmin_SubscriptionBillingManagement_Flow.md",
+        "security_considerations": "Ensure PCI compliance for handling payment information. Use tokenization to avoid storing sensitive card data directly. Implement proper authorization checks for managing payment methods."
+      }
+    }
+  ]
 }

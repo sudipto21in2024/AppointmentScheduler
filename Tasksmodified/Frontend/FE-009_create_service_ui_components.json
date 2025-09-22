@@ -1,7 +1,7 @@
 {
   "task_id": "FE-009",
-  "title": "Create Service Management UI Components",
-  "description": "Develop UI components for service management including service creation, editing, listing, and categorization for providers",
+  "title": "Create Payment UI Components",
+  "description": "Develop UI components for payment management including payment processing, history, and status tracking",
   "priority": "HIGH",
  "complexity": 4,
   "effort_estimate": {
@@ -153,10 +153,9 @@
     "optional_subtasks": [],
     "minimum_completion_percentage": 100,
     "required_deliverables": [
-      "frontend/src/app/components/service/service-list",
-      "frontend/src/app/components/service/service-create",
-      "frontend/src/app/components/service/service-edit",
-      "frontend/src/app/components/service/service-category"
+      "frontend/src/app/components/payment/payment-form",
+      "frontend/src/app/components/payment/payment-history",
+      "frontend/src/app/components/payment/payment-status"
     ]
   },
   "subtasks": []

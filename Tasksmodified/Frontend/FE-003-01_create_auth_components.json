@@ -1,7 +1,7 @@
 {
   "task_id": "FE-003-01",
   "title": "Create Authentication UI Components",
- "description": "Develop UI components for user authentication including login, registration, and password reset forms",
+  "description": "Develop UI components for general user authentication including login, registration, and password reset forms. Service provider registration is handled separately.",
   "priority": "HIGH",
   "complexity": 3,
   "effort_estimate": {
@@ -57,9 +57,9 @@
   ],
   "related_files": {
     "will_create": [
-      "frontend/src/app/components/auth/login.component.ts",
-      "frontend/src/app/components/auth/register.component.ts",
-      "frontend/src/app/components/auth/password-reset.component.ts"
+      "frontend/AppointmentSaas/src/app/components/auth/login/login.component.ts",
+      "frontend/AppointmentSaas/src/app/components/auth/register/register.component.ts",
+      "frontend/AppointmentSaas/src/app/components/auth/password-reset/password-reset.component.ts"
     ],
     "will_modify": [],
     "dependencies": [
@@ -132,14 +132,67 @@
     "testing_guidance": []
   },
   "completion_criteria": {
-    "required_subtasks": [],
+    "required_subtasks": ["FE-003-01.1"],
     "optional_subtasks": [],
     "minimum_completion_percentage": 100,
     "required_deliverables": [
-      "frontend/src/app/components/auth/login.component.ts",
-      "frontend/src/app/components/auth/register.component.ts",
-      "frontend/src/app/components/auth/password-reset.component.ts"
+      "frontend/AppointmentSaas/src/app/components/auth/login/login.component.ts",
+      "frontend/AppointmentSaas/src/app/components/auth/register/register.component.ts",
+      "frontend/AppointmentSaas/src/app/components/auth/password-reset/password-reset.component.ts",
+      "frontend/AppointmentSaas/src/app/components/auth/service-provider-register/service-provider-register.component.ts"
     ]
   },
-  "subtasks": []
+  "subtasks": [
+    {
+      "task_id": "FE-003-01.1",
+      "title": "Create Service Provider Registration UI Component",
+      "description": "Develop UI component for service provider registration, including multi-step form for account details, business information, subscription selection, and payment details.",
+      "priority": "HIGH",
+      "complexity": 4,
+      "effort_estimate": {
+        "hours": 16,
+        "story_points": 8
+      },
+      "status": "NOT_STARTED",
+      "progress": 0,
+      "blocking_information": {
+        "is_blocked": true,
+        "blocking_tasks": ["FE-002", "FE-005-01", "BE-XXX-01"],
+        "can_start_date": "After FE-002, FE-005-01, and BE-XXX-01 completion"
+      },
+      "related_files": {
+        "will_create": [
+          "frontend/AppointmentSaas/src/app/components/auth/service-provider-register/service-provider-register.component.ts",
+          "frontend/AppointmentSaas/src/app/components/auth/service-provider-register/service-provider-register.component.html",
+          "frontend/AppointmentSaas/src/app/components/auth/service-provider-register/service-provider-register.component.scss"
+        ],
+        "dependencies": [
+          "docs/UI/Requirements.mmd",
+          "docs/knowledgebase/UiFlow/ServiceProvider_Registration_Flow.md"
+        ]
+      },
+      "api_information": {
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/auth/register/provider",
+            "description": "Register a new service provider, including tenant creation and initial subscription."
+          }
+        ],
+        "data_contracts": "docs/API/OpenAPI/auth-openapi.yaml"
+      },
+      "acceptance_criteria": [
+        "Multi-step form guides user through account, business, subscription, and payment details.",
+        "Form validates all required fields and displays errors.",
+        "Subscription plan selection is clearly presented.",
+        "Component integrates with backend API for service provider registration.",
+        "Component follows design system and is responsive."
+      ],
+      "additional_context": {
+        "technical_notes": "Implement using Angular Reactive Forms. Use stepper component for navigation. Handle conditional display of payment step based on plan selection. Integrate with new /auth/register/provider endpoint.",
+        "design_references": "docs/knowledgebase/UiFlow/ServiceProvider_Registration_Flow.md",
+        "security_considerations": "Ensure secure handling of all registration data, especially payment information and new tenant details. Implement CAPTCHA or similar for bot protection."
+      }
+    }
+  ]
 }
