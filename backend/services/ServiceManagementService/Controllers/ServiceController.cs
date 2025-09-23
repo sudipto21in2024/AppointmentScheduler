@@ -9,6 +9,7 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using ServiceManagementService.Services;
 using ServiceManagementService.Validators;
+using Shared.DTOs;
 
 namespace ServiceManagementService.Controllers
 {
@@ -361,6 +362,82 @@ namespace ServiceManagementService.Controllers
         }
 
         #endregion
-    }
 
+        /// <summary>
+        /// Approves a service listing.
+        /// </summary>
+        /// <param name="id">Service ID to approve</param>
+        /// <returns>Success message</returns>
+        [HttpPut("{id}/approve")]
+        public async Task<IActionResult> ApproveService(Guid id)
+        {
+            try
+            {
+                var adminId = GetUserIdFromClaims(); // Assuming the user is an admin
+                var tenantId = GetTenantIdFromClaims();
+
+                await _serviceService.ApproveServiceAsync(id, adminId, tenantId);
+
+                _logger.LogInformation($"Service with ID: {id} approved by admin: {adminId}");
+
+                return Ok(new { Message = "Service approved successfully." });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { Message = "Service not found." });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error approving service with ID: {id}");
+                return StatusCode(500, new { Message = "An error occurred while approving the service." });
+            }
+        }
+
+        /// <summary>
+        /// Rejects a service listing.
+        /// </summary>
+        /// <param name="id">Service ID to reject</param>
+        /// <param name="request">Rejection request containing an optional reason</param>
+        /// <returns>Success message</returns>
+        [HttpPut("{id}/reject")]
+        public async Task<IActionResult> RejectService(Guid id, [FromBody] RejectServiceRequest request)
+        {
+            try
+            {
+                var adminId = GetUserIdFromClaims(); // Assuming the user is an admin
+                var tenantId = GetTenantIdFromClaims();
+
+                await _serviceService.RejectServiceAsync(id, adminId, tenantId, request.Reason);
+
+                _logger.LogInformation($"Service with ID: {id} rejected by admin: {adminId}. Reason: {request.Reason}");
+
+                return Ok(new { Message = "Service rejected successfully." });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { Message = "Service not found." });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error rejecting service with ID: {id}");
+                return StatusCode(500, new { Message = "An error occurred while rejecting the service." });
+            }
+        }
+    }
 }

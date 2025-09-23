@@ -12,6 +12,7 @@ using MassTransit;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using Shared.DTOs;
 
 namespace ServiceManagementService.Tests
 {
@@ -120,7 +121,7 @@ namespace ServiceManagementService.Tests
             _dbContext.Services.Add(service);
             await _dbContext.SaveChangesAsync();
 
-            var request = new UpdateServiceRequest
+            var request = new Shared.DTOs.UpdateServiceRequest
             {
                 Name = "Updated Service",
                 Description = "Updated Description",
@@ -130,7 +131,7 @@ namespace ServiceManagementService.Tests
             };
 
             // Setup validator to return valid result
-            _validatorMock.Setup(v => v.ValidateUpdateServiceRequestAsync(It.IsAny<UpdateServiceRequest>(), It.IsAny<Guid>()))
+            _validatorMock.Setup(v => v.ValidateUpdateServiceRequestAsync(It.IsAny<Shared.DTOs.UpdateServiceRequest>(), It.IsAny<Guid>()))
                 .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act
@@ -193,13 +194,13 @@ namespace ServiceManagementService.Tests
             _dbContext.Services.Add(service);
             await _dbContext.SaveChangesAsync();
 
-            var request = new UpdateServiceRequest
+            var request = new Shared.DTOs.UpdateServiceRequest
             {
                 Name = "Updated Service"
             };
 
             // Setup validator to return valid result
-            _validatorMock.Setup(v => v.ValidateUpdateServiceRequestAsync(It.IsAny<UpdateServiceRequest>(), It.IsAny<Guid>()))
+            _validatorMock.Setup(v => v.ValidateUpdateServiceRequestAsync(It.IsAny<Shared.DTOs.UpdateServiceRequest>(), It.IsAny<Guid>()))
                 .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act & Assert

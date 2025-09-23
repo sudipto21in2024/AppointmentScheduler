@@ -8,7 +8,9 @@ using Shared.Events;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using ServiceManagementService.Validators;
-using ServiceManagementService.Services;
+using Shared.Models.Enums;
+using static Shared.Models.Enums.ServiceStatus;
+using Shared.DTOs;
 
 namespace ServiceManagementService.Services
 {
@@ -32,7 +34,7 @@ namespace ServiceManagementService.Services
         /// <param name="userId">ID of the user creating the service</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Created service</returns>
-        public async Task<Service> CreateServiceAsync(CreateServiceRequest request, Guid userId, Guid tenantId)
+        public async Task<Service> CreateServiceAsync(Shared.DTOs.CreateServiceRequest request, Guid userId, Guid tenantId)
         {
             // Validate the request
             var validationResult = await _validator.ValidateCreateServiceRequestAsync(request, tenantId) as Shared.DTOs.ValidationResult;
@@ -127,7 +129,7 @@ namespace ServiceManagementService.Services
         /// <param name="userId">ID of the user updating the service</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Updated service</returns>
-        public async Task<Service> UpdateServiceAsync(Guid serviceId, UpdateServiceRequest request, Guid userId, Guid tenantId)
+        public async Task<Service> UpdateServiceAsync(Guid serviceId, Shared.DTOs.UpdateServiceRequest request, Guid userId, Guid tenantId)
         {
             // Validate the request
             var validationResult = await _validator.ValidateUpdateServiceRequestAsync(request, tenantId) as Shared.DTOs.ValidationResult;
@@ -346,7 +348,7 @@ namespace ServiceManagementService.Services
         /// <param name="userId">ID of the user creating the category</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Created category</returns>
-        public async Task<ServiceCategory> CreateServiceCategoryAsync(CreateCategoryRequest request, Guid userId, Guid tenantId)
+        public async Task<ServiceCategory> CreateServiceCategoryAsync(Shared.DTOs.CreateCategoryRequest request, Guid userId, Guid tenantId)
         {
             // Validate the request
             var validationResult = await _validator.ValidateCreateCategoryRequestAsync(request, tenantId) as Shared.DTOs.ValidationResult;
@@ -391,7 +393,7 @@ namespace ServiceManagementService.Services
         /// <param name="userId">ID of the user updating the category</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Updated category</returns>
-        public async Task<ServiceCategory> UpdateServiceCategoryAsync(Guid categoryId, UpdateCategoryRequest request, Guid userId, Guid tenantId)
+        public async Task<ServiceCategory> UpdateServiceCategoryAsync(Guid categoryId, Shared.DTOs.UpdateCategoryRequest request, Guid userId, Guid tenantId)
         {
             // Validate the request
             var validationResult = await _validator.ValidateUpdateCategoryRequestAsync(request, tenantId) as Shared.DTOs.ValidationResult;
@@ -498,6 +500,119 @@ namespace ServiceManagementService.Services
 
             _dbContext.ServiceCategories.Remove(category);
             await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Approves a service listing.
+        /// </summary>
+        /// <param name="serviceId">ID of the service to approve.</param>
+        /// <param name="adminId">ID of the administrator approving the service.</param>
+        /// <param name="tenantId">ID of the tenant.</param>
+        /// <returns>True if the service was approved successfully, otherwise false.</returns>
+        public async Task<bool> ApproveServiceAsync(Guid serviceId, Guid adminId, Guid tenantId)
+        {
+            var service = await _dbContext.Services
+                .FirstOrDefaultAsync(s => s.Id == serviceId && s.TenantId == tenantId);
+
+            if (service == null)
+            {
+                throw new KeyNotFoundException("Service not found.");
+            }
+
+            // Check if user is an admin (only admins can approve services)
+            var adminUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == adminId && u.TenantId == tenantId);
+            if (adminUser == null || adminUser.UserType != UserRole.Admin)
+            {
+                throw new UnauthorizedAccessException("Only administrators can approve services.");
+            }
+
+            // Check if the service is already approved or rejected
+            if (service.Status == Approved || service.Status == Rejected)
+            {
+                throw new InvalidOperationException($"Service is already {service.Status} and cannot be approved.");
+            }
+
+            // Ensure service is in a pending state before approval
+            if (service.Status != Pending)
+            {
+                throw new InvalidOperationException("Service is not in a pending state and cannot be approved.");
+            }
+
+            service.Status = Approved; // Set to approved
+            service.IsActive = true; // Also set IsActive to true for approved services
+            service.UpdatedAt = DateTime.UtcNow;
+
+            await _dbContext.SaveChangesAsync();
+
+            // Publish ServiceApprovedEvent
+            var serviceApprovedEvent = new ServiceApprovedEvent
+            {
+                ServiceId = service.Id,
+                TenantId = service.TenantId,
+                ApprovedBy = adminId,
+                ApprovedAt = DateTime.UtcNow
+            };
+            await _publishEndpoint.Publish(serviceApprovedEvent);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Rejects a service listing.
+        /// </summary>
+        /// <param name="serviceId">ID of the service to reject.</param>
+        /// <param name="adminId">ID of the administrator rejecting the service.</param>
+        /// <param name="tenantId">ID of the tenant.</param>
+        /// <param name="reason">Optional reason for rejection.</param>
+        /// <returns>True if the service was rejected successfully, otherwise false.</returns>
+        public async Task<bool> RejectServiceAsync(Guid serviceId, Guid adminId, Guid tenantId, string? reason)
+        {
+            var service = await _dbContext.Services
+                .FirstOrDefaultAsync(s => s.Id == serviceId && s.TenantId == tenantId);
+
+            if (service == null)
+            {
+                throw new KeyNotFoundException("Service not found.");
+            }
+
+            // Check if user is an admin (only admins can reject services)
+            var adminUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == adminId && u.TenantId == tenantId);
+            if (adminUser == null || adminUser.UserType != UserRole.Admin)
+            {
+                throw new UnauthorizedAccessException("Only administrators can reject services.");
+            }
+
+            // Check if the service is already approved or rejected
+            if (service.Status == Approved || service.Status == Rejected)
+            {
+                throw new InvalidOperationException($"Service is already {service.Status} and cannot be rejected.");
+            }
+
+            // Ensure service is in a pending state before rejection
+            if (service.Status != Pending)
+            {
+                throw new InvalidOperationException("Service is not in a pending state and cannot be rejected.");
+            }
+
+            service.Status = Rejected; // Set to rejected
+            service.IsActive = false; // Also set IsActive to false for rejected services
+            service.RejectionReason = reason; // Store rejection reason
+            service.UpdatedAt = DateTime.UtcNow;
+
+            await _dbContext.SaveChangesAsync();
+
+            // Publish ServiceRejectedEvent
+            var serviceRejectedEvent = new ServiceRejectedEvent
+            {
+                ServiceId = service.Id,
+                TenantId = service.TenantId,
+                RejectedBy = adminId,
+                RejectedAt = DateTime.UtcNow,
+                Reason = reason
+            };
+            await _publishEndpoint.Publish(serviceRejectedEvent);
 
             return true;
         }

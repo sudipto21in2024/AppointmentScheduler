@@ -24,7 +24,7 @@ namespace ServiceManagementService.Validators
         /// <param name="request">Service creation request</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Validation result</returns>
-        public async Task<Shared.DTOs.ValidationResult> ValidateCreateServiceRequestAsync(CreateServiceRequest request, Guid tenantId)
+        public async Task<Shared.DTOs.ValidationResult> ValidateCreateServiceRequestAsync(Shared.DTOs.CreateServiceRequest request, Guid tenantId)
         {
             var result = new Shared.DTOs.ValidationResult { IsValid = true };
 
@@ -93,7 +93,7 @@ namespace ServiceManagementService.Validators
         /// </summary>
         /// <param name="request">Service update request</param>
         /// <returns>Validation result</returns>
-        public async Task<Shared.DTOs.ValidationResult> ValidateUpdateServiceRequestAsync(UpdateServiceRequest request, Guid tenantId)
+        public async Task<Shared.DTOs.ValidationResult> ValidateUpdateServiceRequestAsync(Shared.DTOs.UpdateServiceRequest request, Guid tenantId)
         {
             var result = new Shared.DTOs.ValidationResult { IsValid = true };
 
@@ -138,7 +138,7 @@ namespace ServiceManagementService.Validators
         /// <param name="request">Category creation request</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Validation result</returns>
-        public async Task<Shared.DTOs.ValidationResult> ValidateCreateCategoryRequestAsync(CreateCategoryRequest request, Guid tenantId)
+        public async Task<Shared.DTOs.ValidationResult> ValidateCreateCategoryRequestAsync(Shared.DTOs.CreateCategoryRequest request, Guid tenantId)
         {
             var result = new Shared.DTOs.ValidationResult { IsValid = true };
 
@@ -183,7 +183,7 @@ namespace ServiceManagementService.Validators
         /// </summary>
         /// <param name="request">Category update request</param>
         /// <returns>Validation result</returns>
-        public async Task<Shared.DTOs.ValidationResult> ValidateUpdateCategoryRequestAsync(UpdateCategoryRequest request, Guid tenantId)
+        public async Task<Shared.DTOs.ValidationResult> ValidateUpdateCategoryRequestAsync(Shared.DTOs.UpdateCategoryRequest request, Guid tenantId)
         {
             var result = new Shared.DTOs.ValidationResult { IsValid = true };
 

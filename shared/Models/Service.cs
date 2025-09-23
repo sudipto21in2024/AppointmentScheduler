@@ -15,6 +15,8 @@ namespace Shared.Models
         public decimal Price { get; set; }
         public string Currency { get; set; } = "USD";
         public bool IsActive { get; set; }
+        public Enums.ServiceStatus Status { get; set; } = Enums.ServiceStatus.Pending; // Default status
+        public string? RejectionReason { get; set; } // New property for rejection reason
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool IsFeatured { get; set; }

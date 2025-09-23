@@ -12,6 +12,7 @@ using MassTransit;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using Shared.DTOs;
 
 namespace ServiceManagementService.Tests
 {
@@ -134,7 +135,7 @@ namespace ServiceManagementService.Tests
             _dbContext.ServiceCategories.Add(category);
             await _dbContext.SaveChangesAsync();
 
-            var request = new CreateServiceRequest
+            var request = new Shared.DTOs.CreateServiceRequest
             {
                 Name = "Test Service",
                 Description = "Test Description",
@@ -148,7 +149,7 @@ namespace ServiceManagementService.Tests
             };
 
             // Setup validator to return valid result
-            _validatorMock.Setup(v => v.ValidateCreateServiceRequestAsync(It.IsAny<CreateServiceRequest>(), It.IsAny<Guid>()))
+            _validatorMock.Setup(v => v.ValidateCreateServiceRequestAsync(It.IsAny<Shared.DTOs.CreateServiceRequest>(), It.IsAny<Guid>()))
                 .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act
@@ -197,7 +198,7 @@ namespace ServiceManagementService.Tests
             _dbContext.Users.Add(customer);
             await _dbContext.SaveChangesAsync();
 
-            var request = new CreateServiceRequest
+            var request = new Shared.DTOs.CreateServiceRequest
             {
                 Name = "Test Service",
                 Description = "Test Description",
@@ -211,7 +212,7 @@ namespace ServiceManagementService.Tests
             };
 
             // Setup validator to return valid result
-            _validatorMock.Setup(v => v.ValidateCreateServiceRequestAsync(It.IsAny<CreateServiceRequest>(), It.IsAny<Guid>()))
+            _validatorMock.Setup(v => v.ValidateCreateServiceRequestAsync(It.IsAny<Shared.DTOs.CreateServiceRequest>(), It.IsAny<Guid>()))
                 .ReturnsAsync(new Shared.DTOs.ValidationResult { IsValid = true });
 
             // Act & Assert

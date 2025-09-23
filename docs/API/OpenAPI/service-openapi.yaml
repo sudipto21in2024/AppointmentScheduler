@@ -270,6 +270,121 @@ paths:
               schema:
                 $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
 
+  /services/{id}/approve:
+    put:
+      summary: Approve a service listing
+      description: Allows a Tenant Admin to approve a pending service listing, making it visible to customers.
+      tags:
+        - Services
+      parameters:
+        - name: id
+          in: path
+          description: Service ID to approve
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Service approved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Service approved successfully
+        '400':
+          description: Bad request (e.g., service not in pending status)
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden (only Tenant Admins can approve services)
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Service not found
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+  /services/{id}/reject:
+    put:
+      summary: Reject a service listing
+      description: Allows a Tenant Admin to reject a pending service listing, keeping it inactive.
+      tags:
+        - Services
+      parameters:
+        - name: id
+          in: path
+          description: Service ID to reject
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Optional reason for rejection
+                  example: Does not meet quality standards.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Service rejected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Service rejected successfully
+        '400':
+          description: Bad request (e.g., service not in pending status)
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden (only Tenant Admins can reject services)
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Service not found
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
   /categories:
     get:
       summary: Get all service categories

@@ -15,7 +15,7 @@ namespace ServiceManagementService.Services
         /// <param name="userId">ID of the user creating the service</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Created service</returns>
-        Task<Service> CreateServiceAsync(CreateServiceRequest request, Guid userId, Guid tenantId);
+        Task<Service> CreateServiceAsync(Shared.DTOs.CreateServiceRequest request, Guid userId, Guid tenantId);
 
         /// <summary>
         /// Gets a service by ID
@@ -34,7 +34,7 @@ namespace ServiceManagementService.Services
         /// <param name="userId">ID of the user updating the service</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Updated service</returns>
-        Task<Service> UpdateServiceAsync(Guid serviceId, UpdateServiceRequest request, Guid userId, Guid tenantId);
+        Task<Service> UpdateServiceAsync(Guid serviceId, Shared.DTOs.UpdateServiceRequest request, Guid userId, Guid tenantId);
 
         /// <summary>
         /// Deletes a service (soft delete)
@@ -69,7 +69,7 @@ namespace ServiceManagementService.Services
         /// <param name="userId">ID of the user creating the category</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Created category</returns>
-        Task<ServiceCategory> CreateServiceCategoryAsync(CreateCategoryRequest request, Guid userId, Guid tenantId);
+        Task<ServiceCategory> CreateServiceCategoryAsync(Shared.DTOs.CreateCategoryRequest request, Guid userId, Guid tenantId);
 
         /// <summary>
         /// Updates an existing service category
@@ -79,7 +79,7 @@ namespace ServiceManagementService.Services
         /// <param name="userId">ID of the user updating the category</param>
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>Updated category</returns>
-        Task<ServiceCategory> UpdateServiceCategoryAsync(Guid categoryId, UpdateCategoryRequest request, Guid userId, Guid tenantId);
+        Task<ServiceCategory> UpdateServiceCategoryAsync(Guid categoryId, Shared.DTOs.UpdateCategoryRequest request, Guid userId, Guid tenantId);
 
         /// <summary>
         /// Deletes a service category
@@ -89,63 +89,25 @@ namespace ServiceManagementService.Services
         /// <param name="tenantId">ID of the tenant</param>
         /// <returns>True if successful</returns>
         Task<bool> DeleteServiceCategoryAsync(Guid categoryId, Guid userId, Guid tenantId);
+
+        /// <summary>
+        /// Approves a service listing.
+        /// </summary>
+        /// <param name="serviceId">ID of the service to approve.</param>
+        /// <param name="adminId">ID of the administrator approving the service.</param>
+        /// <param name="tenantId">ID of the tenant.</param>
+        /// <returns>True if the service was approved successfully, otherwise false.</returns>
+        Task<bool> ApproveServiceAsync(Guid serviceId, Guid adminId, Guid tenantId);
+
+        /// <summary>
+        /// Rejects a service listing.
+        /// </summary>
+        /// <param name="serviceId">ID of the service to reject.</param>
+        /// <param name="adminId">ID of the administrator rejecting the service.</param>
+        /// <param name="tenantId">ID of the tenant.</param>
+        /// <param name="reason">Optional reason for rejection.</param>
+        /// <returns>True if the service was rejected successfully, otherwise false.</returns>
+        Task<bool> RejectServiceAsync(Guid serviceId, Guid adminId, Guid tenantId, string? reason);
     }
 
-    /// <summary>
-    /// Request model for creating a service
-    /// </summary>
-    public class CreateServiceRequest
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public Guid CategoryId { get; set; }
-        public int Duration { get; set; }
-        public decimal Price { get; set; }
-        public string Currency { get; set; } = "USD";
-        public bool IsActive { get; set; } = true;
-        public bool IsFeatured { get; set; } = false;
-        public int MaxBookingsPerDay { get; set; } = 10;
-    }
-
-    /// <summary>
-    /// Request model for updating a service
-    /// </summary>
-    public class UpdateServiceRequest
-    {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public Guid? CategoryId { get; set; }
-        public int? Duration { get; set; }
-        public decimal? Price { get; set; }
-        public string? Currency { get; set; }
-        public bool? IsActive { get; set; }
-        public bool? IsFeatured { get; set; }
-        public int? MaxBookingsPerDay { get; set; }
-    }
-
-    /// <summary>
-    /// Request model for creating a service category
-    /// </summary>
-    public class CreateCategoryRequest
-    {
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public Guid? ParentCategoryId { get; set; }
-        public string? IconUrl { get; set; }
-        public int SortOrder { get; set; } = 0;
-        public bool IsActive { get; set; } = true;
-    }
-
-    /// <summary>
-    /// Request model for updating a service category
-    /// </summary>
-    public class UpdateCategoryRequest
-    {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public Guid? ParentCategoryId { get; set; }
-        public string? IconUrl { get; set; }
-        public int? SortOrder { get; set; }
-        public bool? IsActive { get; set; }
-    }
 }
