@@ -18,6 +18,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.9" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,6 +27,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\backend\services\UserService\UserService.csproj" />
+    <ProjectReference Include="..\..\backend\services\ConfigurationService\ConfigurationService.csproj" />
+    <ProjectReference Include="..\..\backend\services\PaymentService\PaymentService.csproj" />
     <ProjectReference Include="..\..\shared\Shared.csproj" />
   </ItemGroup>
 

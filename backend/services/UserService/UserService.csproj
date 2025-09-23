@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\shared\Shared.csproj" />
+    <ProjectReference Include="..\ConfigurationService\ConfigurationService.csproj" />
+    <ProjectReference Include="..\PaymentService\PaymentService.csproj" />
     <PackageReference Include="MediatR" Version="12.2.0" />
     <PackageReference Include="MassTransit" Version="8.1.0" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="8.1.0" />

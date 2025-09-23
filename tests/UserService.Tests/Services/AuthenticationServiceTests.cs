@@ -14,7 +14,7 @@ namespace UserService.Tests.Services
 {
     public class AuthenticationServiceTests
     {
-        private readonly Mock<UserService.Services.IUserService> _mockUserService;
+        private readonly Mock<Shared.Contracts.IUserService> _mockUserService;
         private readonly Mock<IJwtService> _mockJwtService;
         private readonly Mock<ITokenService> _mockTokenService;
         private readonly Mock<IConfiguration> _mockConfiguration;
@@ -23,7 +23,7 @@ namespace UserService.Tests.Services
 
         public AuthenticationServiceTests()
         {
-            _mockUserService = new Mock<UserService.Services.IUserService>();
+            _mockUserService = new Mock<Shared.Contracts.IUserService>();
             _mockJwtService = new Mock<IJwtService>();
             _mockTokenService = new Mock<ITokenService>();
             _mockConfiguration = new Mock<IConfiguration>();

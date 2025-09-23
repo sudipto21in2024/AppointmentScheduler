@@ -475,6 +475,11 @@ namespace Shared.Data
         // Placeholder for tenant ID - this would be implemented based on your tenant resolution strategy
         private Guid GetCurrentTenantId()
         {
+              // Check for test override first
+            if (OverrideTenantId.HasValue)
+            {
+                return OverrideTenantId.Value;
+            }
             // Retrieve TenantId from HttpContext.User.Claims
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext != null && httpContext.User.Identity is ClaimsIdentity claimsIdentity)

@@ -23,6 +23,8 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Consul;
 using Shared.Consul;
+using ConfigurationService.Services;
+using PaymentService.Services;
 
 namespace UserService;
 
@@ -37,6 +39,7 @@ public class Program
         builder.Services.AddFluentValidationAutoValidation();
         builder.Services.AddFluentValidationClientsideAdapters();
         builder.Services.AddValidatorsFromAssemblyContaining<Validators.LoginRequestValidator>();
+        builder.Services.AddValidatorsFromAssemblyContaining<Validators.RegisterProviderRequestValidator>();
         builder.Services.AddEndpointsApiExplorer();
 
         // Health checks
@@ -71,9 +74,15 @@ public class Program
             new Processors.JwtService(sp.GetRequiredService<IConfiguration>(), sp.GetRequiredService<ILogger<Processors.JwtService>>()));
         builder.Services.AddScoped<Processors.TokenService>(sp =>
             new Processors.TokenService(sp.GetRequiredService<ILogger<Processors.TokenService>>()));
-        builder.Services.AddScoped<IUserService, UserService.Services.UserService>();
+        builder.Services.AddScoped<Shared.Contracts.IUserService, UserService.Services.UserService>();
         builder.Services.AddScoped<Shared.Contracts.IAuthenticationService, UserService.Services.AuthenticationService>();
         builder.Services.AddScoped<UserService.Utils.ITenantResolutionService, UserService.Utils.TenantResolutionService>();
+        builder.Services.AddScoped<IRegistrationService, RegistrationService>();
+        builder.Services.AddScoped<ITenantService, TenantService>();
+        
+        // Add references to external services
+        builder.Services.AddScoped<ConfigurationService.Services.ISubscriptionService, ConfigurationService.Services.SubscriptionService>();
+        builder.Services.AddScoped<PaymentService.Services.IPaymentService, PaymentService.Services.PaymentService>();
         
         // Register the shared ApplicationDbContext
         builder.Services.AddDbContext<Shared.Data.ApplicationDbContext>(options =>

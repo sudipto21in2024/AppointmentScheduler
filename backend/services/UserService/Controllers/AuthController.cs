@@ -12,6 +12,7 @@ using MassTransit;
 using System.Diagnostics;
 using UserService.Utils;
 using FluentValidation;
+using UserService.Services;
 
 
 namespace UserService.Controllers
@@ -21,29 +22,33 @@ namespace UserService.Controllers
     public class AuthController : ControllerBase
     {
         private readonly Shared.Contracts.IAuthenticationService _authenticationService;
-        private readonly UserService.Services.IUserService _userService;
+        private readonly IUserService _userService;
         private readonly UserService.Utils.ITenantResolutionService _tenantResolutionService;
+        private readonly UserService.Services.IRegistrationService _registrationService;
         private readonly ILogger<AuthController> _logger;
         private static readonly ActivitySource ActivitySource = new ActivitySource("UserService.AuthController");
         private readonly IPublishEndpoint _publishEndpoint;
         private readonly IValidator<LoginRequest> _loginRequestValidator;
         private readonly IValidator<RegisterRequest> _registerRequestValidator;
+        private readonly IValidator<RegisterProviderRequest> _registerProviderRequestValidator;
         private readonly IValidator<RefreshRequest> _refreshRequestValidator;
         private readonly IValidator<PasswordResetRequest> _passwordResetRequestValidator;
         private readonly IValidator<ResetPasswordRequest> _resetPasswordRequestValidator;
 
-        public AuthController(Shared.Contracts.IAuthenticationService authenticationService, UserService.Services.IUserService userService, UserService.Utils.ITenantResolutionService tenantResolutionService, ILogger<AuthController> logger, IPublishEndpoint publishEndpoint,
-            IValidator<LoginRequest> loginRequestValidator, IValidator<RegisterRequest> registerRequestValidator,
+        public AuthController(Shared.Contracts.IAuthenticationService authenticationService, IUserService userService, UserService.Utils.ITenantResolutionService tenantResolutionService, UserService.Services.IRegistrationService registrationService, ILogger<AuthController> logger, IPublishEndpoint publishEndpoint,
+            IValidator<LoginRequest> loginRequestValidator, IValidator<RegisterRequest> registerRequestValidator, IValidator<RegisterProviderRequest> registerProviderRequestValidator,
             IValidator<RefreshRequest> refreshRequestValidator, IValidator<PasswordResetRequest> passwordResetRequestValidator,
             IValidator<ResetPasswordRequest> resetPasswordRequestValidator)
         {
             _authenticationService = authenticationService;
             _userService = userService;
             _tenantResolutionService = tenantResolutionService;
+            _registrationService = registrationService;
             _logger = logger;
             _publishEndpoint = publishEndpoint;
             _loginRequestValidator = loginRequestValidator;
             _registerRequestValidator = registerRequestValidator;
+            _registerProviderRequestValidator = registerProviderRequestValidator;
             _refreshRequestValidator = refreshRequestValidator;
             _passwordResetRequestValidator = passwordResetRequestValidator;
             _resetPasswordRequestValidator = resetPasswordRequestValidator;
@@ -372,14 +377,58 @@ namespace UserService.Controllers
             }
         }
 
+        [HttpPost("register/provider")]
+        public async Task<IActionResult> RegisterProvider([FromBody] RegisterProviderRequest request)
+        {
+            using var activity = ActivitySource.StartActivity("AuthController.RegisterProvider");
+            activity?.SetTag("tenant.Id", request.TenantId);
+            activity?.SetTag("user.email", request.Email);
+             
+            LoggingExtensions.AddTraceIdToLogContext();
+             
+            try
+            {
+                // Validate the request
+                var validationResult = await _registerProviderRequestValidator.ValidateAsync(request);
+                if (!validationResult.IsValid)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return BadRequest(validationResult.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }));
+                }
+
+                _logger.LogInformation($"Provider registration requested for {request.Email} with tenant {request.TenantId}");
+             
+                // Register the provider
+                var result = await _registrationService.RegisterProviderAsync(request);
+                
+                if (!result.Success)
+                {
+                    _logger.LogWarning($"Provider registration failed for {request.Email}: {result.Message}");
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return BadRequest(result.Message);
+                }
+                
+                _logger.LogInformation($"Provider {result.User?.Email} registered successfully for tenant {result.Tenant?.Name}");
+                activity?.SetStatus(ActivityStatusCode.Ok);
+             
+                return CreatedAtAction(nameof(GetUser), new { id = result.User?.Id }, result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during provider registration for {Email}", request.Email);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                throw;
+            }
+        }
+
         [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUser(Guid id)
         {
             using var activity = ActivitySource.StartActivity("AuthController.GetUser");
             activity?.SetTag("user.id", id.ToString());
-            
+             
             LoggingExtensions.AddTraceIdToLogContext();
-            
+             
             try
             {
                 var user = await _userService.GetUserById(id);
@@ -388,7 +437,7 @@ namespace UserService.Controllers
                     activity?.SetStatus(ActivityStatusCode.Error);
                     return NotFound($"User with ID {id} not found.");
                 }
-            
+             
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return Ok(new UserResponse { User = user });
             }

@@ -20,14 +20,12 @@
     ],
     "business_rules": [
       "Registration must create a new user account (UserType: Provider).",
-      "Registration must create a new tenant account with the provided business details (e.g., tenant name, subdomain).",
+      "Registration must create a new tenant account with the provided business details (e.g., tenant id).",
       "The selected subscription plan must be associated with the new tenant.",
-      "Subdomain must be unique across the platform.",
       "User email must be unique within the new tenant.",
       "Initial payment processing for paid plans must be handled."
     ],
     "edge_cases": [
-      "Handling duplicate subdomain attempts.",
       "Handling duplicate email within the same tenant.",
       "Managing failed payment processing during registration.",
       "Ensuring transactional consistency for user, tenant, and subscription creation."
@@ -48,7 +46,6 @@
     "A new user (UserType: Provider) is created.",
     "A new tenant is created with the provided business details.",
     "The selected subscription plan is successfully associated with the new tenant.",
-    "Subdomain uniqueness is enforced.",
     "Initial payment (if applicable) is processed correctly.",
     "Proper error responses are returned for invalid or conflicting data."
   ],
@@ -97,7 +94,6 @@
     "unit_tests": [
       "Validate successful registration with new tenant and free plan.",
       "Validate successful registration with new tenant and paid plan (mock payment).",
-      "Test registration with duplicate subdomain.",
       "Test registration with duplicate email.",
       "Test transactional integrity for all associated creations."
     ],
@@ -115,7 +111,7 @@
     "can_start_date": ""
   },
   "additional_context": {
-    "technical_notes": "Ensure atomic creation of user, tenant, and subscription. Utilize existing services for user, tenant, and subscription management. Implement robust validation for subdomain uniqueness and email uniqueness within a tenant. Integrate with payment processing service for initial billing.",
+    "technical_notes": "Ensure atomic creation of user, tenant, and subscription. Utilize existing services for user, tenant, and subscription management. Implement robust validation for  email uniqueness within a tenant. Integrate with payment processing service for initial billing.",
     "design_references": "docs/BusinessRequirements/BRD.mmd, docs/knowledgebase/UiFlow/ServiceProvider_Registration_Flow.md",
     "security_considerations": "Securely handle all registration data. Implement rate limiting to prevent abuse. Ensure proper logging and auditing of registration attempts."
   },
