@@ -88,28 +88,42 @@ namespace Shared.Data
             modelBuilder.Entity<Tenant>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                
+
+                entity.HasIndex(e => e.Subdomain).IsUnique();
+                entity.HasIndex(e => e.ContactEmail).IsUnique();
+
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(255);
-                    
+
                 entity.Property(e => e.Description)
                     .HasMaxLength(1000);
-                    
-                entity.Property(e => e.Domain)
+
+                entity.Property(e => e.Subdomain)
+                    .IsRequired()
                     .HasMaxLength(255);
-                    
+
+                entity.Property(e => e.Status)
+                    .HasConversion<string>()
+                    .IsRequired();
+
                 entity.Property(e => e.LogoUrl)
                     .HasMaxLength(500);
-                    
+
                 entity.Property(e => e.ContactEmail)
+                    .IsRequired()
                     .HasMaxLength(255);
-                    
+
                 entity.Property(e => e.CreatedAt)
                     .IsRequired();
-                    
+
                 entity.Property(e => e.UpdatedAt)
                     .IsRequired();
+
+                entity.Property(e => e.IsDeleted)
+                    .IsRequired();
+
+                entity.Property(e => e.DeletedAt);
             });
 
             // Service Category entity configuration

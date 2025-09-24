@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Generic;
+using Shared.Models;
 
-namespace Shared.Models
+namespace Shared.DTOs
 {
-    public class Tenant
+    public class TenantDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;
@@ -13,8 +13,6 @@ namespace Shared.Models
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public string? LogoUrl { get; set; }
-        public string? ContactEmail { get; set; }
-        public bool IsDeleted { get; set; }
-        public DateTime? DeletedAt { get; set; }
+        public string? AdminEmail { get; set; }
     }
 }

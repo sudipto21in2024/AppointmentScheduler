@@ -10,6 +10,304 @@ servers:
     description: Production server
 
 paths:
+  /system-admin/tenants:
+    get:
+      summary: Get all tenants (System Admin)
+      description: Retrieve a paginated list of all tenants for system administration
+      tags:
+        - System Admin - Tenants
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: sort
+          in: query
+          description: Sort field
+          required: false
+          schema:
+            type: string
+            default: createdAt
+        - name: order
+          in: query
+          description: Sort order
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Successfully retrieved tenants
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Requires SuperAdmin role
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create a new tenant (System Admin)
+      description: Create a new tenant account by system administrator
+      tags:
+        - System Admin - Tenants
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTenantRequest'
+      responses:
+        '201':
+          description: Tenant created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Requires SuperAdmin role
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: Tenant already exists (duplicate subdomain or admin email)
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+  /system-admin/tenants/{id}:
+    get:
+      summary: Get tenant by ID (System Admin)
+      description: Retrieve detailed information about a specific tenant
+      tags:
+        - System Admin - Tenants
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Tenant ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successfully retrieved tenant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Requires SuperAdmin role
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Tenant not found
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update tenant details (System Admin)
+      description: Update information for an existing tenant
+      tags:
+        - System Admin - Tenants
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Tenant ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTenantRequest'
+      responses:
+        '200':
+          description: Tenant updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Requires SuperAdmin role
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Tenant not found
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - duplicate subdomain or admin email
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Soft delete tenant (System Admin)
+      description: Soft delete a tenant account
+      tags:
+        - System Admin - Tenants
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Tenant ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Tenant deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Requires SuperAdmin role
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Tenant not found
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+  /system-admin/tenants/{id}/status:
+    put:
+      summary: Update tenant status (System Admin)
+      description: Change tenant status to active, inactive, or suspended
+      tags:
+        - System Admin - Tenants
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Tenant ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTenantStatusRequest'
+      responses:
+        '200':
+          description: Tenant status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Requires SuperAdmin role
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Tenant not found
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
   /tenants:
     get:
       summary: Get all tenants
@@ -257,9 +555,10 @@ components:
       required:
         - id
         - name
+        - subdomain
+        - status
         - createdAt
         - updatedAt
-        - isActive
       properties:
         id:
           type: string
@@ -271,12 +570,13 @@ components:
         description:
           type: string
           description: Tenant description
-        domain:
+        subdomain:
           type: string
-          description: Custom domain (e.g., `tenant1.yourdomain.com`). Used for tenant-specific login.
-        isActive:
-          type: boolean
-          description: Tenant status
+          description: Unique subdomain for the tenant (e.g., `tenant1`). Used for tenant-specific login.
+        status:
+          type: string
+          enum: [Active, Inactive, Suspended]
+          description: Current status of the tenant
         createdAt:
           type: string
           format: date-time
@@ -288,16 +588,17 @@ components:
         logoUrl:
           type: string
           description: Tenant logo/image URL
-        contactEmail:
+        adminEmail:
           type: string
           format: email
-          description: Contact email for tenant
+          description: Admin email for the tenant
 
     CreateTenantRequest:
       type: object
       required:
         - name
-        - contactEmail
+        - subdomain
+        - adminEmail
       properties:
         name:
           type: string
@@ -305,16 +606,16 @@ components:
         description:
           type: string
           description: Tenant description
-        domain:
+        subdomain:
           type: string
-          description: Custom domain (e.g., `tenant1.yourdomain.com`). Used for tenant-specific login.
+          description: Unique subdomain for the tenant (e.g., `tenant1`). Used for tenant-specific login.
         logoUrl:
           type: string
           description: Tenant logo/image URL
-        contactEmail:
+        adminEmail:
           type: string
           format: email
-          description: Contact email for tenant
+          description: Admin email for the tenant
 
     UpdateTenantRequest:
       type: object
@@ -325,18 +626,19 @@ components:
         description:
           type: string
           description: Tenant description
-        domain:
+        subdomain:
           type: string
-          description: Custom domain (e.g., `tenant1.yourdomain.com`). Used for tenant-specific login.
+          description: Unique subdomain for the tenant (e.g., `tenant1`). Used for tenant-specific login.
         logoUrl:
           type: string
           description: Tenant logo/image URL
-        contactEmail:
+        adminEmail:
           type: string
           format: email
-          description: Contact email for tenant
-        isActive:
-          type: boolean
+          description: Admin email for the tenant
+        status:
+          type: string
+          enum: [Active, Inactive, Suspended]
           description: Tenant status
 
     TenantResponse:
@@ -346,6 +648,16 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/Tenant'
+
+    UpdateTenantStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [Active, Inactive, Suspended]
+          description: New status for the tenant
 
     TenantListResponse:
       type: object
