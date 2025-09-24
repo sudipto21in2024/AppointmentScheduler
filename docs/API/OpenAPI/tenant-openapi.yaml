@@ -569,6 +569,73 @@ paths:
               schema:
                 $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
 
+  /system-admin/global-settings:
+    get:
+      summary: Get global system settings (System Admin)
+      description: Retrieve platform-wide global settings for system administration
+      tags:
+        - System Admin - Global Settings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved global settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalSettingsResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Requires SuperAdmin role
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update global system settings (System Admin)
+      description: Update platform-wide global settings by system administrator
+      tags:
+        - System Admin - Global Settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGlobalSettingsRequest'
+      responses:
+        '200':
+          description: Global settings updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalSettingsResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Requires SuperAdmin role
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
   /tenants:
     get:
       summary: Get all tenants
@@ -1114,6 +1181,77 @@ components:
               type: string
             next:
               type: string
+
+    GlobalSettings:
+      type: object
+      required:
+        - id
+        - maintenanceMode
+        - defaultTimezone
+        - maxUsersPerTenant
+        - maxAppointmentsPerTenant
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for global settings
+        maintenanceMode:
+          type: boolean
+          description: Whether the platform is in maintenance mode
+        defaultTimezone:
+          type: string
+          description: Default timezone for the platform
+        maxUsersPerTenant:
+          type: integer
+          description: Maximum number of users allowed per tenant
+        maxAppointmentsPerTenant:
+          type: integer
+          description: Maximum number of appointments allowed per tenant
+        createdAt:
+          type: string
+          format: date-time
+          description: Settings creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last settings update timestamp
+        updatedBy:
+          type: string
+          format: uuid
+          description: User who last updated the settings
+
+    UpdateGlobalSettingsRequest:
+      type: object
+      required:
+        - maintenanceMode
+        - defaultTimezone
+        - maxUsersPerTenant
+        - maxAppointmentsPerTenant
+      properties:
+        maintenanceMode:
+          type: boolean
+          description: Whether the platform is in maintenance mode
+        defaultTimezone:
+          type: string
+          description: Default timezone for the platform
+        maxUsersPerTenant:
+          type: integer
+          minimum: 1
+          description: Maximum number of users allowed per tenant
+        maxAppointmentsPerTenant:
+          type: integer
+          minimum: 1
+          description: Maximum number of appointments allowed per tenant
+
+    GlobalSettingsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/GlobalSettings'
 
     ErrorResponse:
       $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'

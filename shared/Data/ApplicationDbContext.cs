@@ -43,6 +43,7 @@ namespace Shared.Data
         // Configuration Service Entities
         public virtual DbSet<PricingPlan> PricingPlans { get; set; }
         public virtual DbSet<Subscription> Subscriptions { get; set; }
+        public virtual DbSet<GlobalSettings> GlobalSettings { get; set; }
 
         // Booking History Entities
         public virtual DbSet<BookingHistory> BookingHistories { get; set; }
@@ -192,6 +193,31 @@ namespace Shared.Data
                     .WithMany() // No navigation back
                     .HasForeignKey(e => e.PricingPlanId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // GlobalSettings entity configuration
+            modelBuilder.Entity<GlobalSettings>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.MaintenanceMode)
+                    .IsRequired();
+
+                entity.Property(e => e.DefaultTimezone)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.MaxUsersPerTenant)
+                    .IsRequired();
+
+                entity.Property(e => e.MaxAppointmentsPerTenant)
+                    .IsRequired();
+
+                entity.Property(e => e.CreatedAt)
+                    .IsRequired();
+
+                entity.Property(e => e.UpdatedAt)
+                    .IsRequired();
             });
 
             // Service Category entity configuration
