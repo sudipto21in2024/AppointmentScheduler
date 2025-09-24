@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReportingService.Services;
 using Shared.DTOs;
@@ -11,10 +12,12 @@ namespace ReportingService.Controllers
     public class AnalyticsController : ControllerBase
     {
         private readonly IAnalyticsService _analyticsService;
+        private readonly IDashboardAnalyticsService _dashboardAnalyticsService;
 
-        public AnalyticsController(IAnalyticsService analyticsService)
+        public AnalyticsController(IAnalyticsService analyticsService, IDashboardAnalyticsService dashboardAnalyticsService)
         {
             _analyticsService = analyticsService;
+            _dashboardAnalyticsService = dashboardAnalyticsService;
         }
 
         /// <summary>
@@ -101,6 +104,100 @@ namespace ReportingService.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { Message = "An error occurred while retrieving customer insights data", Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets tenant-specific booking analytics data
+        /// </summary>
+        /// <param name="startDate">Start date for filtering (optional)</param>
+        /// <param name="endDate">End date for filtering (optional)</param>
+        /// <returns>Tenant booking analytics data</returns>
+        [HttpGet("tenant/bookings")]
+        [Authorize(Roles = "TenantAdmin")]
+        public async Task<ActionResult<BookingAnalyticsDto>> GetTenantBookingAnalytics(
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
+        {
+            try
+            {
+                var tenantId = GetTenantId();
+                var analytics = await _dashboardAnalyticsService.GetTenantBookingAnalyticsAsync(tenantId, startDate, endDate);
+                return Ok(analytics);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while retrieving tenant booking analytics data", Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets tenant-specific revenue analytics data
+        /// </summary>
+        /// <param name="startDate">Start date for filtering (optional)</param>
+        /// <param name="endDate">End date for filtering (optional)</param>
+        /// <returns>Tenant revenue analytics data</returns>
+        [HttpGet("tenant/revenue")]
+        [Authorize(Roles = "TenantAdmin")]
+        public async Task<ActionResult<RevenueAnalyticsDto>> GetTenantRevenueAnalytics(
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
+        {
+            try
+            {
+                var tenantId = GetTenantId();
+                var analytics = await _dashboardAnalyticsService.GetTenantRevenueAnalyticsAsync(tenantId, startDate, endDate);
+                return Ok(analytics);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while retrieving tenant revenue analytics data", Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets global booking analytics data
+        /// </summary>
+        /// <param name="startDate">Start date for filtering (optional)</param>
+        /// <param name="endDate">End date for filtering (optional)</param>
+        /// <returns>Global booking analytics data</returns>
+        [HttpGet("global/bookings")]
+        [Authorize(Roles = "SystemAdmin")]
+        public async Task<ActionResult<BookingAnalyticsDto>> GetGlobalBookingAnalytics(
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
+        {
+            try
+            {
+                var analytics = await _dashboardAnalyticsService.GetGlobalBookingAnalyticsAsync(startDate, endDate);
+                return Ok(analytics);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while retrieving global booking analytics data", Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets global revenue analytics data
+        /// </summary>
+        /// <param name="startDate">Start date for filtering (optional)</param>
+        /// <param name="endDate">End date for filtering (optional)</param>
+        /// <returns>Global revenue analytics data</returns>
+        [HttpGet("global/revenue")]
+        [Authorize(Roles = "SystemAdmin")]
+        public async Task<ActionResult<RevenueAnalyticsDto>> GetGlobalRevenueAnalytics(
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
+        {
+            try
+            {
+                var analytics = await _dashboardAnalyticsService.GetGlobalRevenueAnalyticsAsync(startDate, endDate);
+                return Ok(analytics);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while retrieving global revenue analytics data", Error = ex.Message });
             }
         }
 

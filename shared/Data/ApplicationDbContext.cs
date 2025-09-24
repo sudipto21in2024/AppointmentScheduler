@@ -533,19 +533,20 @@ namespace Shared.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Apply multi-tenancy query filters
-            modelBuilder.Entity<User>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
-            modelBuilder.Entity<ServiceCategory>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
-            modelBuilder.Entity<Service>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
-            modelBuilder.Entity<Slot>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
-            modelBuilder.Entity<Booking>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
-            modelBuilder.Entity<Payment>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
-            modelBuilder.Entity<PaymentMethod>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId() || e.User.TenantId == GetCurrentTenantId());
-            modelBuilder.Entity<Review>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
-            modelBuilder.Entity<Notification>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
-            modelBuilder.Entity<NotificationPreference>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
-            modelBuilder.Entity<BookingHistory>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
-            modelBuilder.Entity<RefreshToken>().HasQueryFilter(e => e.User.TenantId == GetCurrentTenantId());
+            // Apply multi-tenancy query filters - bypass when tenant ID is Guid.Empty (system admin)
+            var tenantId = GetCurrentTenantId();
+            modelBuilder.Entity<User>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
+            modelBuilder.Entity<ServiceCategory>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
+            modelBuilder.Entity<Service>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
+            modelBuilder.Entity<Slot>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
+            modelBuilder.Entity<Booking>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
+            modelBuilder.Entity<Payment>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
+            modelBuilder.Entity<PaymentMethod>().HasQueryFilter(e => tenantId == Guid.Empty || (e.TenantId == tenantId || e.User.TenantId == tenantId));
+            modelBuilder.Entity<Review>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
+            modelBuilder.Entity<Notification>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
+            modelBuilder.Entity<NotificationPreference>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
+            modelBuilder.Entity<BookingHistory>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
+            modelBuilder.Entity<RefreshToken>().HasQueryFilter(e => tenantId == Guid.Empty || e.User.TenantId == tenantId);
             // Tenant entity should not be filtered by TenantId from claims, as it is the root of the tenancy.
             // Super Admins should always be able to view all tenants.
 

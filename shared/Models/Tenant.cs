@@ -9,7 +9,9 @@ namespace Shared.Models
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
         public string? Subdomain { get; set; }
+        public string? Domain { get; set; }
         public TenantStatus Status { get; set; }
+        public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public string? LogoUrl { get; set; }
