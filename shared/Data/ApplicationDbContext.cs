@@ -40,6 +40,10 @@ namespace Shared.Data
         // Tenant Management Entities
         public virtual DbSet<Tenant> Tenants { get; set; }
 
+        // Configuration Service Entities
+        public virtual DbSet<PricingPlan> PricingPlans { get; set; }
+        public virtual DbSet<Subscription> Subscriptions { get; set; }
+
         // Booking History Entities
         public virtual DbSet<BookingHistory> BookingHistories { get; set; }
 
@@ -124,6 +128,70 @@ namespace Shared.Data
                     .IsRequired();
 
                 entity.Property(e => e.DeletedAt);
+            });
+
+            // PricingPlan entity configuration
+            modelBuilder.Entity<PricingPlan>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasIndex(e => e.Name).IsUnique();
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.Description)
+                    .HasMaxLength(1000);
+
+                entity.Property(e => e.Price)
+                    .HasColumnType("decimal(18,2)")
+                    .IsRequired();
+
+                entity.Property(e => e.Currency)
+                    .IsRequired()
+                    .HasMaxLength(3)
+                    .HasDefaultValue("USD");
+
+                entity.Property(e => e.Interval)
+                    .IsRequired()
+                    .HasMaxLength(20);
+
+                entity.Property(e => e.Status)
+                    .HasConversion<string>()
+                    .IsRequired();
+
+                entity.Property(e => e.CreatedDate)
+                    .IsRequired();
+
+                entity.Property(e => e.UpdatedDate);
+            });
+
+            // Subscription entity configuration
+            modelBuilder.Entity<Subscription>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Status)
+                    .HasConversion<string>()
+                    .IsRequired();
+
+                entity.Property(e => e.StartDate)
+                    .IsRequired();
+
+                entity.Property(e => e.EndDate)
+                    .IsRequired();
+
+                entity.Property(e => e.CreatedDate)
+                    .IsRequired();
+
+                entity.Property(e => e.UpdatedDate);
+
+                // Relationships
+                entity.HasOne(e => e.PricingPlan)
+                    .WithMany() // No navigation back
+                    .HasForeignKey(e => e.PricingPlanId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             // Service Category entity configuration

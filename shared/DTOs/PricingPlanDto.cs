@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Shared.Models;
 
 namespace Shared.DTOs
 {
@@ -19,6 +20,8 @@ namespace Shared.DTOs
         public List<string> Features { get; set; } = new List<string>();
         public int MaxUsers { get; set; }
         public int MaxAppointments { get; set; }
-        public bool IsActive { get; set; }
+        public PricingPlanStatus Status { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public DateTime? UpdatedDate { get; set; }
     }
 }

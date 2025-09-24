@@ -19,9 +19,9 @@ namespace ConfigurationService.Services
             // Seed some dummy data for demonstration
             _pricingPlans = new List<PricingPlan>
             {
-                new PricingPlan { Id = Guid.NewGuid(), Name = "Basic", Description = "Basic Plan", Price = 10.00m, Currency = "USD", Interval = "monthly", Features = new List<string> { "Feature A" }, MaxUsers = 1, MaxAppointments = 10, IsActive = true, CreatedDate = DateTime.UtcNow },
-                new PricingPlan { Id = Guid.NewGuid(), Name = "Pro", Description = "Pro Plan", Price = 25.00m, Currency = "USD", Interval = "monthly", Features = new List<string> { "Feature A", "Feature B" }, MaxUsers = 5, MaxAppointments = 50, IsActive = true, CreatedDate = DateTime.UtcNow },
-                new PricingPlan { Id = Guid.NewGuid(), Name = "Enterprise", Description = "Enterprise Plan", Price = 100.00m, Currency = "USD", Interval = "annually", Features = new List<string> { "Feature A", "Feature B", "Feature C" }, MaxUsers = 100, MaxAppointments = 1000, IsActive = true, CreatedDate = DateTime.UtcNow }
+                new PricingPlan { Id = Guid.NewGuid(), Name = "Basic", Description = "Basic Plan", Price = 10.00m, Currency = "USD", Interval = "monthly", Features = new List<string> { "Feature A" }, MaxUsers = 1, MaxAppointments = 10, Status = PricingPlanStatus.Active, CreatedDate = DateTime.UtcNow },
+                new PricingPlan { Id = Guid.NewGuid(), Name = "Pro", Description = "Pro Plan", Price = 25.00m, Currency = "USD", Interval = "monthly", Features = new List<string> { "Feature A", "Feature B" }, MaxUsers = 5, MaxAppointments = 50, Status = PricingPlanStatus.Active, CreatedDate = DateTime.UtcNow },
+                new PricingPlan { Id = Guid.NewGuid(), Name = "Enterprise", Description = "Enterprise Plan", Price = 100.00m, Currency = "USD", Interval = "annually", Features = new List<string> { "Feature A", "Feature B", "Feature C" }, MaxUsers = 100, MaxAppointments = 1000, Status = PricingPlanStatus.Active, CreatedDate = DateTime.UtcNow }
             };
 
             _subscriptions = new List<Subscription>();
@@ -40,7 +40,9 @@ namespace ConfigurationService.Services
                 Features = p.Features,
                 MaxUsers = p.MaxUsers,
                 MaxAppointments = p.MaxAppointments,
-                IsActive = p.IsActive
+                Status = p.Status,
+                CreatedDate = p.CreatedDate,
+                UpdatedDate = p.UpdatedDate
             }));
         }
 
@@ -60,7 +62,9 @@ namespace ConfigurationService.Services
                 Features = plan.Features,
                 MaxUsers = plan.MaxUsers,
                 MaxAppointments = plan.MaxAppointments,
-                IsActive = plan.IsActive
+                Status = plan.Status,
+                CreatedDate = plan.CreatedDate,
+                UpdatedDate = plan.UpdatedDate
             });
         }
 

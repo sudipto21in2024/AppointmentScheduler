@@ -308,6 +308,267 @@ paths:
               schema:
                 $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
 
+  /system-admin/pricing-plans:
+    get:
+      summary: Get all pricing plans (System Admin)
+      description: Retrieve a paginated list of all pricing plans for system administration
+      tags:
+        - System Admin - Pricing Plans
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: sort
+          in: query
+          description: Sort field
+          required: false
+          schema:
+            type: string
+            default: createdDate
+        - name: order
+          in: query
+          description: Sort order
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Successfully retrieved pricing plans
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PricingPlanListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Requires SuperAdmin role
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create a new pricing plan (System Admin)
+      description: Create a new pricing plan by system administrator
+      tags:
+        - System Admin - Pricing Plans
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePricingPlanRequest'
+      responses:
+        '201':
+          description: Pricing plan created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PricingPlanResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Requires SuperAdmin role
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: Pricing plan already exists (duplicate name)
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+  /system-admin/pricing-plans/{id}:
+    get:
+      summary: Get pricing plan by ID (System Admin)
+      description: Retrieve detailed information about a specific pricing plan
+      tags:
+        - System Admin - Pricing Plans
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Pricing plan ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successfully retrieved pricing plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PricingPlanResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Requires SuperAdmin role
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Pricing plan not found
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update pricing plan details (System Admin)
+      description: Update information for an existing pricing plan
+      tags:
+        - System Admin - Pricing Plans
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Pricing plan ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePricingPlanRequest'
+      responses:
+        '200':
+          description: Pricing plan updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PricingPlanResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Requires SuperAdmin role
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Pricing plan not found
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - duplicate pricing plan name
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+  /system-admin/pricing-plans/{id}/status:
+    put:
+      summary: Update pricing plan status (System Admin)
+      description: Change pricing plan status to active, inactive, or archived
+      tags:
+        - System Admin - Pricing Plans
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Pricing plan ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePricingPlanStatusRequest'
+      responses:
+        '200':
+          description: Pricing plan status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PricingPlanResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Requires SuperAdmin role
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Pricing plan not found
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
   /tenants:
     get:
       summary: Get all tenants
@@ -658,6 +919,175 @@ components:
           type: string
           enum: [Active, Inactive, Suspended]
           description: New status for the tenant
+
+    PricingPlan:
+      type: object
+      required:
+        - id
+        - name
+        - price
+        - currency
+        - interval
+        - status
+        - createdDate
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the pricing plan
+        name:
+          type: string
+          description: Pricing plan name
+        description:
+          type: string
+          description: Pricing plan description
+        price:
+          type: number
+          format: decimal
+          description: Plan price
+        currency:
+          type: string
+          description: Currency code (e.g., USD, EUR)
+        interval:
+          type: string
+          enum: [monthly, annually]
+          description: Billing interval
+        features:
+          type: array
+          items:
+            type: string
+          description: List of plan features
+        maxUsers:
+          type: integer
+          description: Maximum number of users allowed
+        maxAppointments:
+          type: integer
+          description: Maximum number of appointments allowed
+        status:
+          type: string
+          enum: [Active, Inactive, Archived]
+          description: Current status of the pricing plan
+        createdDate:
+          type: string
+          format: date-time
+          description: Plan creation timestamp
+        updatedDate:
+          type: string
+          format: date-time
+          description: Last plan update timestamp
+
+    CreatePricingPlanRequest:
+      type: object
+      required:
+        - name
+        - price
+        - currency
+        - interval
+      properties:
+        name:
+          type: string
+          description: Pricing plan name
+        description:
+          type: string
+          description: Pricing plan description
+        price:
+          type: number
+          format: decimal
+          description: Plan price
+        currency:
+          type: string
+          description: Currency code (e.g., USD, EUR)
+        interval:
+          type: string
+          enum: [monthly, annually]
+          description: Billing interval
+        features:
+          type: array
+          items:
+            type: string
+          description: List of plan features
+        maxUsers:
+          type: integer
+          description: Maximum number of users allowed
+        maxAppointments:
+          type: integer
+          description: Maximum number of appointments allowed
+
+    UpdatePricingPlanRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Pricing plan name
+        description:
+          type: string
+          description: Pricing plan description
+        price:
+          type: number
+          format: decimal
+          description: Plan price
+        currency:
+          type: string
+          description: Currency code (e.g., USD, EUR)
+        interval:
+          type: string
+          enum: [monthly, annually]
+          description: Billing interval
+        features:
+          type: array
+          items:
+            type: string
+          description: List of plan features
+        maxUsers:
+          type: integer
+          description: Maximum number of users allowed
+        maxAppointments:
+          type: integer
+          description: Maximum number of appointments allowed
+
+    UpdatePricingPlanStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [Active, Inactive, Archived]
+          description: New status for the pricing plan
+
+    PricingPlanResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/PricingPlan'
+
+    PricingPlanListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PricingPlan'
+        meta:
+          $ref: '../common/pagination.yaml#/components/schemas/Pagination'
+        links:
+          type: object
+          properties:
+            self:
+              type: string
+            first:
+              type: string
+            last:
+              type: string
+            prev:
+              type: string
+            next:
+              type: string
 
     TenantListResponse:
       type: object

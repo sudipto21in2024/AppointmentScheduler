@@ -14,7 +14,7 @@ namespace Shared.Models
         public List<string> Features { get; set; } = new List<string>();
         public int MaxUsers { get; set; }
         public int MaxAppointments { get; set; }
-        public bool IsActive { get; set; }
+        public PricingPlanStatus Status { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
     }
