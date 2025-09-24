@@ -106,7 +106,7 @@ namespace UserService.Tests.Services
             // Mock IEventStore as it's a dependency of UserService
             var mockEventStore = new Mock<IEventStore>();
             
-            _userService = new UserService.Services.UserService(_dbContext, Mock.Of<ILogger<UserService.Services.UserService>>(), mockEventStore.Object);
+            _userService = new UserService.Services.UserService(_dbContext, Mock.Of<ILogger<UserService.Services.UserService>>(), mockEventStore.Object, Mock.Of<Shared.Contracts.IUserNotificationService>());
         }
 
         [Fact]

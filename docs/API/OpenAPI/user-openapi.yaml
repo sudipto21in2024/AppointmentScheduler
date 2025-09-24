@@ -256,6 +256,97 @@ paths:
               schema:
                 $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
 
+  /users/{userId}/notification-preferences:
+    get:
+      summary: Get user notification preferences
+      description: Retrieve notification preferences for a specific user
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          description: User ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successfully retrieved notification preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferencesResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update user notification preferences
+      description: Update notification preferences for a specific user
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          description: User ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNotificationPreferencesRequest'
+      responses:
+        '200':
+          description: Notification preferences updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferencesResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
 components:
   schemas:
     User:
@@ -395,6 +486,68 @@ components:
 
     ErrorResponse:
       $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+    NotificationPreference:
+      type: object
+      required:
+        - id
+        - userId
+        - emailEnabled
+        - smsEnabled
+        - pushEnabled
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the notification preference
+        userId:
+          type: string
+          format: uuid
+          description: Reference to the user
+        emailEnabled:
+          type: boolean
+          description: Whether email notifications are enabled
+        smsEnabled:
+          type: boolean
+          description: Whether SMS notifications are enabled
+        pushEnabled:
+          type: boolean
+          description: Whether push notifications are enabled
+        preferredTimezone:
+          type: string
+          description: User's preferred timezone
+        tenantId:
+          type: string
+          format: uuid
+          description: Reference to tenant (for multi-tenancy)
+
+    UpdateNotificationPreferencesRequest:
+      type: object
+      required:
+        - emailEnabled
+        - smsEnabled
+        - pushEnabled
+      properties:
+        emailEnabled:
+          type: boolean
+          description: Whether email notifications are enabled
+        smsEnabled:
+          type: boolean
+          description: Whether SMS notifications are enabled
+        pushEnabled:
+          type: boolean
+          description: Whether push notifications are enabled
+        preferredTimezone:
+          type: string
+          description: User's preferred timezone
+
+    NotificationPreferencesResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/NotificationPreference'
 
   securitySchemes:
     bearerAuth:

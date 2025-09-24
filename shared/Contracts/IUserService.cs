@@ -13,5 +13,7 @@ namespace Shared.Contracts
         Task<User> CreateUser(User user);
         Task<User?> UpdateUser(User user);
         Task<bool> DeleteUser(Guid id);
+        Task<NotificationPreference?> GetNotificationPreferencesAsync(Guid userId);
+        Task<NotificationPreference> UpdateNotificationPreferencesAsync(Guid userId, NotificationPreference preferences);
     }
 }

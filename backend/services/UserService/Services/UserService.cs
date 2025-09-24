@@ -19,12 +19,14 @@ namespace UserService.Services
         private readonly Shared.Data.ApplicationDbContext _context;
         private readonly ILogger<UserService> _logger;
         private readonly IEventStore _eventStore;
+        private readonly Shared.Contracts.IUserNotificationService _notificationService;
 
-        public UserService(Shared.Data.ApplicationDbContext context, ILogger<UserService> logger, IEventStore eventStore)
+        public UserService(Shared.Data.ApplicationDbContext context, ILogger<UserService> logger, IEventStore eventStore, Shared.Contracts.IUserNotificationService notificationService)
         {
             _context = context;
             _logger = logger;
             _eventStore = eventStore;
+            _notificationService = notificationService;
         }
         
         public async Task<User?> GetUserByUsername(string email)
@@ -259,9 +261,9 @@ namespace UserService.Services
         {
             using var activity = ActivitySource.StartActivity("UserService.DeleteUser");
             activity?.SetTag("user.id", id.ToString());
-            
+
             LoggingExtensions.AddTraceIdToLogContext();
-            
+
             try
             {
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.IsActive);
@@ -297,6 +299,25 @@ namespace UserService.Services
                 activity?.SetStatus(ActivityStatusCode.Error);
                 throw;
             }
+        }
+
+        public async Task<NotificationPreference?> GetNotificationPreferencesAsync(Guid userId)
+        {
+            return await _notificationService.GetNotificationPreferencesAsync(userId);
+        }
+
+        public async Task<NotificationPreference> UpdateNotificationPreferencesAsync(Guid userId, NotificationPreference preferences)
+        {
+            // Convert NotificationPreference to UpdateNotificationPreferencesRequest
+            var request = new Shared.DTOs.UpdateNotificationPreferencesRequest
+            {
+                EmailEnabled = preferences.EmailEnabled,
+                SmsEnabled = preferences.SmsEnabled,
+                PushEnabled = preferences.PushEnabled,
+                PreferredTimezone = preferences.PreferredTimezone
+            };
+
+            return await _notificationService.UpdateNotificationPreferencesAsync(userId, request);
         }
     }
 }

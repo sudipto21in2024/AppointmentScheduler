@@ -79,6 +79,7 @@ public class Program
         builder.Services.AddScoped<UserService.Utils.ITenantResolutionService, UserService.Utils.TenantResolutionService>();
         builder.Services.AddScoped<IRegistrationService, RegistrationService>();
         builder.Services.AddScoped<ITenantService, TenantService>();
+        builder.Services.AddScoped<Shared.Contracts.IUserNotificationService, UserNotificationService>();
         
         // Add references to external services
         builder.Services.AddScoped<ConfigurationService.Services.ISubscriptionService, ConfigurationService.Services.SubscriptionService>();

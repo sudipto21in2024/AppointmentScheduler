@@ -68,7 +68,7 @@ namespace UserService.Services
                 }
 
                 // 2. Validate user email uniqueness within tenant
-                var existingUser = await _dbContext.Users
+                var existingUser = await _dbContext.Users.IgnoreQueryFilters()
                     .FirstOrDefaultAsync(u => u.Email == request.Email && u.TenantId == request.TenantId);
                 if (existingUser != null)
                 {
