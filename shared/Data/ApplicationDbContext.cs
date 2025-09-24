@@ -28,6 +28,7 @@ namespace Shared.Data
 
         // Payment Service Entities
         public virtual DbSet<Payment> Payments { get; set; }
+        public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
 
         // Review Service Entities
         public virtual DbSet<Review> Reviews { get; set; }
@@ -274,6 +275,41 @@ namespace Shared.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
+            // PaymentMethod entity configuration
+            modelBuilder.Entity<PaymentMethod>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Token)
+                    .IsRequired()
+                    .HasMaxLength(500);
+
+                entity.Property(e => e.Type)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.LastFourDigits)
+                    .IsRequired()
+                    .HasMaxLength(4);
+
+                entity.Property(e => e.CreatedAt)
+                    .IsRequired();
+
+                entity.Property(e => e.UpdatedAt)
+                    .IsRequired();
+
+                // Relationships
+                entity.HasOne(e => e.User)
+                    .WithMany() // No navigation back
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Tenant)
+                    .WithMany() // No navigation back
+                    .HasForeignKey(e => e.TenantId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
             // Review entity configuration
             modelBuilder.Entity<Review>(entity =>
             {
@@ -396,6 +432,7 @@ namespace Shared.Data
             modelBuilder.Entity<Slot>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
             modelBuilder.Entity<Booking>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
             modelBuilder.Entity<Payment>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
+            modelBuilder.Entity<PaymentMethod>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId() || e.User.TenantId == GetCurrentTenantId());
             modelBuilder.Entity<Review>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
             modelBuilder.Entity<Notification>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());
             modelBuilder.Entity<NotificationPreference>().HasQueryFilter(e => e.TenantId == GetCurrentTenantId());

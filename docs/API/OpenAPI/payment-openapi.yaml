@@ -301,6 +301,278 @@ paths:
               schema:
                 $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
 
+  /payment-methods:
+    get:
+      summary: Get payment methods
+      description: Retrieve saved payment methods for a user or tenant
+      tags:
+        - Payment Methods
+      parameters:
+        - name: userId
+          in: query
+          description: User ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: tenantId
+          in: query
+          description: Tenant ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successfully retrieved payment methods
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentMethodListResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Add payment method
+      description: Add a new saved payment method
+      tags:
+        - Payment Methods
+      parameters:
+        - name: userId
+          in: query
+          description: User ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: tenantId
+          in: query
+          description: Tenant ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentMethodRequest'
+      responses:
+        '201':
+          description: Payment method created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentMethodResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+  /payment-methods/{id}:
+    delete:
+      summary: Delete payment method
+      description: Remove a saved payment method
+      tags:
+        - Payment Methods
+      parameters:
+        - name: id
+          in: path
+          description: Payment method ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: query
+          description: User ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: tenantId
+          in: query
+          description: Tenant ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Payment method deleted successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Payment method not found
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update payment method
+      description: Update a saved payment method
+      tags:
+        - Payment Methods
+      parameters:
+        - name: id
+          in: path
+          description: Payment method ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: query
+          description: User ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: tenantId
+          in: query
+          description: Tenant ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePaymentMethodRequest'
+      responses:
+        '204':
+          description: Payment method updated successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Payment method not found
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+  /payment-methods/{id}/default:
+    put:
+      summary: Set default payment method
+      description: Set a payment method as the default
+      tags:
+        - Payment Methods
+      parameters:
+        - name: id
+          in: path
+          description: Payment method ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: query
+          description: User ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: tenantId
+          in: query
+          description: Tenant ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Payment method set as default successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Payment method not found
+          content:
+            application/json:
+              schema:
+                $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
 components:
   schemas:
     Payment:
@@ -445,6 +717,112 @@ components:
 
     ErrorResponse:
       $ref: '../common/errors.yaml#/components/schemas/ErrorResponse'
+
+    PaymentMethod:
+      type: object
+      required:
+        - id
+        - type
+        - lastFourDigits
+        - expiryMonth
+        - expiryYear
+        - isDefault
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the payment method
+        type:
+          type: string
+          description: Payment method type (e.g., CreditCard, DebitCard)
+        lastFourDigits:
+          type: string
+          description: Last four digits of the card
+        expiryMonth:
+          type: integer
+          minimum: 1
+          maximum: 12
+          description: Expiry month
+        expiryYear:
+          type: integer
+          minimum: 2023
+          maximum: 2050
+          description: Expiry year
+        isDefault:
+          type: boolean
+          description: Whether this is the default payment method
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+
+    CreatePaymentMethodRequest:
+      type: object
+      required:
+        - type
+        - cardNumber
+        - expiryMonth
+        - expiryYear
+        - cvv
+      properties:
+        type:
+          type: string
+          description: Payment method type
+        cardNumber:
+          type: string
+          description: Card number
+        expiryMonth:
+          type: integer
+          minimum: 1
+          maximum: 12
+          description: Expiry month
+        expiryYear:
+          type: integer
+          minimum: 2023
+          maximum: 2050
+          description: Expiry year
+        cvv:
+          type: string
+          description: CVV code
+        cardholderName:
+          type: string
+          description: Cardholder name
+
+    UpdatePaymentMethodRequest:
+      type: object
+      properties:
+        expiryMonth:
+          type: integer
+          minimum: 1
+          maximum: 12
+          description: Expiry month
+        expiryYear:
+          type: integer
+          minimum: 2023
+          maximum: 2050
+          description: Expiry year
+        cardholderName:
+          type: string
+          description: Cardholder name
+
+    PaymentMethodResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/PaymentMethod'
+
+    PaymentMethodListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentMethod'
 
   securitySchemes:
     bearerAuth:
