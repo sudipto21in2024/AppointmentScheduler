@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shared.Data;
@@ -10,6 +11,7 @@ using Shared.DTOs;
 using Shared.Contracts;
 using PaymentService.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace PaymentService.Tests
 {
@@ -18,17 +20,35 @@ namespace PaymentService.Tests
         private readonly ApplicationDbContext _context;
         private readonly Mock<ILogger<PaymentMethodService>> _mockLogger;
         private readonly PaymentMethodService _paymentMethodService;
+        private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
+        private readonly Guid _testTenantId;
 
         public PaymentMethodServiceTests()
         {
+            _testTenantId = Guid.NewGuid();
+            _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
+            SetupTenantClaims(_testTenantId);
+
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-            ApplicationDbContext.OverrideTenantId = Guid.NewGuid();
-            _context = new ApplicationDbContext(options, new Mock<IHttpContextAccessor>().Object);
+
+            _context = new ApplicationDbContext(options, _mockHttpContextAccessor.Object);
             _mockLogger = new Mock<ILogger<PaymentMethodService>>();
-    
+
             _paymentMethodService = new PaymentMethodService(_context, _mockLogger.Object);
+        }
+
+        private void SetupTenantClaims(Guid tenantId)
+        {
+            var mockHttpContext = new DefaultHttpContext();
+            var claims = new List<System.Security.Claims.Claim>
+            {
+                new System.Security.Claims.Claim("TenantId", tenantId.ToString())
+            };
+            var claimsIdentity = new System.Security.Claims.ClaimsIdentity(claims);
+            mockHttpContext.User = new System.Security.Claims.ClaimsPrincipal(claimsIdentity);
+            _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(mockHttpContext);
         }
 
         [Fact]
@@ -42,7 +62,7 @@ namespace PaymentService.Tests
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
-                TenantId = ApplicationDbContext.OverrideTenantId,
+                TenantId = _testTenantId,
                 Token = "tok_123",
                 Type = "CreditCard",
                 LastFourDigits = "1234",
@@ -105,7 +125,7 @@ namespace PaymentService.Tests
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
-                TenantId = ApplicationDbContext.OverrideTenantId,
+                TenantId = _testTenantId,
                 Token = "tok_123",
                 Type = "CreditCard",
                 LastFourDigits = "1234",
@@ -147,7 +167,7 @@ namespace PaymentService.Tests
             {
                 Id = methodId,
                 UserId = userId,
-                TenantId = ApplicationDbContext.OverrideTenantId,
+                TenantId = _testTenantId,
                 Token = "tok_123",
                 Type = "CreditCard",
                 LastFourDigits = "1234",
@@ -181,7 +201,7 @@ namespace PaymentService.Tests
             {
                 Id = defaultMethodId,
                 UserId = userId,
-                TenantId = ApplicationDbContext.OverrideTenantId,
+                TenantId = _testTenantId,
                 Token = "tok_123",
                 Type = "CreditCard",
                 LastFourDigits = "1234",
@@ -196,7 +216,7 @@ namespace PaymentService.Tests
             {
                 Id = otherMethodId,
                 UserId = userId,
-                TenantId = ApplicationDbContext.OverrideTenantId,
+                TenantId = _testTenantId,
                 Token = "tok_456",
                 Type = "DebitCard",
                 LastFourDigits = "5678",
@@ -231,7 +251,7 @@ namespace PaymentService.Tests
             {
                 Id = methodId,
                 UserId = userId,
-                TenantId = ApplicationDbContext.OverrideTenantId,
+                TenantId = _testTenantId,
                 Token = "tok_123",
                 Type = "CreditCard",
                 LastFourDigits = "1234",
@@ -246,7 +266,7 @@ namespace PaymentService.Tests
             {
                 Id = otherMethodId,
                 UserId = userId,
-                TenantId = ApplicationDbContext.OverrideTenantId,
+                TenantId = _testTenantId,
                 Token = "tok_456",
                 Type = "DebitCard",
                 LastFourDigits = "5678",
@@ -285,7 +305,7 @@ namespace PaymentService.Tests
             {
                 Id = methodId,
                 UserId = userId,
-                TenantId = ApplicationDbContext.OverrideTenantId,
+                TenantId = _testTenantId,
                 Token = "tok_123",
                 Type = "CreditCard",
                 LastFourDigits = "1234",
@@ -326,7 +346,7 @@ namespace PaymentService.Tests
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
-                TenantId = ApplicationDbContext.OverrideTenantId,
+                TenantId = _testTenantId,
                 Token = "tok_123",
                 Type = "CreditCard",
                 LastFourDigits = "1234",

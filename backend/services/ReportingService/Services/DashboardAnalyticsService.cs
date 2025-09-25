@@ -103,56 +103,55 @@ namespace ReportingService.Services
         //     };
         // }
         public async Task<SystemDashboardOverviewDto> GetSystemDashboardOverviewAsync(DateTime? startDate = null, DateTime? endDate = null)
-{
-    // More explicit date handling
-    DateTime start, end;
-    
-    if (startDate.HasValue && endDate.HasValue)
-    {
-        start = startDate.Value.Date; // Start of start date
-        end = endDate.Value.Date.AddDays(1).AddTicks(-1); // End of end date
-    }
-    else if (startDate.HasValue)
-    {
-        start = startDate.Value.Date;
-        end = DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
-    }
-    else
-    {
-        // Default to last 30 days
-        start = DateTime.UtcNow.AddDays(-30).Date;
-        end = DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
-    }
+        {
+            // More explicit date handling
+            DateTime start, end;
 
-    // Rest of the method remains the same...
-    var totalTenants = await _dbContext.Tenants.IgnoreQueryFilters().CountAsync();
-    var totalUsers = await _dbContext.Users.IgnoreQueryFilters().CountAsync();
-    
-    var totalBookings = await _dbContext.Bookings.IgnoreQueryFilters()
-        .Where(b => b.CreatedAt >= start && b.CreatedAt <= end)
-        .CountAsync();
-        
-    var totalRevenue = await _dbContext.Payments.IgnoreQueryFilters()
-        .Where(p => p.PaidAt.HasValue && 
-                   p.PaidAt.Value >= start && 
-                   p.PaidAt.Value <= end && 
-                   p.PaymentStatus == "Completed")
-        .SumAsync(p => (decimal?)p.Amount) ?? 0m;
-        
-    var activeServices = await _dbContext.Services.IgnoreQueryFilters()
-        .CountAsync(); // Or add .Where(s => s.IsActive) if you have that property
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                start = startDate.Value.Date; // Start of start date
+                end = endDate.Value.Date.AddDays(1).AddTicks(-1); // End of end date
+            }
+            else if (startDate.HasValue)
+            {
+                start = startDate.Value.Date;
+                end = DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
+            }
+            else
+            {
+                // Default to last 30 days
+                start = DateTime.UtcNow.AddDays(-30).Date;
+                end = DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
+            }
 
-    return new SystemDashboardOverviewDto
-    {
-        TotalTenants = totalTenants,
-        TotalUsers = totalUsers,
-        TotalBookings = totalBookings,
-        TotalRevenue = totalRevenue,
-        ActiveServices = activeServices,
-        SystemHealthScore = 95.0m,
-        LastUpdated = DateTime.UtcNow
-    };
-}
+            // System admin filters are automatically bypassed via claims
+            var totalTenants = await _dbContext.Tenants.CountAsync();
+            var totalUsers = await _dbContext.Users.CountAsync();
+
+            var totalBookings = await _dbContext.Bookings
+                .Where(b => b.CreatedAt >= start && b.CreatedAt <= end)
+                .CountAsync();
+
+            var totalRevenue = await _dbContext.Payments
+                .Where(p => p.PaidAt.HasValue &&
+                            p.PaidAt.Value >= start &&
+                            p.PaidAt.Value <= end &&
+                            p.PaymentStatus == "Completed")
+                .SumAsync(p => (decimal?)p.Amount) ?? 0m;
+
+            var activeServices = await _dbContext.Services.CountAsync();
+
+            return new SystemDashboardOverviewDto
+            {
+                TotalTenants = totalTenants,
+                TotalUsers = totalUsers,
+                TotalBookings = totalBookings,
+                TotalRevenue = totalRevenue,
+                ActiveServices = activeServices,
+                SystemHealthScore = 95.0m,
+                LastUpdated = DateTime.UtcNow
+            };
+        }
 
         public async Task<BookingAnalyticsDto> GetTenantBookingAnalyticsAsync(Guid tenantId, DateTime? startDate = null, DateTime? endDate = null)
         {
@@ -208,8 +207,9 @@ namespace ReportingService.Services
 
         public async Task<BookingAnalyticsDto> GetGlobalBookingAnalyticsAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
+            // System admin filters are automatically bypassed via claims
             var analytics = new BookingAnalyticsDto();
-            analytics.BookingTrends = await _dbContext.Bookings.IgnoreQueryFilters()
+            analytics.BookingTrends = await _dbContext.Bookings
                 .Where(b => b.CreatedAt >= (startDate ?? DateTime.UtcNow.AddDays(-30)) && b.CreatedAt <= (endDate ?? DateTime.UtcNow))
                 .GroupBy(b => b.CreatedAt.Date)
                 .Select(g => new BookingTrendDto
@@ -228,8 +228,9 @@ namespace ReportingService.Services
 
         public async Task<RevenueAnalyticsDto> GetGlobalRevenueAnalyticsAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
+            // System admin filters are automatically bypassed via claims
             var analytics = new RevenueAnalyticsDto();
-            analytics.RevenueTrends = await _dbContext.Payments.IgnoreQueryFilters()
+            analytics.RevenueTrends = await _dbContext.Payments
                 .Where(p => p.PaidAt.HasValue && p.PaidAt.Value >= (startDate ?? DateTime.UtcNow.AddDays(-30)) && p.PaidAt.Value <= (endDate ?? DateTime.UtcNow) && p.PaymentStatus == "Completed")
                 .GroupBy(p => p.PaidAt.Value.Date)
                 .Select(g => new RevenueTrendDto

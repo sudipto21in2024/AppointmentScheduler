@@ -25,6 +25,7 @@ namespace UserService.Services
                 Id = Guid.NewGuid(),
                 Name = request.Name,
                 Description = request.Description,
+                Subdomain = request.Name.ToLower().Replace(" ", "").Replace("-", ""),
                 Domain = request.Domain,
                 IsActive = request.IsActive,
                 CreatedAt = DateTime.UtcNow,
@@ -45,7 +46,7 @@ namespace UserService.Services
 
         public async Task<IEnumerable<Tenant>> GetAllTenantsAsync()
         {
-            return await _dbContext.Tenants.ToListAsync();
+            return await _dbContext.Tenants.IgnoreQueryFilters().ToListAsync();
         }
 
         public async Task<Tenant?> UpdateTenantAsync(Guid id, UpdateTenantRequest request)

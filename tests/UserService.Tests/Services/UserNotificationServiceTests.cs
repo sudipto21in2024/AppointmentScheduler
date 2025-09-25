@@ -43,19 +43,29 @@ namespace UserService.Tests.Services
                 .Options;
 
             var mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
+            SetupTenantClaims(_tenantId, mockHttpContextAccessor);
 
             _dbContext = new ApplicationDbContext(options, mockHttpContextAccessor.Object);
             _dbContext.Database.EnsureDeleted();
             _dbContext.Database.EnsureCreated();
-
-            // Set tenant override for testing
-            Shared.Data.ApplicationDbContext.OverrideTenantId = _tenantId;
 
             // Seed user
             _dbContext.Users.Add(_testUser);
             _dbContext.SaveChangesAsync().Wait();
 
             _notificationService = new UserNotificationService(_dbContext, Mock.Of<ILogger<UserNotificationService>>());
+        }
+
+        private void SetupTenantClaims(Guid tenantId, Mock<IHttpContextAccessor> mockHttpContextAccessor)
+        {
+            var mockHttpContext = new DefaultHttpContext();
+            var claims = new System.Collections.Generic.List<System.Security.Claims.Claim>
+            {
+                new System.Security.Claims.Claim("TenantId", tenantId.ToString())
+            };
+            var claimsIdentity = new System.Security.Claims.ClaimsIdentity(claims);
+            mockHttpContext.User = new System.Security.Claims.ClaimsPrincipal(claimsIdentity);
+            mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(mockHttpContext);
         }
 
         [Fact]
@@ -131,7 +141,6 @@ namespace UserService.Tests.Services
         public async Task UpdateNotificationPreferencesAsync_ShouldUpdateExistingPreferences_WhenTheyExist()
         {
             // Arrange
-            Shared.Data.ApplicationDbContext.OverrideTenantId = _tenantId; // Ensure override is set
             var existingPreference = new NotificationPreference
             {
                 Id = Guid.NewGuid(),
@@ -184,7 +193,6 @@ namespace UserService.Tests.Services
 
         public void Dispose()
         {
-            Shared.Data.ApplicationDbContext.OverrideTenantId = null;
             _dbContext.Dispose();
         }
     }

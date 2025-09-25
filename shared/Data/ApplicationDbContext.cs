@@ -9,6 +9,10 @@ namespace Shared.Data
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
 
+        // Admin tenant constants
+        public static readonly Guid AdminTenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        public const string AdminTenantSubdomain = "admin";
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IHttpContextAccessor httpContextAccessor) : base(options)
         {
             _httpContextAccessor = httpContextAccessor;
@@ -533,20 +537,19 @@ namespace Shared.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Apply multi-tenancy query filters - bypass when tenant ID is Guid.Empty (system admin)
-            var tenantId = GetCurrentTenantId();
-            modelBuilder.Entity<User>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
-            modelBuilder.Entity<ServiceCategory>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
-            modelBuilder.Entity<Service>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
-            modelBuilder.Entity<Slot>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
-            modelBuilder.Entity<Booking>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
-            modelBuilder.Entity<Payment>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
-            modelBuilder.Entity<PaymentMethod>().HasQueryFilter(e => tenantId == Guid.Empty || (e.TenantId == tenantId || e.User.TenantId == tenantId));
-            modelBuilder.Entity<Review>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
-            modelBuilder.Entity<Notification>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
-            modelBuilder.Entity<NotificationPreference>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
-            modelBuilder.Entity<BookingHistory>().HasQueryFilter(e => tenantId == Guid.Empty || e.TenantId == tenantId);
-            modelBuilder.Entity<RefreshToken>().HasQueryFilter(e => tenantId == Guid.Empty || e.User.TenantId == tenantId);
+            // Apply multi-tenancy query filters with system admin bypass
+            modelBuilder.Entity<User>().HasQueryFilter(e => GetCurrentTenantId() == Guid.Empty || e.TenantId == GetCurrentTenantId());
+            modelBuilder.Entity<ServiceCategory>().HasQueryFilter(e => GetCurrentTenantId() == Guid.Empty || e.TenantId == GetCurrentTenantId());
+            modelBuilder.Entity<Service>().HasQueryFilter(e => GetCurrentTenantId() == Guid.Empty || e.TenantId == GetCurrentTenantId());
+            modelBuilder.Entity<Slot>().HasQueryFilter(e => GetCurrentTenantId() == Guid.Empty || e.TenantId == GetCurrentTenantId());
+            modelBuilder.Entity<Booking>().HasQueryFilter(e => GetCurrentTenantId() == Guid.Empty || e.TenantId == GetCurrentTenantId());
+            modelBuilder.Entity<Payment>().HasQueryFilter(e => GetCurrentTenantId() == Guid.Empty || e.TenantId == GetCurrentTenantId());
+            modelBuilder.Entity<PaymentMethod>().HasQueryFilter(e => GetCurrentTenantId() == Guid.Empty || e.TenantId == GetCurrentTenantId() || e.User.TenantId == GetCurrentTenantId());
+            modelBuilder.Entity<Review>().HasQueryFilter(e => GetCurrentTenantId() == Guid.Empty || e.TenantId == GetCurrentTenantId());
+            modelBuilder.Entity<Notification>().HasQueryFilter(e => GetCurrentTenantId() == Guid.Empty || e.TenantId == GetCurrentTenantId());
+            modelBuilder.Entity<NotificationPreference>().HasQueryFilter(e => GetCurrentTenantId() == Guid.Empty || e.TenantId == GetCurrentTenantId());
+            modelBuilder.Entity<BookingHistory>().HasQueryFilter(e => GetCurrentTenantId() == Guid.Empty || e.TenantId == GetCurrentTenantId());
+            modelBuilder.Entity<RefreshToken>().HasQueryFilter(e => GetCurrentTenantId() == Guid.Empty || e.User.TenantId == GetCurrentTenantId());
             // Tenant entity should not be filtered by TenantId from claims, as it is the root of the tenancy.
             // Super Admins should always be able to view all tenants.
 
@@ -612,24 +615,41 @@ namespace Shared.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
+            // Seed admin tenant
+            SeedAdminTenant(modelBuilder);
+
             base.OnModelCreating(modelBuilder);
         }
 
-        // Property to allow overriding the tenant ID for testing
-        public static Guid? OverrideTenantId { get; set; } = null;
-        
-        // Placeholder for tenant ID - this would be implemented based on your tenant resolution strategy
+        private void SeedAdminTenant(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Tenant>().HasData(new Tenant
+            {
+                Id = AdminTenantId,
+                Name = "System Admin Tenant",
+                Subdomain = AdminTenantSubdomain,
+                Status = TenantStatus.Active,
+                IsActive = true,
+                ContactEmail = "admin@system.com",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+        }
+
+        // Get current tenant ID from claims, with system admin bypass
         private Guid GetCurrentTenantId()
         {
-              // Check for test override first
-            if (OverrideTenantId.HasValue)
-            {
-                return OverrideTenantId.Value;
-            }
-            // Retrieve TenantId from HttpContext.User.Claims
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext != null && httpContext.User.Identity is ClaimsIdentity claimsIdentity)
             {
+                // Check for system admin bypass
+                var isSystemAdmin = claimsIdentity.FindFirst("IsSystemAdmin")?.Value;
+                if (isSystemAdmin == "true")
+                {
+                    return Guid.Empty; // Bypass filters for system admin
+                }
+
+                // Get tenant ID for tenant users
                 var tenantIdClaim = claimsIdentity.FindFirst("TenantId");
                 if (tenantIdClaim != null && Guid.TryParse(tenantIdClaim.Value, out Guid tenantId))
                 {
@@ -637,9 +657,7 @@ namespace Shared.Data
                 }
             }
 
-            // Fallback: If no tenant ID is found in claims, return Guid.Empty or throw an exception
-            // depending on your application's security policy. Returning Guid.Empty might allow
-            // access to non-tenant-specific data or indicate an unauthenticated context.
+            // Not logged-in or no tenant context
             return Guid.Empty;
         }
     }

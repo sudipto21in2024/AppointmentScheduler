@@ -62,12 +62,24 @@ namespace UserService.Tests.Services
             );
         }
 
+        private void SetupTenantClaims(Guid tenantId, Mock<IHttpContextAccessor> mockHttpContextAccessor)
+        {
+            var mockHttpContext = new DefaultHttpContext();
+            var claims = new System.Collections.Generic.List<System.Security.Claims.Claim>
+            {
+                new System.Security.Claims.Claim("TenantId", tenantId.ToString())
+            };
+            var claimsIdentity = new System.Security.Claims.ClaimsIdentity(claims);
+            mockHttpContext.User = new System.Security.Claims.ClaimsPrincipal(claimsIdentity);
+            mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(mockHttpContext);
+        }
+
         [Fact]
         public async Task RegisterProviderAsync_ShouldReturnSuccess_WhenAllOperationsSucceed()
         {
             // Arrange
             var tenantId = Guid.NewGuid();
-            ApplicationDbContext.OverrideTenantId = tenantId;
+            // Removed OverrideTenantId usage = tenantId;
 
             var request = new RegisterProviderRequest
             {
@@ -89,7 +101,11 @@ namespace UserService.Tests.Services
             var tenant = new Tenant
             {
                 Id = tenantId,
-                Name = "John's Clinic"
+                Name = "John's Clinic",
+                Subdomain = "johnsclinic",
+                ContactEmail = "admin@johnsclinic.com",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             var user = new User
@@ -260,7 +276,7 @@ public async Task RegisterProviderAsync_ShouldReturnFailure_WhenUserWithEmailAlr
 {
     // Arrange
     var tenantId = Guid.NewGuid();
-    ApplicationDbContext.OverrideTenantId = tenantId; // Set the override like your working test
+    // Removed OverrideTenantId usage = tenantId; // Set the override like your working test
 
     var request = new RegisterProviderRequest
     {
@@ -276,6 +292,8 @@ public async Task RegisterProviderAsync_ShouldReturnFailure_WhenUserWithEmailAlr
     {
         Id = tenantId,
         Name = "John's Clinic",
+        Subdomain = "johnsclinic",
+        ContactEmail = "admin@johnsclinic.com",
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
     };
@@ -327,7 +345,7 @@ public async Task RegisterProviderAsync_ShouldReturnFailure_WhenUserWithEmailAlr
     _mockUserService.Verify(s => s.CreateUser(It.IsAny<User>()), Times.Never);
     
     // Clean up - important for other tests
-    ApplicationDbContext.OverrideTenantId = null;
+    // Removed OverrideTenantId usage = null;
 }
 
         [Fact]
@@ -348,7 +366,11 @@ public async Task RegisterProviderAsync_ShouldReturnFailure_WhenUserWithEmailAlr
             var tenant = new Tenant
             {
                 Id = tenantId,
-                Name = "John's Clinic"
+                Name = "John's Clinic",
+                Subdomain = "johnsclinic",
+                ContactEmail = "admin@johnsclinic.com",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             _dbContext.Tenants.Add(tenant);
@@ -385,7 +407,11 @@ public async Task RegisterProviderAsync_ShouldReturnFailure_WhenUserWithEmailAlr
             var tenant = new Tenant
             {
                 Id = tenantId,
-                Name = "John's Clinic"
+                Name = "John's Clinic",
+                Subdomain = "johnsclinic",
+                ContactEmail = "admin@johnsclinic.com",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             var pricingPlan = new PricingPlanDto
@@ -414,7 +440,7 @@ public async Task RegisterProviderAsync_ShouldReturnFailure_WhenUserWithEmailAlr
         public void Dispose()
         {
             _dbContext?.Dispose();
-            ApplicationDbContext.OverrideTenantId = null;
+            // Removed OverrideTenantId usage = null;
         }
     }
 

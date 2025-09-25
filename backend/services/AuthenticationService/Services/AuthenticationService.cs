@@ -87,8 +87,10 @@ namespace AuthenticationService.Services
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.Role, user.UserType.ToString()),
-                    new Claim("TenantId", user.TenantId.ToString())
-                }),
+                    new Claim("TenantId", user.TenantId.ToString()),
+                    // Add system admin claim if user belongs to admin tenant
+                    user.TenantId == Shared.Data.ApplicationDbContext.AdminTenantId ? new Claim("IsSystemAdmin", "true") : null
+                }.Where(c => c != null)),
                 Expires = DateTime.UtcNow.AddMinutes(Convert.ToDouble(_configuration["Jwt:AccessTokenValidityInMinutes"])),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
                 Issuer = _configuration["Jwt:Issuer"],
