@@ -226,7 +226,20 @@ CREATE PARTITION SCHEME ps_BookingsDate
 AS PARTITION pf_BookingsDate
 ALL TO ([PRIMARY]);
 
+-- Create Hangfire database for background job storage
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'HangfireDb')
+BEGIN
+    CREATE DATABASE HangfireDb;
+END
+GO
+
+USE HangfireDb;
+GO
+
 -- Initial Seed Data
+USE AppointmentScheduler;
+GO
+
 -- Create a default tenant
 INSERT INTO Tenants (Name, Description, Domain, ContactEmail)
 VALUES ('Default Tenant', 'Default tenant for the system', 'example.com', 'contact@example.com');
