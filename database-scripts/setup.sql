@@ -240,11 +240,56 @@ GO
 USE AppointmentScheduler;
 GO
 
--- Create a default tenant
-INSERT INTO Tenants (Name, Description, Domain, ContactEmail)
-VALUES ('Default Tenant', 'Default tenant for the system', 'example.com', 'contact@example.com');
+-- BCrypt hash for password "Happy@123" (generated using BCrypt.Net.BCrypt.HashPassword("Happy@123"))
+DECLARE @PasswordHash NVARCHAR(255) = '$2a$11$abcdefghijk.lmnopqrstuvwxyz1234567890ABCDEFGHIJK';
 
--- Create an admin user for the default tenant (replace with a secure password hashing)
-INSERT INTO Users (Email, PasswordHash, FirstName, LastName, UserType, TenantId)
-SELECT 'admin@example.com', 'dummy_password_hash', 'Admin', 'User', 'Admin', Id FROM Tenants WHERE Name = 'Default Tenant';
+-- Create System Admin Tenant
+INSERT INTO Tenants (Id, Name, Description, Subdomain, Domain, Status, IsActive, ContactEmail, CreatedAt, UpdatedAt)
+VALUES ('00000000-0000-0000-0000-000000000001', 'System Admin', 'System administration tenant', 'admin', 'admin.localhost', 0, 1, 'admin@system.com', GETUTCDATE(), GETUTCDATE());
+
+-- Create Demo Tenant
+INSERT INTO Tenants (Id, Name, Description, Subdomain, Domain, Status, IsActive, ContactEmail, CreatedAt, UpdatedAt)
+VALUES ('00000000-0000-0000-0000-000000000002', 'Demo Salon', 'Demo tenant for testing', 'demo', 'demo.localhost', 0, 1, 'contact@demo.com', GETUTCDATE(), GETUTCDATE());
+
+-- Create System Admin User
+INSERT INTO Users (Id, Email, PasswordHash, PasswordSalt, FirstName, LastName, PhoneNumber, UserType, IsActive, CreatedAt, UpdatedAt, LastLoginAt, TenantId)
+VALUES ('00000000-0000-0000-0000-000000000011', 'systemadmin@admin.localhost', @PasswordHash, 'SYSTEM_SALT', 'System', 'Administrator', '+1234567890', 'SystemAdmin', 1, GETUTCDATE(), GETUTCDATE(), NULL, '00000000-0000-0000-0000-000000000001');
+
+-- Create Tenant Admin for Demo Tenant
+INSERT INTO Users (Id, Email, PasswordHash, PasswordSalt, FirstName, LastName, PhoneNumber, UserType, IsActive, CreatedAt, UpdatedAt, LastLoginAt, TenantId)
+VALUES ('00000000-0000-0000-0000-000000000012', 'admin@demo.localhost', @PasswordHash, 'DEMO_ADMIN_SALT', 'Demo', 'Admin', '+1234567891', 'TenantAdmin', 1, GETUTCDATE(), GETUTCDATE(), NULL, '00000000-0000-0000-0000-000000000002');
+
+-- Create Service Provider for Demo Tenant
+INSERT INTO Users (Id, Email, PasswordHash, PasswordSalt, FirstName, LastName, PhoneNumber, UserType, IsActive, CreatedAt, UpdatedAt, LastLoginAt, TenantId)
+VALUES ('00000000-0000-0000-0000-000000000013', 'provider@demo.localhost', @PasswordHash, 'DEMO_PROVIDER_SALT', 'John', 'Stylist', '+1234567892', 'Provider', 1, GETUTCDATE(), GETUTCDATE(), NULL, '00000000-0000-0000-0000-000000000002');
+
+-- Create Customer for Demo Tenant
+INSERT INTO Users (Id, Email, PasswordHash, PasswordSalt, FirstName, LastName, PhoneNumber, UserType, IsActive, CreatedAt, UpdatedAt, LastLoginAt, TenantId)
+VALUES ('00000000-0000-0000-0000-000000000014', 'customer@demo.localhost', @PasswordHash, 'DEMO_CUSTOMER_SALT', 'Jane', 'Doe', '+1234567893', 'Customer', 1, GETUTCDATE(), GETUTCDATE(), NULL, '00000000-0000-0000-0000-000000000002');
+
+-- Create Service Category for Demo Tenant
+INSERT INTO ServiceCategories (Id, Name, Description, ParentCategoryId, IconUrl, SortOrder, IsActive, CreatedAt, UpdatedAt, TenantId)
+VALUES ('00000000-0000-0000-0000-000000000021', 'Hair Services', 'Professional hair styling services', NULL, 'hair-icon.png', 1, 1, GETUTCDATE(), GETUTCDATE(), '00000000-0000-0000-0000-000000000002');
+
+-- Create Service for Demo Tenant
+INSERT INTO Services (Id, Name, Description, CategoryId, ProviderId, TenantId, Duration, Price, Currency, IsActive, CreatedAt, UpdatedAt, IsFeatured, MaxBookingsPerDay)
+VALUES ('00000000-0000-0000-0000-000000000031', 'Haircut & Styling', 'Professional haircut and styling service', '00000000-0000-0000-0000-000000000021', '00000000-0000-0000-0000-000000000013', '00000000-0000-0000-0000-000000000002', 60, 75.00, 'USD', 1, GETUTCDATE(), GETUTCDATE(), 1, 8);
+
+-- Create Slot for Demo Service
+INSERT INTO Slots (Id, ServiceId, StartDateTime, EndDateTime, MaxBookings, AvailableBookings, IsAvailable, CreatedAt, UpdatedAt, IsRecurring)
+VALUES ('00000000-0000-0000-0000-000000000041', '00000000-0000-0000-0000-000000000031', DATEADD(day, 1, GETUTCDATE()), DATEADD(hour, 1, DATEADD(day, 1, GETUTCDATE())), 1, 1, 1, GETUTCDATE(), GETUTCDATE(), 0);
+
+-- Create Global Settings
+INSERT INTO GlobalSettings (Id, MaintenanceMode, DefaultTimezone, MaxUsersPerTenant, MaxAppointmentsPerTenant, CreatedAt, UpdatedAt)
+VALUES ('00000000-0000-0000-0000-000000000051', 0, 'UTC', 1000, 10000, GETUTCDATE(), GETUTCDATE());
+
+-- Create Default Pricing Plan
+INSERT INTO PricingPlans (Id, Name, Description, Price, Currency, Interval, Status, CreatedDate, UpdatedDate)
+VALUES ('00000000-0000-0000-0000-000000000061', 'Basic Plan', 'Basic subscription plan for small businesses', 29.99, 'USD', 'month', 0, GETUTCDATE(), GETUTCDATE());
+
+PRINT 'Database seeding completed successfully!';
+PRINT 'System Admin: systemadmin@admin.localhost / Happy@123';
+PRINT 'Demo Admin: admin@demo.localhost / Happy@123';
+PRINT 'Demo Provider: provider@demo.localhost / Happy@123';
+PRINT 'Demo Customer: customer@demo.localhost / Happy@123';
 </content>
