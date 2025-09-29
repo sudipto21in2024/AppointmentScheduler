@@ -9,7 +9,6 @@ describe('AgGridTableComponent', () => {
     {
       field: 'id',
       headerName: 'ID',
-      type: 'number',
       sortable: true,
       filter: 'number',
       width: 100
@@ -17,7 +16,6 @@ describe('AgGridTableComponent', () => {
     {
       field: 'name',
       headerName: 'Name',
-      type: 'text',
       sortable: true,
       filter: 'text',
       minWidth: 150
@@ -25,19 +23,23 @@ describe('AgGridTableComponent', () => {
     {
       field: 'status',
       headerName: 'Status',
-      type: 'text',
       sortable: true,
-      filter: 'set',
+      filter: 'text',
       width: 120
     },
     {
       field: 'createdAt',
       headerName: 'Created Date',
-      type: 'date',
       sortable: true,
-      filter: 'date',
+      filter: 'text',
       width: 140
     }
+  ];
+
+  const mockData = [
+    { id: 1, name: 'John Doe', status: 'active', createdAt: '2023-01-01' },
+    { id: 2, name: 'Jane Smith', status: 'inactive', createdAt: '2023-01-02' },
+    { id: 3, name: 'Bob Johnson', status: 'pending', createdAt: '2023-01-03' }
   ];
 
   beforeEach(async () => {
@@ -48,6 +50,7 @@ describe('AgGridTableComponent', () => {
     fixture = TestBed.createComponent(AgGridTableComponent);
     component = fixture.componentInstance;
     component.columns = mockColumns;
+    component.data = mockData;
     fixture.detectChanges();
   });
 
@@ -59,8 +62,6 @@ describe('AgGridTableComponent', () => {
     expect(component.config.height).toBe(400);
     expect(component.config.paginationPageSize).toBe(50);
     expect(component.config.paginationPageSizeSelector).toEqual([20, 50, 100, 200]);
-    expect(component.config.cacheBlockSize).toBe(100);
-    expect(component.config.maxBlocksInCache).toBe(10);
     expect(component.config.rowSelection).toBe('multiple');
   });
 

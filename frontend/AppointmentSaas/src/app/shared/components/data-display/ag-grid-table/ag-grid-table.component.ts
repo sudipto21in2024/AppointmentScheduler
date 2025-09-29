@@ -6,15 +6,8 @@ import {
   ColDef,
   GridApi,
   GridReadyEvent,
-  IServerSideDatasource,
-  IServerSideGetRowsParams,
-  IServerSideGetRowsRequest,
-  GridOptions,
-  ModuleRegistry
+  GridOptions
 } from 'ag-grid-community';
-import { ServerSideRowModelModule } from 'ag-grid-enterprise';
-
-ModuleRegistry.registerModules([ServerSideRowModelModule]);
 
 export interface AgGridColumn extends ColDef {
   field: string;
@@ -23,10 +16,9 @@ export interface AgGridColumn extends ColDef {
   minWidth?: number;
   maxWidth?: number;
   sortable?: boolean;
-  filter?: boolean | 'text' | 'number' | 'date' | 'set';
+  filter?: boolean | 'text' | 'number' | 'date';
   resizable?: boolean;
   editable?: boolean;
-  pinned?: 'left' | 'right' | boolean;
   cellRenderer?: string | Function;
   cellRendererParams?: any;
   valueFormatter?: (params: any) => string;
@@ -38,22 +30,20 @@ export interface AgGridColumn extends ColDef {
   suppressFilter?: boolean;
 }
 
-export interface ServerSideRequest {
-  startRow: number;
-  endRow: number;
-  rowGroupCols: any[];
-  valueCols: any[];
-  pivotCols: any[];
-  pivotMode: boolean;
-  groupKeys: string[];
-  filterModel: any;
-  sortModel: any;
+export interface DataRequest {
+  page?: number;
+  pageSize?: number;
+  sortModel?: any[];
+  filterModel?: any;
+  globalFilter?: string;
 }
 
-export interface ServerSideResponse {
+export interface DataResponse {
   data: any[];
-  totalCount: number;
-  secondaryColumns?: any[];
+  totalCount?: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
 }
 
 export interface AgGridTableConfig {
@@ -65,43 +55,14 @@ export interface AgGridTableConfig {
   rowMultiSelectWithClick?: boolean;
   suppressCellFocus?: boolean;
   enableCellTextSelection?: boolean;
-  ensureDomOrder?: boolean;
-  suppressColumnVirtualisation?: boolean;
-  suppressRowVirtualisation?: boolean;
-  debounceVerticalScrollbar?: boolean;
-  suppressAnimationFrame?: boolean;
-  suppressContextMenu?: boolean;
-  preventDefaultOnContextMenu?: boolean;
-  allowContextMenuWithControlKey?: boolean;
-  suppressDragLeaveHidesColumns?: boolean;
-  suppressMakeColumnVisibleAfterUnGroup?: boolean;
-  suppressClipboardPaste?: boolean;
-  suppressCopyRowsToClipboard?: boolean;
-  suppressCutToClipboard?: boolean;
-  suppressPaste?: boolean;
-  enableBrowserTooltips?: boolean;
-  enableCellExpressions?: boolean;
-  enableGroupEdit?: boolean;
-  suppressGroupRowsSticky?: boolean;
-  suppressRowTransform?: boolean;
-  suppressMaxRenderedRowRestriction?: boolean;
-  suppressPaginationPanel?: boolean;
+  pagination?: boolean;
   paginationPageSize?: number;
   paginationPageSizeSelector?: number[];
-  cacheBlockSize?: number;
-  maxBlocksInCache?: number;
-  cacheOverflowSize?: number;
-  infiniteInitialRowCount?: number;
-  maxConcurrentDatasourceRequests?: number;
-  blockLoadDebounceMillis?: number;
-  purgeClosedRowNodes?: boolean;
   domLayout?: 'normal' | 'autoHeight' | 'print';
   rowHeight?: number;
   headerHeight?: number;
-  groupHeaderHeight?: number;
-  floatingFiltersHeight?: number;
-  pivotGroupHeaderHeight?: number;
-  pivotHeaderHeight?: number;
+  suppressPaginationPanel?: boolean;
+  enableBrowserTooltips?: boolean;
 }
 
 @Component({
@@ -192,14 +153,10 @@ export interface AgGridTableConfig {
           [gridOptions]="gridOptions"
           [columnDefs]="columnDefs"
           [defaultColDef]="defaultColDef"
-          [rowData]="rowData"
-          [serverSideDatasource]="serverSideDatasource"
-          [rowModelType]="'serverSide'"
-          [pagination]="true"
+          [rowData]="data"
+          [pagination]="config.pagination !== false"
           [paginationPageSize]="config.paginationPageSize || 50"
           [paginationPageSizeSelector]="config.paginationPageSizeSelector || [20, 50, 100, 200]"
-          [cacheBlockSize]="config.cacheBlockSize || 100"
-          [maxBlocksInCache]="config.maxBlocksInCache || 10"
           [rowSelection]="config.rowSelection || 'multiple'"
           [suppressRowClickSelection]="config.suppressRowClickSelection || false"
           [enableRangeSelection]="config.enableRangeSelection || false"
@@ -596,12 +553,11 @@ export class AgGridTableComponent implements OnChanges {
     height: 400,
     paginationPageSize: 50,
     paginationPageSizeSelector: [20, 50, 100, 200],
-    cacheBlockSize: 100,
-    maxBlocksInCache: 10,
     rowSelection: 'multiple'
   };
 
   @Input() columns: AgGridColumn[] = [];
+  @Input() data: any[] = [];
   @Input() title?: string;
   @Input() subtitle?: string;
   @Input() showToolbar = true;
@@ -620,7 +576,7 @@ export class AgGridTableComponent implements OnChanges {
     requiresSelection?: boolean;
   }>;
 
-  @Output() dataRequest = new EventEmitter<ServerSideRequest>();
+  @Output() dataLoad = new EventEmitter<DataRequest>();
   @Output() selectionChange = new EventEmitter<any[]>();
   @Output() rowClick = new EventEmitter<any>();
   @Output() exportRequest = new EventEmitter<void>();
@@ -631,6 +587,10 @@ export class AgGridTableComponent implements OnChanges {
   globalSearchText = '';
   selectedRows: any[] = [];
   totalRows = 0;
+  currentPage = 0;
+  pageSize = 50;
+  sortModel: any[] = [];
+  filterModel: any = {};
 
   get gridOptions(): GridOptions {
     return {
@@ -654,7 +614,6 @@ export class AgGridTableComponent implements OnChanges {
       filter: col.filter,
       resizable: col.resizable,
       editable: col.editable,
-      pinned: col.pinned,
       cellRenderer: col.cellRenderer,
       cellRendererParams: col.cellRendererParams,
       valueFormatter: col.valueFormatter,
@@ -676,32 +635,7 @@ export class AgGridTableComponent implements OnChanges {
     };
   }
 
-  get rowData(): any[] {
-    return []; // For server-side row model, data comes from datasource
-  }
-
-  get serverSideDatasource(): IServerSideDatasource {
-    return {
-      getRows: (params: IServerSideGetRowsParams) => {
-        const request: ServerSideRequest = {
-          startRow: params.request.startRow || 0,
-          endRow: params.request.endRow || 50,
-          rowGroupCols: params.request.rowGroupCols,
-          valueCols: params.request.valueCols,
-          pivotCols: params.request.pivotCols,
-          pivotMode: params.request.pivotMode,
-          groupKeys: params.request.groupKeys,
-          filterModel: params.request.filterModel,
-          sortModel: params.request.sortModel
-        };
-
-        this.dataRequest.emit(request);
-
-        // The parent component should call params.success() or params.fail()
-        // when data is received from the server
-      }
-    };
-  }
+  // For client-side row model, we'll use a simple approach
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['loading'] && this.gridApi) {
@@ -710,6 +644,9 @@ export class AgGridTableComponent implements OnChanges {
       } else {
         this.gridApi.hideOverlay();
       }
+    }
+    if (changes['data'] && !changes['data'].firstChange) {
+      this.refreshGridData();
     }
   }
 
@@ -726,11 +663,14 @@ export class AgGridTableComponent implements OnChanges {
   }
 
   onFilterChanged(event: any): void {
-    // Filter changes are handled automatically by server-side datasource
+    this.filterModel = this.gridApi?.getFilterModel() || {};
+    this.loadDataFromServer();
   }
 
   onSortChanged(event: any): void {
-    // Sort changes are handled automatically by server-side datasource
+    // Sort model is handled by AG Grid internally for client-side
+    // For server-side coordination, we would need to extract from event
+    this.loadDataFromServer();
   }
 
   onFirstDataRendered(event: any): void {
@@ -753,9 +693,7 @@ export class AgGridTableComponent implements OnChanges {
 
   onRefresh(): void {
     this.refreshRequest.emit();
-    if (this.gridApi) {
-      this.gridApi.refreshServerSide();
-    }
+    this.loadDataFromServer();
   }
 
   onRetry(): void {
@@ -767,11 +705,29 @@ export class AgGridTableComponent implements OnChanges {
     this.customActionClick.emit(action);
   }
 
+  private loadDataFromServer(): void {
+    const request: DataRequest = {
+      page: this.currentPage,
+      pageSize: this.pageSize,
+      sortModel: this.sortModel,
+      filterModel: this.filterModel,
+      globalFilter: this.globalSearchText
+    };
+
+    this.dataLoad.emit(request);
+  }
+
+  private refreshGridData(): void {
+    if (this.gridApi) {
+      // For client-side row model, update the grid data
+      this.totalRows = this.data.length;
+      // The grid will automatically update when data input changes
+    }
+  }
+
   // Public API methods for parent components
   refreshData(): void {
-    if (this.gridApi) {
-      this.gridApi.refreshServerSide();
-    }
+    this.loadDataFromServer();
   }
 
   clearSelection(): void {
@@ -790,31 +746,20 @@ export class AgGridTableComponent implements OnChanges {
     return this.selectedRows;
   }
 
-  setFilter(field: string, filterValue: any): void {
-    if (this.gridApi) {
-      const filterModel = { [field]: filterValue };
-      this.gridApi.setFilterModel(filterModel);
-    }
+  setData(data: any[]): void {
+    this.data = data;
+    this.totalRows = data.length;
+    this.refreshGridData();
   }
 
-  clearFilters(): void {
-    if (this.gridApi) {
-      this.gridApi.setFilterModel({});
-    }
+  setTotalRows(total: number): void {
+    this.totalRows = total;
   }
 
   exportToCsv(filename?: string): void {
     if (this.gridApi) {
       this.gridApi.exportDataAsCsv({
         fileName: filename || `${this.title || 'data'}_export.csv`
-      });
-    }
-  }
-
-  exportToExcel(filename?: string): void {
-    if (this.gridApi) {
-      this.gridApi.exportDataAsExcel({
-        fileName: filename || `${this.title || 'data'}_export.xlsx`
       });
     }
   }
