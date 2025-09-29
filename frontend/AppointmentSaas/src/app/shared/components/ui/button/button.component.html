@@ -1,11 +1,10 @@
 <button
-  [type]="type"
-  [ngClass]="buttonClasses"
-  [disabled]="disabled || loading"
-  (click)="onClick($event)"
+  [type]="config.type || 'button'"
+  class="btn"
+  [class]="getButtonClasses()"
+  [disabled]="config.disabled || config.loading"
+  (click)="onClick.emit($event)"
 >
+  <span *ngIf="config.loading" class="btn__spinner"></span>
   <ng-content></ng-content>
-  <span *ngIf="label">{{ label }}</span>
-  <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
-  <span *ngIf="loading" class="app-button__spinner"></span>
 </button>

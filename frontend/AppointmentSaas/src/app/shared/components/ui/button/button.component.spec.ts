@@ -1,7 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ButtonComponent } from './button.component';
-import { By } from '@angular/platform-browser';
-import { CommonModule } from '@angular/common';
 
 describe('ButtonComponent', () => {
   let component: ButtonComponent;
@@ -9,7 +7,7 @@ describe('ButtonComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ButtonComponent, CommonModule],
+      imports: [ButtonComponent]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ButtonComponent);
@@ -21,62 +19,77 @@ describe('ButtonComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should display the label', () => {
-    component.label = 'Test Button';
-    fixture.detectChanges();
-    const buttonElement = fixture.debugElement.query(By.css('button')).nativeElement;
-    expect(buttonElement.textContent).toContain('Test Button');
+  it('should have default config', () => {
+    expect(component.config.variant).toBe('primary');
+    expect(component.config.size).toBe('md');
+    expect(component.config.disabled).toBe(false);
+    expect(component.config.loading).toBe(false);
+    expect(component.config.block).toBe(false);
+    expect(component.config.type).toBe('button');
   });
 
-  it('should emit clicked event on click', () => {
-    spyOn(component.clicked, 'emit');
-    const buttonElement = fixture.debugElement.query(By.css('button')).nativeElement;
-    buttonElement.click();
-    expect(component.clicked.emit).toHaveBeenCalled();
+  it('should apply correct CSS classes for primary variant', () => {
+    component.config.variant = 'primary';
+    fixture.detectChanges();
+    const element = fixture.nativeElement.querySelector('.btn');
+    expect(element.classList.contains('btn--primary')).toBe(true);
   });
 
-  it('should not emit clicked event when disabled', () => {
-    spyOn(component.clicked, 'emit');
-    component.disabled = true;
+  it('should apply correct CSS classes for secondary variant', () => {
+    component.config.variant = 'secondary';
     fixture.detectChanges();
-    const buttonElement = fixture.debugElement.query(By.css('button')).nativeElement;
-    buttonElement.click();
-    expect(component.clicked.emit).not.toHaveBeenCalled();
+    const element = fixture.nativeElement.querySelector('.btn');
+    expect(element.classList.contains('btn--secondary')).toBe(true);
   });
 
-  it('should apply variant classes', () => {
-    component.variant = 'accent';
+  it('should apply correct size classes', () => {
+    component.config.size = 'lg';
     fixture.detectChanges();
-    const buttonElement = fixture.debugElement.query(By.css('button')).nativeElement;
-    expect(buttonElement.classList).toContain('app-button--accent');
+    const element = fixture.nativeElement.querySelector('.btn');
+    expect(element.classList.contains('btn--lg')).toBe(true);
   });
 
-  it('should apply size classes', () => {
-    component.size = 'large';
+  it('should apply block class when block is true', () => {
+    component.config.block = true;
     fixture.detectChanges();
-    const buttonElement = fixture.debugElement.query(By.css('button')).nativeElement;
-    expect(buttonElement.classList).toContain('app-button--large');
+    const element = fixture.nativeElement.querySelector('.btn');
+    expect(element.classList.contains('btn--block')).toBe(true);
   });
 
-  it('should display icon when provided', () => {
-    component.icon = 'home';
+  it('should disable button when disabled is true', () => {
+    component.config.disabled = true;
     fixture.detectChanges();
-    const iconElement = fixture.debugElement.query(By.css('mat-icon'));
-    expect(iconElement).toBeTruthy();
-    expect(iconElement.nativeElement.textContent).toContain('home');
-  });
-
-  it('should show loading spinner when loading is true', () => {
-    component.loading = true;
-    fixture.detectChanges();
-    const spinnerElement = fixture.debugElement.query(By.css('.app-button__spinner'));
-    expect(spinnerElement).toBeTruthy();
+    const button = fixture.nativeElement.querySelector('button');
+    expect(button.disabled).toBe(true);
   });
 
   it('should disable button when loading is true', () => {
-    component.loading = true;
+    component.config.loading = true;
     fixture.detectChanges();
-    const buttonElement = fixture.debugElement.query(By.css('button')).nativeElement;
-    expect(buttonElement.disabled).toBeTrue();
+    const button = fixture.nativeElement.querySelector('button');
+    expect(button.disabled).toBe(true);
+  });
+
+  it('should show spinner when loading is true', () => {
+    component.config.loading = true;
+    fixture.detectChanges();
+    const spinner = fixture.nativeElement.querySelector('.btn__spinner');
+    expect(spinner).toBeTruthy();
+  });
+
+  it('should emit click event when button is clicked', () => {
+    spyOn(component.onClick, 'emit');
+    const button = fixture.nativeElement.querySelector('button');
+    button.click();
+    expect(component.onClick.emit).toHaveBeenCalled();
+  });
+
+  it('should not emit click event when disabled', () => {
+    component.config.disabled = true;
+    spyOn(component.onClick, 'emit');
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('button');
+    button.click();
+    expect(component.onClick.emit).not.toHaveBeenCalled();
   });
 });
